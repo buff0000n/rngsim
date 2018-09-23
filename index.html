@@ -1,13 +1,14 @@
 <html>
+<!-- Full disclosure: JavaScript is not my forte and neither is CSS. -B -->
 <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+<meta name="viewport" content="width=640, initial-scale=1">
 <head>
     <title>Warframe RNG Simulator</title>
 </head>
 <!-- embedded favicon because why not -->
 <link href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAANH5AADR+QGceVN3AAAKT2lDQ1BQaG90b3Nob3AgSUNDIHByb2ZpbGUAAHjanVNnVFPpFj333vRCS4iAlEtvUhUIIFJCi4AUkSYqIQkQSoghodkVUcERRUUEG8igiAOOjoCMFVEsDIoK2AfkIaKOg6OIisr74Xuja9a89+bN/rXXPues852zzwfACAyWSDNRNYAMqUIeEeCDx8TG4eQuQIEKJHAAEAizZCFz/SMBAPh+PDwrIsAHvgABeNMLCADATZvAMByH/w/qQplcAYCEAcB0kThLCIAUAEB6jkKmAEBGAYCdmCZTAKAEAGDLY2LjAFAtAGAnf+bTAICd+Jl7AQBblCEVAaCRACATZYhEAGg7AKzPVopFAFgwABRmS8Q5ANgtADBJV2ZIALC3AMDOEAuyAAgMADBRiIUpAAR7AGDIIyN4AISZABRG8lc88SuuEOcqAAB4mbI8uSQ5RYFbCC1xB1dXLh4ozkkXKxQ2YQJhmkAuwnmZGTKBNA/g88wAAKCRFRHgg/P9eM4Ors7ONo62Dl8t6r8G/yJiYuP+5c+rcEAAAOF0ftH+LC+zGoA7BoBt/qIl7gRoXgugdfeLZrIPQLUAoOnaV/Nw+H48PEWhkLnZ2eXk5NhKxEJbYcpXff5nwl/AV/1s+X48/Pf14L7iJIEyXYFHBPjgwsz0TKUcz5IJhGLc5o9H/LcL//wd0yLESWK5WCoU41EScY5EmozzMqUiiUKSKcUl0v9k4t8s+wM+3zUAsGo+AXuRLahdYwP2SycQWHTA4vcAAPK7b8HUKAgDgGiD4c93/+8//UegJQCAZkmScQAAXkQkLlTKsz/HCAAARKCBKrBBG/TBGCzABhzBBdzBC/xgNoRCJMTCQhBCCmSAHHJgKayCQiiGzbAdKmAv1EAdNMBRaIaTcA4uwlW4Dj1wD/phCJ7BKLyBCQRByAgTYSHaiAFiilgjjggXmYX4IcFIBBKLJCDJiBRRIkuRNUgxUopUIFVIHfI9cgI5h1xGupE7yAAygvyGvEcxlIGyUT3UDLVDuag3GoRGogvQZHQxmo8WoJvQcrQaPYw2oefQq2gP2o8+Q8cwwOgYBzPEbDAuxsNCsTgsCZNjy7EirAyrxhqwVqwDu4n1Y8+xdwQSgUXACTYEd0IgYR5BSFhMWE7YSKggHCQ0EdoJNwkDhFHCJyKTqEu0JroR+cQYYjIxh1hILCPWEo8TLxB7iEPENyQSiUMyJ7mQAkmxpFTSEtJG0m5SI+ksqZs0SBojk8naZGuyBzmULCAryIXkneTD5DPkG+Qh8lsKnWJAcaT4U+IoUspqShnlEOU05QZlmDJBVaOaUt2ooVQRNY9aQq2htlKvUYeoEzR1mjnNgxZJS6WtopXTGmgXaPdpr+h0uhHdlR5Ol9BX0svpR+iX6AP0dwwNhhWDx4hnKBmbGAcYZxl3GK+YTKYZ04sZx1QwNzHrmOeZD5lvVVgqtip8FZHKCpVKlSaVGyovVKmqpqreqgtV81XLVI+pXlN9rkZVM1PjqQnUlqtVqp1Q61MbU2epO6iHqmeob1Q/pH5Z/YkGWcNMw09DpFGgsV/jvMYgC2MZs3gsIWsNq4Z1gTXEJrHN2Xx2KruY/R27iz2qqaE5QzNKM1ezUvOUZj8H45hx+Jx0TgnnKKeX836K3hTvKeIpG6Y0TLkxZVxrqpaXllirSKtRq0frvTau7aedpr1Fu1n7gQ5Bx0onXCdHZ4/OBZ3nU9lT3acKpxZNPTr1ri6qa6UbobtEd79up+6Ynr5egJ5Mb6feeb3n+hx9L/1U/W36p/VHDFgGswwkBtsMzhg8xTVxbzwdL8fb8VFDXcNAQ6VhlWGX4YSRudE8o9VGjUYPjGnGXOMk423GbcajJgYmISZLTepN7ppSTbmmKaY7TDtMx83MzaLN1pk1mz0x1zLnm+eb15vft2BaeFostqi2uGVJsuRaplnutrxuhVo5WaVYVVpds0atna0l1rutu6cRp7lOk06rntZnw7Dxtsm2qbcZsOXYBtuutm22fWFnYhdnt8Wuw+6TvZN9un2N/T0HDYfZDqsdWh1+c7RyFDpWOt6azpzuP33F9JbpL2dYzxDP2DPjthPLKcRpnVOb00dnF2e5c4PziIuJS4LLLpc+Lpsbxt3IveRKdPVxXeF60vWdm7Obwu2o26/uNu5p7ofcn8w0nymeWTNz0MPIQ+BR5dE/C5+VMGvfrH5PQ0+BZ7XnIy9jL5FXrdewt6V3qvdh7xc+9j5yn+M+4zw33jLeWV/MN8C3yLfLT8Nvnl+F30N/I/9k/3r/0QCngCUBZwOJgUGBWwL7+Hp8Ib+OPzrbZfay2e1BjKC5QRVBj4KtguXBrSFoyOyQrSH355jOkc5pDoVQfujW0Adh5mGLw34MJ4WHhVeGP45wiFga0TGXNXfR3ENz30T6RJZE3ptnMU85ry1KNSo+qi5qPNo3ujS6P8YuZlnM1VidWElsSxw5LiquNm5svt/87fOH4p3iC+N7F5gvyF1weaHOwvSFpxapLhIsOpZATIhOOJTwQRAqqBaMJfITdyWOCnnCHcJnIi/RNtGI2ENcKh5O8kgqTXqS7JG8NXkkxTOlLOW5hCepkLxMDUzdmzqeFpp2IG0yPTq9MYOSkZBxQqohTZO2Z+pn5mZ2y6xlhbL+xW6Lty8elQfJa7OQrAVZLQq2QqboVFoo1yoHsmdlV2a/zYnKOZarnivN7cyzytuQN5zvn//tEsIS4ZK2pYZLVy0dWOa9rGo5sjxxedsK4xUFK4ZWBqw8uIq2Km3VT6vtV5eufr0mek1rgV7ByoLBtQFr6wtVCuWFfevc1+1dT1gvWd+1YfqGnRs+FYmKrhTbF5cVf9go3HjlG4dvyr+Z3JS0qavEuWTPZtJm6ebeLZ5bDpaql+aXDm4N2dq0Dd9WtO319kXbL5fNKNu7g7ZDuaO/PLi8ZafJzs07P1SkVPRU+lQ27tLdtWHX+G7R7ht7vPY07NXbW7z3/T7JvttVAVVN1WbVZftJ+7P3P66Jqun4lvttXa1ObXHtxwPSA/0HIw6217nU1R3SPVRSj9Yr60cOxx++/p3vdy0NNg1VjZzG4iNwRHnk6fcJ3/ceDTradox7rOEH0x92HWcdL2pCmvKaRptTmvtbYlu6T8w+0dbq3nr8R9sfD5w0PFl5SvNUyWna6YLTk2fyz4ydlZ19fi753GDborZ752PO32oPb++6EHTh0kX/i+c7vDvOXPK4dPKy2+UTV7hXmq86X23qdOo8/pPTT8e7nLuarrlca7nuer21e2b36RueN87d9L158Rb/1tWeOT3dvfN6b/fF9/XfFt1+cif9zsu72Xcn7q28T7xf9EDtQdlD3YfVP1v+3Njv3H9qwHeg89HcR/cGhYPP/pH1jw9DBY+Zj8uGDYbrnjg+OTniP3L96fynQ89kzyaeF/6i/suuFxYvfvjV69fO0ZjRoZfyl5O/bXyl/erA6xmv28bCxh6+yXgzMV70VvvtwXfcdx3vo98PT+R8IH8o/2j5sfVT0Kf7kxmTk/8EA5jz/GMzLdsAAAAgY0hSTQAAeiUAAICDAAD5/wAAgOkAAHUwAADqYAAAOpgAABdvkl/FRgAAAetJREFUeNqMkz+oklEYxp8jtw8xMVEX+fyzhAjdJkN0aHBICEIiPt2dBBFB3CJwsLi7qJuTOCjOYZAUOElg1JVMhwvaouXQDUoT8Wnxky+vdT3wDO857/M7vO97jiCJI5Z3PB4r8/lcdrvdH202WxPANwAAyf9quVw+SqfT3y0WCyVJotPpZKFQ+EzylCT2kx/W6/XX+Xz+U6PReEkykUqlpgC4r2w2+5XkHa35SSgU+ivJ4/HQbDbvYlmWORwOC5PJJFWtVt+2Wq13KuBBqVR6f+gmrVwuF1er1eOt58ZmszkFSVxcXDyLRCK/ZFlmrVbrybL8T0iz2XylLRsk0ev1zqLRKLvdbpGkLpPJfDlkNplMVBTlN0lZBegAYL1em8Ph8A+/3/8cwCYYDJ7vz1Gv1yMWi2E2m0kATOq+2JLukrTpdLo3ADAej596vd4XDocDkiQBAJLJJPr9PoQQ03K5fBvATwA4AQAhxLkQQoWarFarFAgEMBqNkEgkYLfb0el00G630el0zlTzoYd0L5fLTY1G465uIQSFEATAeDxOkvevNFFVpVLpXjfKYrH4QevRafokDYdD+bpPMRgM7ABuqrEWgCM/ltjqKuDIpZaD3RTUA5/Pd6koyi2DwbA+5FwsFid+v/9SC/gzAD0ZXxYwq1doAAAAAElFTkSuQmCC" rel="icon" type="image/png" />
 <style type="text/css">
-    /* basic styles */
-
+    /* general formatting */
     * {
         font-family: sans-serif;
         color: #B0B0B0;
@@ -46,6 +47,72 @@
     .label {
         color: #FFFFFF;
     }
+    a {
+        color: #8080FF
+    }
+    a:visited {
+        color: #D080FF
+    }
+    ul {
+        list-style-type: disc;
+    }
+    li {
+        margin: 0ex 0ex 1ex 0ex;
+    }
+
+    /* help section formatting */
+    #lotsOfWordsContainer, .footerContainer {
+        background-color: #202020;
+        margin: 1ex;
+        padding: 1ex;
+        border-radius: 1ex;
+   	    text-align: center;
+    }
+    .lotsOfWords, .footer {
+        max-width: 100ex;
+        display: inline-block;
+   	    text-align: left;
+    }
+    .footer {
+	    font-weight: bold;
+	    font-size: 100%;
+    }
+    .about {
+        text-align: center;
+    }
+    h1, h2, h3, h4 {
+        color: A0C0F0;
+    }
+    strong {
+        color: 6080B0;
+    }
+    .warn, .warn * {
+        color: D06040;
+    }
+    #TOC li {
+        margin: 0;
+    }
+
+    /* notes formatting */
+    .notes tr td {
+        padding: 0.1ex 0.25ex 1ex 0.25ex;
+        vertical-align: text-top;
+    }
+    .notes tr td:first-child {
+        width: 33%;
+        text-align: right;
+    }
+    /*
+        For some unknown reason, the font size on moble devices is much smaller, but only on the first column on the
+        notes tables. Work around using a media query for a coarse pointer (usually denotes a phone or tablet).
+    */
+    @media only screen and (pointer: coarse) {
+        .notes tr td:first-child {
+            font-size: 150%;
+        }
+    }
+
+    /* error bar formatting */
     #errorBar {
 	    text-align: center;
     }
@@ -63,28 +130,8 @@
 	    font-weight: bold;
 	    color: #FFFFFF;
     }
-    #lotsOfWordsContainer, .footerContainer {
-        background-color: #202020;
-        margin: 1ex;
-        padding: 1ex;
-        border-radius: 1ex;
-   	    text-align: center;
-    }
-    .lotsOfWords, .footer {
-        max-width: 100ex;
-        display: inline-block;
-   	    text-align: left;
-    }
-    .footer {
-	    font-weight: bold;
-	    font-size: 100%;
-    }
-    a {
-        color: #8080FF
-    }
-    a:visited {
-        color: #D080FF
-    }
+
+    /* general view formatting */
     .modelTitle {
 	    font-weight: bold;
 	    font-size: 150%;
@@ -116,7 +163,7 @@
         font-size: 75%;
         color: 808080;
     }
-    .drop, .item, .mission, .add {
+    .drop, .item, .mission, .add, .enemy, .rivenRoll, .rivenFieldTable {
         border-width: 0ex 0ex 0ex 0.25ex;
         border-style: solid;
         border-color: #80A0D0;
@@ -124,21 +171,24 @@
         margin: 0ex 0ex 0ex 3ex;
         padding: 0ex 0ex 0ex 3ex;
 	}
-    .mission {
+    .mission, .enemy, .rivenRoll {
         border-width: 0.25ex 0ex 0ex 0.25ex;
     }
     .missionTable {
         margin: 1ex 1ex 1ex 3ex;
 	}
+    #scenario .fieldTable {
+        width: 50ex;
+    }
+
+    /* Buttons */
     .button {
         margin: 1ex 1ex 1ex 1ex;
+        cursor: pointer;
 	}
 	.utilGroup {
 	    text-align: center;
 	}
-    #scenario .fieldTable {
-        width: 50ex;
-    }
     .button, .examplesDiv, .stopAfterDiv, .autoStartDiv, .start, .stop, .urlButton {
         background-color: #808080;
         border: none;
@@ -179,6 +229,8 @@
         background-color: #80A0D0;
         color: #FFFFFF;
     }
+
+    /* Fields */
     .inputName, .inputTime, .inputRequired, .inputCount, .inputRate, .inputStopAfter {
         background-color: #101010;
         border: none;
@@ -192,13 +244,18 @@
         border: none;
         color: #B0B0B0;
     }
-    #samplesSelect {
+    #samplesSelect, .rivenTypeSelect {
         background-color: #101010;
         border: none;
         color: #B0B0B0;
         font-size: 100%;
         padding: 1ex;
         border-radius: 1ex;
+    }
+
+    /* graying everthing out when disabled */
+    .rivenTypeSelect:disabled {
+        background-color: #202020;
     }
     .button:disabled {
         background-color: #404040;
@@ -223,37 +280,44 @@
         color: #B0B0B0;
         cursor: not-allowed;
     }
-    .missionResults, .trialResult table tr td, .timeResult table tr td {
+
+    /* results formatting */
+    .missionResults, .trialResult table tr td, .timeResult table tr td, .notes tr td {
         vertical-align: text-top;
+    }
+    .statsTable {
+        width: 100%;
+    }
+    .statsTable tr td:first-child {
+        width: 25ex;
+    }
+    .util, .utilHidden {
+        margin: 1ex 0ex 1ex 0ex;
     }
     .util {
         display: inline;
-        margin: 1ex 0ex 1ex 0ex;
     }
-    .about {
-        text-align: center;
+    .utilHidden {
+        display: none;
     }
-    h1, h2, h3, h4 {
-        color: A0C0F0;
-    }
-    strong {
-        color: 6080B0;
-    }
-    .warn {
-        color: D06040;
-    }
-    .notes tr td:first-child {
-        width: 25%;
-        text-align: right;
-        vertical-align: text-top;
+    /*
+        Huge hack to configure the histogram chart through CSS
+        The 'content' property can contain anything, does not affect a <canvas> element, and can be read by javascript
+        using getComputedStyle()
+
+        bg: background color
+        l: line color
+        t: text color
+        to: text outline color
+        b: bar color
+        bh: bar highlight color
+        bhbg: bar highlight background color
+        fs: font size
+    */
+    .histogram {
+        content: "bg=#202020;l=#B0B0B0;t=#B0B0B0;to=#202020;b=#80A0D0;bh=#A0C0FF;bhbg=#204050;fs=15";
     }
 
-    .tooltip a {
-        color: #0000FF
-    }
-    .tooltip a:visited {
-        color: #B000FF
-    }
 
     /* tooltips, adapted from https://www.w3schools.com/css/css_tooltip.asp */
 
@@ -261,7 +325,19 @@
         position: relative;
         display: inline-block;
     }
+    .tooltip:hover .tooltiptext, .tooltip:hover .tooltiptextbottom  {
+        visibility: visible;
+        opacity: 1;
+    }
+    /* fix the link colors inside tooltips */
+    .tooltip a {
+        color: #0000FF
+    }
+    .tooltip a:visited {
+        color: #B000FF
+    }
 
+    /* right side tooltip */
     .tooltip .tooltiptext {
         visibility: hidden;
         width: 50ex;
@@ -279,7 +355,18 @@
         transition: opacity 500ms;
         transition-delay: 1s;
     }
+    .tooltip .tooltiptext::after {
+        content: "";
+        position: absolute;
+        top: 2.25ex;
+        right: 100%;
+        margin-top: -1ex;
+        border-width: 1ex;
+        border-style: solid;
+        border-color: transparent #FFFFFF transparent transparent;
+    }
 
+    /* bottom side tooltip */
     .tooltip .tooltiptextbottom {
         visibility: hidden;
         width: 30ex;
@@ -298,18 +385,6 @@
         transition: opacity 500ms;
         transition-delay: 1s;
     }
-
-    .tooltip .tooltiptext::after {
-        content: "";
-        position: absolute;
-        top: 2.25ex;
-        right: 100%;
-        margin-top: -1ex;
-        border-width: 1ex;
-        border-style: solid;
-        border-color: transparent #FFFFFF transparent transparent;
-    }
-
     .tooltip .tooltiptextbottom::after {
         content: "";
         position: absolute;
@@ -321,19 +396,12 @@
         border-color: transparent transparent #FFFFFF transparent;
     }
 
-    .tooltip:hover .tooltiptext, .tooltip:hover .tooltiptextbottom  {
-        visibility: visible;
-        opacity: 1;
-    }
-
-    /* adapted from https://www.w3schools.com/howto/howto_js_popup.asp */
-
+    /* popup, adapted from https://www.w3schools.com/howto/howto_js_popup.asp */
     .popup {
         position: relative;
         display: inline-block;
         cursor: pointer;
     }
-
     .popup .popuptext {
         visibility: hidden;
         width: 50ex;
@@ -348,7 +416,6 @@
         left: -40ex;
         margin-left: -2ex;
     }
-
     .popup .popuptext::after {
         content: "";
         position: absolute;
@@ -359,32 +426,82 @@
         border-style: solid;
         border-color: transparent transparent #FFFFFF transparent;
     }
-
     .popup .show {
         visibility: visible;
         animation: fadeIn 1s
     }
-
     #urlHolder {
         color: #000000;
     }
 
-    /*
-        Huge hack to configure the histogram chart through CSS
-        The 'content' property can contain anything, does not affect a <canvas> element, and can be read by javascript
-        using getComputedStyle()
+    /* custom checkbox, adapted from https://www.w3schools.com/howto/howto_css_custom_checkbox.asp */
+    .container {
+        display: inline;
+        position: relative;
+        padding: 0ex 3ex;
+        margin-bottom: 2ex;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
 
-        bg: background color
-        l: line color
-        t: text color
-        to: text outline color
-        b: bar color
-        bh: bar highlight color
-        bhbg: bar highlight background color
-        fs: font size
-    */
-    .histogram {
-        content: "bg=#202020;l=#B0B0B0;t=#B0B0B0;to=#202020;b=#80A0D0;bh=#A0C0FF;bhbg=#204050;fs=15";
+    /* Hide the browser's default radio button */
+    .container input {
+        position: absolute;
+        opacity: 0;
+    }
+
+    /* Create a custom radio button */
+    .checkmark, .checkmarkHelp {
+        padding: 0.2ex 1ex;
+        border-radius: 0.5ex;
+	    font-weight: bold;
+	    color: #FFFFFF;
+        background-color: #101010;
+    }
+    .checkmark {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    /* On mouse-over, add a grey background color */
+    .container:hover input ~ .checkmark {
+        background-color: #808080;
+    }
+
+    /* When the radio button is checked, add a colored background */
+    .container input:checked ~ .checkmark.positiveReq, .positiveReqHelp {
+        background-color: #20F020;
+    }
+    .container input:checked ~ .checkmark.positive, .positiveHelp {
+        background-color: #208020;
+    }
+    .container input:checked ~ .checkmark.dontwant, .dontwantHelp {
+        background-color: #404040;
+    }
+    .container input:checked ~ .checkmark.negative, .negativeHelp {
+        background-color: #802020;
+    }
+    .container input:checked ~ .checkmark.negativeReq {
+        background-color: #F02020;
+    }
+
+    /* When the radio button is checked and disabled, add a lighter gray background */
+    .container input:checked:disabled ~ .checkmark {
+        background-color: #606060;
+    }
+
+    /* When the radio button is disabled and not checked, make the background the same as the page background */
+    .container input:disabled ~ .checkmark {
+        background-color: #202020;
+    }
+
+    /* keep the stat line from wrapping */
+    .statPriorityGroup, .container, .checkmark, .label, .rivenCriterionNode td {
+        white-space: nowrap;
     }
 
 </style>
@@ -568,7 +685,11 @@
 		    // serialize to a string
 			var s = writeName(this.name);
 			for (var i = 0; i < this.missions.length; i++) {
-				s += FIELD_SEP + GROUP_START + this.missions[i].toString() + GROUP_END ;
+				s += FIELD_SEP + GROUP_START +
+				    (this.missions[i] instanceof Enemy ? "e_" :
+				     this.missions[i] instanceof Mission ? "m_" :
+				     this.missions[i] instanceof RivenRoll ? "r_" : "_") +
+				    this.missions[i].toString() + GROUP_END;
 			}
             return s;
 		}
@@ -581,7 +702,15 @@
 			}
 			this.name = readName(fields[0]);
 			for (var i = 1; i < fields.length; i++) {
-				this.add(new Mission().fromString(fields[i]));
+			    if (fields[i].startsWith("m_")) {
+    				this.add(new Mission().fromString(fields[i].substring(2)));
+
+			    } else if (fields[i].startsWith("e_")) {
+    				this.add(new Enemy().fromString(fields[i].substring(2)));
+
+			    } else if (fields[i].startsWith("r_")) {
+    				this.add(new RivenRoll().fromString(fields[i].substring(2)));
+    			}
 			}
 
 			return this;
@@ -594,6 +723,403 @@
 
     function writeScenario(scenario) {
         return scenario.toString();
+    }
+
+    //==============================================================
+    // Enemy data model
+    //==============================================================
+
+    // This is just a simplifying wrapper around the Mission-based scenario
+    class Enemy extends Mission {
+        constructor() {
+            super();
+
+            // create a singleton Drop Event
+            var drop = new Drop();
+            drop.name = "Kill";
+			this.drops.push(drop);
+        }
+
+        add(drop) {
+            // make sure there is only one Drop Event
+            this.drops[0] = drop;
+        }
+    }
+
+    //==============================================================
+    // Riven Roll data model
+    //==============================================================
+
+    // "database" of Riven stats.  Stats are identified by their index in this list.
+    // The second value is a list of flags saying where the stat is applicable:
+    //  g: gun
+    //  m: melee
+    //  p: positive stat
+    //  n: negative stat
+    //  r: reverse description, i.e. + is bad and - is good.
+    var rivenStatList = Array(
+        ["Ammo maximum", "gpn"],
+        ["Attack Speed", "mpn"],
+        ["Damage vs Corpus", "gmpn"],
+        ["Damage vs Grineer", "gmpn"],
+        ["Damage vs Infested", "gmpn"],
+        ["Channeling Damage", "mpn"],
+        ["Channeling Efficiency", "mpn"],
+        ["Cold Damage", "gmp"],
+        ["Combo Duration", "mp"],
+        ["Critical Chance", "gmpn"],
+        ["Critical Chance on Slide Attack", "mpn"],
+        ["Critical Damage", "gmpn"],
+        ["Damage", "gmpn"],
+        ["Electric Damage", "gmp"],
+        ["Heat Damage", "gmp"],
+        ["Finisher Damage", "mpn"],
+        ["Fire Rate", "gpn"],
+        ["Flight Speed", "gpn"],
+        ["Impact Damage", "gmpn"],
+        ["Magazine Capacity", "gpn"],
+        ["Multishot", "gpn"],
+        ["Toxin Damage", "gmp"],
+        ["Punch Through", "gp"],
+        ["Puncture Damage", "gmpn"],
+        ["Range", "mpn"],
+        ["Reload Speed", "gpn"],
+        ["Slash Damage", "gmpn"],
+        ["Status Chance", "gmpn"],
+        ["Status Duration", "gmpn"],
+        ["Recoil", "gpnr"],
+        ["Zoom", "gpn"],
+    );
+
+    // Anecdotally, there seems to be a basic 50-50 chance of either 2 or 3 positives.
+    // Define it this way so we can use the exact same RNG code to determine the number of positive stats
+    var rivenPositiveNumProbs = [0, 0, 50, 100];
+
+    // Likewise, there seems to be a basic 50-50 chance of either 0 or 1 negative.
+    // Define it this way so we can use the exact same RNG code to determine the number of negative stats
+    var rivenNegativeNumProbs = [50, 100];
+
+    // Get the name for the given stat
+    function getStatName(stat) {
+        return rivenStatList[stat][0];
+    }
+
+    // determine whether the given stat has the given flag
+    function statHasFlag(stat, flag) {
+        return rivenStatList[stat][1].indexOf(flag) >= 0;
+    }
+
+    // produce a list of all the stats with the given flag or flags
+    function getRivenStatGroup(flags) {
+        // todo: cache
+        var group = Array();
+        for (var i = 0; i < rivenStatList.length; i++) {
+            var match = true;
+            for (var j = 0; j < flags.length; j++) {
+                if (!statHasFlag(i, flags[j])) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
+                group.push(i);
+            }
+        }
+        return group;
+    }
+
+    // config model for criteria for a successful Riven roll.  The per-stat criteria is a list the size of the stat
+    // database; the value at each index indicates the priority for the corresponding stat.  The priorities are:
+    //   P: required positive
+    //   p: wanted positive
+    //   N: required negative
+    //   n: wanted negative
+    //   d: don't want
+    //   -: not applicable (rifle only with melee riven or vice versa)
+
+	class RivenCriterion {
+    	constructor() {
+    		this.name = "Criteria";
+    		this.requiredNumPositives = -1;
+    		this.requiredNumNegatives = -1;
+    		// each index corresponds to the same index in rivenStatList
+    		this.statPriority = Array(rivenStatList.length);
+    		// initialize to N/A
+    		for (var i = 0; i < rivenStatList.length; i++) {
+    		    this.statPriority[i] = "-";
+    		}
+    	}
+
+        hasTime() {
+            // fitting into the Mission model interface, there is no time data
+	        return false;
+        }
+
+        getStats(priority) {
+            // gets the stats with the given priority
+            var stats = Array();
+            for (var i = 0; i < this.statPriority.length; i++) {
+                if (this.statPriority[i] == priority) {
+                    stats.push(i);
+                }
+            }
+            return stats;
+        }
+
+        updatePriorities() {
+            // break out out the stat priority list into separate lists of stat indices for each priority
+            // do this lazily and cache it
+            if (!this.requiredPositives) {
+                this.requiredPositives = this.getStats("P");
+                this.wantedPositives = this.getStats("p");
+                this.requiredNegatives = this.getStats("N");
+                this.wantedNegatives = this.getStats("n");
+                // total number of applicable stats is the total number of all stats minus the N/A ones
+                this.numStats = this.statPriority.length - this.getStats("-").length;
+            }
+        }
+
+        // get the number of stats that are for this Riven type and the given "p" or "n" flag
+        getNumApplicableStats(flag) {
+            var count = 0;
+            for (var i = 0; i < this.statPriority.length; i++) {
+                if (this.statPriority[i] != "-" && statHasFlag(i, flag)) {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        // get the numbered stat that is for this Riven type, and the given "p" or "n" flag, and not already in use
+        getApplicableStat(index, skip, flag) {
+            var count = 0;
+            for (var i = 0; i < this.statPriority.length; i++) {
+                // priority of "-" means it's N/A, missing the flag basically means it's an exluded negative stat, and
+                // appearing in the skip array means it's already been used.
+                if (this.statPriority[i] != "-" && statHasFlag(i, flag) && skip.indexOf(i) == -1) {
+                    // found our count, return the identifying stat index
+                    if (count == index) {
+                        return i;
+                    }
+                    count++;
+                }
+            }
+            return -1;
+        }
+
+        verify(type) {
+            // make sure the state is updated
+            this.updatePriorities();
+            var errors = Array();
+            // sanity check on the size of the stat priorities list.
+            var rivenStatGroup = getRivenStatGroup(type);
+            if (rivenStatGroup.length != this.numStats) {
+                errors.push("wrong number of stat priorities");
+            }
+
+            // sanity check on the contents of the stat priorities list
+            for (var i = 0; i < this.statPriority.length; i++) {
+                if ("PpdnN-".indexOf(this.statPriority[i]) < 0) {
+                    errors.push("invalid priority: " + this.statPriority[i]);
+                }
+            }
+
+            // verification of the positive and negative sides are identical
+            errors = this.verifySide(errors, "positive", this.requiredNumPositives, this.requiredPositives, rivenPositiveNumProbs);
+            errors = this.verifySide(errors, "negative", this.requiredNumNegatives, this.requiredNegatives, rivenNegativeNumProbs);
+
+            return errors;
+        }
+
+
+       verifySide(errors, name, requiredNum, required, numProbs) {
+            // check the number of required stats
+            if (requiredNum > numProbs.length - 1) {
+                errors.push("Required " + name + "s is too high");
+
+            // check the required num is too negative
+            } else if (requiredNum < -1) {
+                errors.push("Required " + name + "s is too low");
+
+            // check if the required num is not a possible choice given the probability list
+            // either it's 0 and the cumulative probability of 0 is 0%
+            } else if ((requiredNum == 0 && numProbs[0] == 0) ||
+                // or it's > 0 and the difference in cumulative probability between num and num - 1 is 0%, meaning there 
+                // is a 0% change of RNG giving us this output
+                    (requiredNum > 0 && numProbs[requiredNum] == numProbs[requiredNum - 1])) {
+                errors.push("Required " + name + "s is invalid");
+            }
+
+            // make sure the number of required stats isn't more than the possible number of stats
+            if (required.length > numProbs.length - 1 ||
+                (requiredNum >= 0 && required.length > requiredNum)) {
+                errors.push("too many required " + name + " stats");
+            }
+            return errors;
+       }
+
+        accept(positiveList, negativeList) {
+            // determine whether the given Riven stats meet this criteria
+
+            // check against the required number of positive stats, if applicable        
+            if (this.requiredNumPositives > -1 && this.requiredNumPositives != positiveList.length) {
+                return false;
+            }
+            // check against the required number negative stats, if applicable        
+            if (this.requiredNumNegatives > -1 && this.requiredNumNegatives != negativeList.length) {
+                return false;
+            }
+            // make sure the state is updated
+            this.updatePriorities();
+
+            // see if the intersection of the Riven positive stats and our required positive stats includes all of our 
+            // required positive stats
+            if (intersection(positiveList, this.requiredPositives).length < this.requiredPositives.length) {
+                return false;
+            }
+
+            // pull out the leftover Riven positive stats after removing the required ones
+            var leftoverPositives = difference(positiveList, this.requiredPositives);
+
+            // intersect the leftover Riven positive stats with out wanted positive stats
+            var positiveInt = intersection(leftoverPositives, this.wantedPositives);
+
+            // If the size of that intersection is equal to the number of leftover Riven positive stats, then all of the 
+            // Riven positive stats are wanted, so we're good.
+            // Alternative, if the size of that intersection is equal to the wanted positive stats, then all of our 
+            // wanted positive stats are present, so we're still good.
+            if (positiveInt.length != leftoverPositives.length && positiveInt.length != this.wantedPositives.length) {
+                return false;
+            }
+
+            // todo: simplify the negative stat checking since there can only be one of them
+
+            // see if the intersection of the Riven negative stats and our required negative stats includes all of our 
+            // required negative stats
+            if (intersection(negativeList, this.requiredNegatives).length < this.requiredNegatives.length) {
+                return false;
+            }
+            // pull out the leftover Riven negative stats after removing the required ones
+            var leftoverNegatives = difference(negativeList, this.requiredNegatives);
+
+            // intersect the leftover Riven negative stats with out wanted negative stats
+            var negativeInt = intersection(leftoverNegatives, this.wantedNegatives);
+
+            // If the size of that intersection is equal to the number of leftover Riven negative stats, then all of the 
+            // Riven negative stats are wanted, so we're good.
+            // Alternative, if the size of that intersection is equal to the wanted negative stats, then all of our 
+            // wanted negative stats are present, so we're still good.
+            if (negativeInt.length != leftoverNegatives.length && negativeInt.length != this.wantedNegatives.length) {
+                return false;
+            }
+
+            // nothing else to check, we're good!
+            return true;
+        }
+
+		toString() {
+		    // serialize to a string
+		    var s = "";
+			s += writeName(this.name) + FIELD_SEP;
+			s += this.requiredNumPositives + FIELD_SEP;
+			s += this.requiredNumNegatives + FIELD_SEP;
+			// write the stat priority list as a simple character sequence, one per index
+			for (var i = 0; i < this.statPriority.length; i++) {
+			    s += this.statPriority[i];
+			}
+			return s;
+		}
+
+		fromString(s) {
+		    // deserialize from a string
+			var fields = split(s);
+			if (fields.length != 4) {
+    			return null;
+			}
+			this.name = readName(fields[0]);
+			this.requiredNumPositives = readIntWithDefault(fields[1], -1);
+			this.requiredNumNegatives = readIntWithDefault(fields[2], -1);
+			// read the stat priority list as a character sequence
+			for (var i = 0; i < this.statPriority.length; i++) {
+			    this.statPriority[i] = fields[3][i];
+			}
+
+			return this;
+		}
+	}
+
+    // config model for a riven roll
+	class RivenRoll {
+    	constructor() {
+    		this.name = "Riven Roll";
+    		// g: Gun
+    		// m: Melee
+    		this.type = "g";
+    		// list of RivenCriteria objects
+    		this.criteria = Array();
+    	}
+
+        add(criterion) {
+            this.criteria.push(criterion);
+        }
+
+		getNumDrops() {
+		    // matching the Mission interface, we have 1 drop event.
+    		return 1;
+		}
+
+        hasTime() {
+		    // matching the Mission interface, there is no time info.
+	        return false;
+        }
+
+		toString() {
+		    // serialize to a string
+		    var s = "";
+			s += writeName(this.name) + FIELD_SEP;
+		    s += writeName(this.type);
+			for (var i = 0; i < this.criteria.length; i++) {
+			    s += FIELD_SEP + GROUP_START + this.criteria[i].toString() + GROUP_END;
+			}
+			return s;
+		}
+
+		fromString(s) {
+		    // deserialize from a string
+			var fields = split(s);
+			if (fields.length < 3) {
+    			return null;
+			}
+			this.name = readName(fields[0]);
+			this.type = readName(fields[1]);
+			for (var i = 2; i < fields.length; i++) {
+			    this.add(new RivenCriterion().fromString(fields[i]));
+			}
+
+			return this;
+		}
+	}
+
+    // utility for creating an interesection of two lists
+    function intersection(list1, list2) {
+        var list3 = new Array();
+        for (var i = 0; i < list1.length; i++) {
+            if (list2.indexOf(list1[i]) >= 0) {
+                list3.push(list1[i]);
+            }
+        }
+        return list3;
+    }
+
+    // utility for subtracting one list from another
+    function difference(list1, list2) {
+        var list3 = new Array();
+        for (var i = 0; i < list1.length; i++) {
+            if (list2.indexOf(list1[i]) == -1) {
+                list3.push(list1[i]);
+            }
+        }
+        return list3;
     }
 
     //==============================================================
@@ -618,10 +1144,14 @@
 	}
 
 	function readInt(intString) {
+	    return readIntWithDefault(intString, 0);
+	}
+
+	function readIntWithDefault(intString, def) {
 	    // read a number from a string and convert any errors or negative values to zero.
 	    var i = Number.parseInt(intString);
 	    if (Number.isNaN(i) || i < 0) {
-	        return 0;
+	        return def;
 	    }
 	    return i;
 	}
@@ -710,12 +1240,20 @@
 
             // sum of the runs from all the trials
             this.total = 0;
+
             // the smallest number of runs in any trial
             this.min = Number.MAX_SAFE_INTEGER;
+            // A descriptive string from the trial with the smallest number of runs.
+            this.minString = null;
+
             // the largest number of runs in any trial
             this.max = 0;
             // A descriptive string from the trial with the largest number of runs.
             this.maxString = null;
+
+            // keep track of the largest bucket value
+            this.maxBucketValue = -1;
+
             // the total number of trials.
             this.numTrials = 0;
 
@@ -736,11 +1274,16 @@
 
             // make sure our distribution arrays are big enough and scaled appropriately for this trial's bucket
 			this.ensureScaleAndSize(result);
+			var bucket = result/this.scale;
 			// increment our distibution's bucket corresponding to this trial's number of runs
-			this.dist[result/this.scale] += 1;
+			this.dist[bucket] += 1;
+			// track the largest bucket
+			if (this.maxBucketValue < this.dist[bucket]) {
+			    this.maxBucketValue = this.dist[bucket];
+			}
 			// increment our cumulative distribution's bucket corresponding to this trial's number of runs, along with
 			// every bucket greater than that.
-			for (var i = result/this.scale; i < this.cDist.length; i++) {
+			for (var i = bucket; i < this.cDist.length; i++) {
 				this.cDist[i] += 1;
 			}
 			// add to our sum of all trials' runs
@@ -748,6 +1291,8 @@
 			// track the mininum number of runs
 			if (result < this.min) {
 				this.min = result;
+				// store a string description of the minimum run
+				this.minString = desc.toString();
 			}
 			// max is already set by ensureSize()
 			if (result >= this.max) {
@@ -1079,7 +1624,7 @@
 				this.x[i1]++;
 				// check that item's count against its required number
 				if (this.x[i1] + this.otherx[i1] == this.drop.items[i1].required) {
-				    // if the item has hit its requried number, increment the number of successful items
+				    // if the item has hit its required number, increment the number of successful items
 					this.numSuccess++;
 					// if the number of successful items has hit the drop's required number successes, then
 					// return success
@@ -1102,7 +1647,7 @@
 		        if (this.drop.items[d].name == itemName) {
 		            this.otherx[d]++;
                     if (this.x[d] + this.otherx[d] == this.drop.items[d].required) {
-                        // if the item has hit its requried number, increment the number of successful items
+                        // if the item has hit its required number, increment the number of successful items
                         this.numSuccess++;
                         // if the number of successful items has hit the drop's required number successes, then
                         // return success
@@ -1285,6 +1830,11 @@
             }
         }
 
+   		customResults() {
+   		    // nothing else to display
+   		    return null;
+   		}
+
 		toString() {
             // produce a desciptive string of this mission's results.
 
@@ -1310,7 +1860,14 @@
             // create a mission runner for each of our missions
             this.missionRunners = new Array(this.scenario.missions.length);
             for (var i = 0; i < this.scenario.missions.length; i++) {
-                this.missionRunners[i] = new MissionRunner(this.scenario.missions[i]);
+                var mission = this.scenario.missions[i];
+                if (mission instanceof Mission) {
+                    // This covers Mission Scenarios and Enemy Scenarios
+                    this.missionRunners[i] = new MissionRunner(mission);
+
+                } else if (mission instanceof RivenRoll) {
+                    this.missionRunners[i] = new RivenRollRunner(mission);
+                }
             }
             // see whether there is any time data to track
             this.hasTime = this.scenario.hasTime();
@@ -1385,6 +1942,20 @@
             }
 		}
 
+		customResults() {
+		    // assemble any custom results from our mission runners
+		    var results = Array();
+		    for (var m = 0; m < this.missionRunners.length; m++) {
+		        var mResults = this.missionRunners[m].customResults();
+		        if (mResults != null) {
+                    for (var i = 0; i < mResults.length; i++) {
+                        results.push(mResults[i]);
+                    }
+                }
+		    }
+		    return results.length == 0 ? null : results;
+		}
+
 		toString() {
             // produce a desciptive string of this missions list's results.
 
@@ -1421,6 +1992,192 @@
 			cProbs[i] = cProbs[i - 1] + items[i].prob;
 		}
 		return cProbs;
+	}
+
+    //==============================================================
+    // Riven Runner
+    //==============================================================
+
+    var rivenRollHistorySize = 5;
+
+    // runner for actually generating Rivens and checking against the criteria
+	class RivenRollRunner {
+	    constructor(rivenRoll) {
+            this.rivenRoll = rivenRoll;
+            // conforming to MissionRunner interface
+            this.mission = rivenRoll;
+
+            // track total number of missions and total mission time
+            this.totalMissions = 0;
+
+            // TrialData objects for holding the run and time results
+            this.totalResults = new TrialData();
+
+            // basic tracking for how many times each criteria is matched during the entire run
+            this.criteriaResults = Array();
+            for (var i = 0; i < this.rivenRoll.criteria.length; i++) {
+                this.criteriaResults.push(0);
+            }
+            // Store the last N rolls
+            this.history = Array();
+        }
+
+		verify() {
+		    var errors = Array();
+		    // whoops no criteria
+		    if (this.rivenRoll.criteria.length == 0) {
+		        errors.push("contains no criteria");
+		    }
+		    // whoops invalid riven type
+		    if (this.rivenRoll.type != "m" && this.rivenRoll.type != "g") {
+		        errors.push("invalid riven type");
+		    }
+		    // verify each criterion
+		    for (var c = 0; c < this.rivenRoll.criteria.length; c++) {
+		        var criterion = this.rivenRoll.criteria[c];
+		        var criterionErrors = criterion.verify(this.rivenRoll.type);
+		        for (var error in criterionErrors) {
+		            errors.push(criterion.name + " -> " + criterionErrors[error]);
+		        }
+		    }
+		    return errors;
+		}
+
+		reset() {
+	        // reset almost everything
+			this.totalMissions = 0;
+			this.totalMissionTime = 0;
+			// leave criteriaResults alone; it's cumulative over the whole run
+		}
+
+        generateStats(numStatProbs, usedStats, pn) {
+            // generate a random percentage between 0 and 100.
+            var d = Math.random() * 100.0;
+            // search the cumulative probability list for how many stats are generated
+            var num = binarySearch(numStatProbs, d);
+            // convert the "not found" result to an index
+            if (num < 0) {
+                num = -(num + 1);
+            }
+
+            var stats = Array();
+            // use the first criterion in the list to determine things like which stats are applicable.
+            var criterion = this.rivenRoll.criteria[0];
+            // get the total number of applicable stats with the given "p" or "n" flag.
+            var total = criterion.getNumApplicableStats(pn);
+            for (var i = 0; i < num; i++) {
+                // the actual number of stats we have to choose from is the total minus what's already been chosen
+                // generate a random integer between zero inclusive and the number of available stats exclusive.
+                var n = Math.floor(Math.random() * (total - usedStats.length));
+                // translate that count to an actual identifying stat index
+                var stat = criterion.getApplicableStat(n, usedStats, pn);
+                // add it to our stat list
+                stats.push(stat);
+                // add it to our total used stats list
+                usedStats.push(stat);
+            }
+
+            return stats;
+        }
+
+		run(scenaroRunner) {
+            // loop until we get a roll that passes one of the criteria
+            var success = false;
+
+			for (; !success; this.totalMissions++) {
+                var usedStats = new Array();
+                // save the generated stats on the object for later used by toString()
+                this.positiveStats = this.generateStats(rivenPositiveNumProbs, usedStats, "p");
+                this.negativeStats = this.generateStats(rivenNegativeNumProbs, usedStats, "n");
+
+                // loop over the criteria
+                for (var c = 0; c < this.rivenRoll.criteria.length; c++) {
+                    var criterion = this.rivenRoll.criteria[c];
+                    // check if the roll is acceptable
+                    if (criterion.accept(this.positiveStats, this.negativeStats)) {
+                        // this trial is done
+                        success = true;
+                        // increment the match count for this criteria
+                        // note that multiple criteria may match the same roll, so the match percentages may be greater
+                        // than 100%
+                        this.criteriaResults[c]++;
+					}
+				}
+			}
+
+			// we did it!
+
+			// save history
+            if (this.history.length < rivenRollHistorySize) {
+                // okay, so it isn't *technically* the last N results, it's the first N results since the last
+                // customResults() call.
+                this.history.push([this.totalMissions, this.positiveStats, this.negativeStats]);
+            }
+
+            // add the total number of mission runs to our results
+			this.totalResults.addResult(this.totalMissions, this);
+		}
+
+		otherSuccess(dropRunner, lastItemName) {
+            // conforming to MissionRunner interface
+		    // ignore
+		}
+
+		customResults() {
+            var results = Array();
+
+            // we have custom results if there is a history
+            if (this.history.length > 0) {
+                var s = "";
+                for (var i = 0; i < rivenRollHistorySize; i++) {
+                    if (i > 0) {
+                        // make it readable
+                        s += "<br/>\n";
+                    }
+                    s += "(" + this.history[i][0] + ") " + this.toStringStats(this.history[i][1], this.history[i][2]);
+                }
+                // clear it out
+                this.history = Array();
+
+                results.push(["Last " + rivenRollHistorySize + " rolls", s]);
+            }
+
+		    // we have more custom results if there is more than one criterion
+		    if (this.criteriaResults.length > 1) {
+                // build a list of criteria and what percentage of trials resulted in a match for each criterion
+                var s = "";
+                for (var i = 0; i < this.criteriaResults.length; i++) {
+                    if (i > 0) {
+                        // make it readable
+                        s += "<br/>\n";
+                    }
+                    s += this.rivenRoll.criteria[i].name + ": " + ((this.criteriaResults[i] / this.totalResults.numTrials) * 100).toFixed(0) + "%";
+                }
+
+                results.push(["Criteria met", s]);
+            }
+
+		    return results;
+		}
+
+		toString() {
+            // produce a desciptive string of this riven roll's results.
+            return this.toStringStats(this.positiveStats, this.negativeStats);
+		}
+
+		toStringStats(positiveStats, negativeStats) {
+            var s = "";
+            for (var i = 0; i < positiveStats.length; i++) {
+                if (i > 0) {
+                    s += ", ";
+                }
+                s += (statHasFlag(positiveStats[i], "r") ? "-" : "+") + getStatName(positiveStats[i]);
+            }
+            for (var i = 0; i < negativeStats.length; i++) {
+                s += ", " + (statHasFlag(negativeStats[i], "r") ? "+" : "-") + getStatName(negativeStats[i]);
+            }
+            return s;
+   		}
 	}
 
     //==============================================================
@@ -1503,6 +2260,23 @@
     // UI Builders
     //==============================================================
 
+    // track how many of each kind of scenario component we have
+    var numMissions = 0;
+    var numEnemies = 0;
+    var numRivenRolls = 0;
+
+    function updateAddMissionRivenButtons() {
+        // We don't *have* to restrict scenarios to only contain one kind of mission/enemy/Riven Roll, but we will in
+        // order to make things less confusing.
+        // "Add Mission" is disabled if there are any Enemies or Riven Rolls.  It's still enabled if there is already a
+        // Mission so that multiple missions can be added
+        document.getElementById("addMission").disabled = (numRivenRolls > 0) || (numEnemies > 0) ;
+        // "Add Enemy" is disabled if anything has been added
+        document.getElementById("addEnemy").disabled = (numMissions > 0) || (numEnemies > 0) || (numRivenRolls > 0);
+        // "Add Riven Roll" is disabled if anything has been added
+        document.getElementById("addRivenRoll").disabled = (numMissions > 0) || (numEnemies > 0) || (numRivenRolls > 0);
+    }
+
     function getScenario() {
         return document.getElementById('scenario');
     }
@@ -1525,16 +2299,23 @@
 
         // clear the results
         clearResults()
+
+        // reset scenario component counts
+        numMissions = 0;
+        numEnemies = 0;
+        numRivenRolls = 0;
+        // update button states
+        updateAddMissionRivenButtons();
     }
 
     function addMission(scenarioNode, autoPop) {
         // static HTML for each mission config
-        html = `
+        var html = `
         <tr class="missionRow">
             <td class="mission">
                 <div class="modelTitle">Mission</div>
                 <span class="tooltip">
-                    <input class="button delete" type="submit" value="Delete" onclick="deleteNode(getParent(this, 'missionRow'))"/>
+                    <input class="button delete" type="submit" value="Delete" onclick="deleteMission(getParent(this, 'missionRow'))"/>
                     <span class="tooltiptext">Remove this mission from the list.</span>
                 </span>
                 <table class="fieldTable">
@@ -1603,13 +2384,25 @@
             addDrop(newNode, true);
         }
 
+        // update button states
+        numMissions++;
+        updateAddMissionRivenButtons();
+
         // return the mission row element we just added
         return newNode;
     }
 
+    function deleteMission(missionNode) {
+        // delete the DOM element
+        deleteNode(missionNode);
+        // update button states
+        numMissions--;
+        updateAddMissionRivenButtons();
+    }
+
     function addDrop(missionNode, autoPop) {
         // static HTML for each drop config
-        html = `
+        var html = `
                 <div class="drop">
                     <div class="modelTitle">Drop Event</div>
                     <span class="tooltip">
@@ -1686,7 +2479,7 @@
 
     function addItem(dropNode) {
         // static HTML for each item config
-        html = `
+        var html = `
                     <div class="item">
                         <div class="modelTitle">Item</div>
                         <span class="tooltip">
@@ -1738,6 +2531,352 @@
         // return the item element we just added
         return newNode;
     }
+
+    //==============================================================
+    // Enemy UI builders
+    //==============================================================
+
+    function addEnemy(scenarioNode, autoPop) {
+        // static HTML for each enemy config
+        var html = `
+        <tr class="missionRow">
+            <td class="enemy">
+                <div class="modelTitle">Enemy</div>
+                <span class="tooltip">
+                    <input class="button delete" type="submit" value="Delete" onclick="deleteEnemy(getParent(this, 'missionRow'))"/>
+                    <span class="tooltiptext">Remove this enemy from the list.</span>
+                </span>
+                <table class="fieldTable">
+                    <tr>
+                        <td class="tooltip">
+                            Name:
+                            <span class="tooltiptextbottom">The name of the enemy</span>
+                        </td>
+                        <td>
+                            <input class="inputName" type="text" value="enemy"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="tooltip">
+                            Items Required:
+                            <span class="tooltiptextbottom">The number of items that must get their required number of drops during the course of a run, or '0' if all of them are required.</span>
+                        </td>
+                        <td>
+                            <input class="inputRequired" type="number" value="0"/>
+                        </td>
+                    </tr>
+                </table>
+                <div class="add">
+                    <span class="tooltip">
+                        <input class="button addButton" type="submit" value="Add Item" onclick="addItem(getParent(this, 'missionRow'))"/>
+                        <span class="tooltiptext">Add an item drop to the enemy.</span>
+                    </span>
+                </div>
+            </td>
+
+            <td class="missionResults">
+                <div class="trialResult"></div>
+                <div class="timeResult"></div>
+            </td>
+        </tr>
+        `;
+
+        // find the "add" row under the scenario
+        addNode = getLastChild(scenarioNode, "add");
+
+        // insert the mission HTML before the "add" row
+        addNode.insertAdjacentHTML("beforebegin", html);
+
+        // find the "missionRow" element we just added
+        newNode = addNode.previousElementSibling
+
+        // if someone clicked the "add enemy" button then go ahead and add an item.
+        if (autoPop) {
+            addItem(newNode);
+        }
+
+        // update button states
+        numEnemies++;
+        updateAddMissionRivenButtons();
+
+        // return the mission row element we just added
+        return newNode;
+    }
+
+    function deleteEnemy(enemyNode) {
+        // delete the DOM element
+        deleteNode(enemyNode);
+        // update button states
+        numEnemies--;
+        updateAddMissionRivenButtons();
+    }
+
+    //==============================================================
+    // Riven UI builders
+    //==============================================================
+
+    function addRivenRoll(scenarioNode, autoPop) {
+        // static HTML for each riven roll config
+        var html = `
+        <tr class="missionRow">
+            <td class="rivenRoll">
+                <div class="modelTitle">Riven Roll</div>
+                <span class="tooltip">
+                    <input class="button delete" type="submit" value="Delete" onclick="deleteRivenRoll(getParent(this, 'missionRow'))"/>
+                    <span class="tooltiptext">Remove this riven roll.</span>
+                </span>
+                <table class="fieldTable">
+                    <!-- No need for name field because there can only be one of these
+                    <tr>
+                        <td class="tooltip">
+                            Name:
+                            <span class="tooltiptextbottom">A descriptive name for the Riven Roll</span>
+                        </td>
+                        <td>
+                            <input class="inputName" type="text" value="Riven Roll"/>
+                        </td>
+                    </tr>
+                    -->
+                    <tr>
+                        <td class="tooltip">
+                            Riven Type:
+                            <span class="tooltiptextbottom">Select the type of Riven.</span>
+                        </td>
+                        <td>
+                            <select class="rivenTypeSelect" onchange="setRivenType(getParent(this, 'rivenRoll'), this.value)">
+                                <option value="g" selected>Gun</option>
+                                <option value="m">Melee</option>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+                <div class="add">
+                    <span class="tooltip">
+                        <input class="button addButton" type="submit" value="Add Criteria" onclick="addRivenCriterion(getParent(this, 'rivenRoll'), true)"/>
+                        <span class="tooltiptext">Add a criteria for a successful riven roll.</span>
+                    </span>
+                </div>
+            </td>
+            <td class="missionResults">
+                <div class="trialResult"></div>
+                <div class="timeResult"></div>
+            </td>
+        </tr>
+        `;
+
+        // find the "add" row under the scenario
+        var addNode = getLastChild(scenarioNode, "add");
+
+        // insert the riven roll HTML before the "add" row
+        addNode.insertAdjacentHTML("beforebegin", html);
+
+        // find the "missionRow" element we just added
+        var newNode = addNode.previousElementSibling
+
+        // go down a level to the "rivenRoll" div.
+        var rivenNode = getFirstChild(newNode, "rivenRoll");
+
+        // set the Riven type to Gun by default
+        setRivenType(rivenNode, "g");
+
+        // if someone clicked the "add riven roll" button then go ahead and add a criterion.
+        if (autoPop) {
+            addRivenCriterion(rivenNode, true);
+        }
+
+        // update button states
+        numRivenRolls++;
+        updateAddMissionRivenButtons();
+
+        // return the riven roll row element we just added
+        return rivenNode;
+    }
+
+    function deleteRivenRoll(rivenRollNode) {
+        // delete the DOM element
+        deleteNode(rivenRollNode);
+        // update button states
+        numRivenRolls--;
+        updateAddMissionRivenButtons();
+    }
+
+    function setRivenType(rivenNode, type) {
+        // make things easy, just save the type identifier directly on the DOM element
+        rivenNode.type = type;
+        // find all the criteria nodes
+        var criteriaNodes = getAllChildren(rivenNode, "drop");
+        for (var i = 0; i < criteriaNodes.length; i++) {
+            // reset the riven type on each criterion
+            setRivenCriterionType(criteriaNodes[i], type);
+        }
+    }
+
+    function addRivenCriterion(rivenNode, autoPop, statPriority) {
+        // static HTML for each riven criterion config
+        var html = `
+        <div class="drop">
+            <div class="modelTitle">Riven Criteria</div>
+            <span class="tooltip">
+                <input class="button delete" type="submit" value="Delete" onclick="deleteNode(getParent(this, 'drop'))"/>
+                <span class="tooltiptext">Remove this riven criteria.</span>
+            </span>
+            <span class="tooltip">
+                <input class="button delete" type="submit" value="Reset" onclick="clearRivenCriterion(getParent(this, 'drop'))"/>
+                <span class="tooltiptext">Reset this riven criteria.</span>
+            </span>
+            <table class="fieldTable">
+                <tr>
+                    <td class="tooltip">
+                        Name:
+                        <span class="tooltiptextbottom">A decriptive name for the riven criteria</span>
+                    </td>
+                    <td>
+                        <input class="inputName" type="text" value="Criteria"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="tooltip">
+                        Required positives:
+                        <span class="tooltiptextbottom">The required number of positive stats, or -1 if either 2 or 3 is fine.</span>
+                    </td>
+                    <td>
+                        <input class="inputRequired" type="number" value="-1"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="tooltip">
+                        Required negatives:
+                        <span class="tooltiptextbottom">The required number of negative stats, or -1 if either 0 or 1 is fine.</span>
+                    </td>
+                    <td>
+                        <input class="inputRequired" type="number" value="-1"/>
+                    </td>
+                </tr>
+            </table>
+            <table class="rivenFieldTable">
+            </table>
+        `;
+
+        // find the "add" row under the riven roll
+        var addNode = getLastChild(rivenNode, "add");
+
+        // insert the riven criterion HTML before the "add" row
+        addNode.insertAdjacentHTML("beforebegin", html);
+
+        // find the "missionRow" element we just added
+        var newNode = addNode.previousElementSibling
+
+        if (autoPop || statPriority) {
+            // if we're autopopulating, or we have a prefilled list of stat priorities, go ahead and build the stat list UI
+            // pretty sure one of those will always be true...
+            setRivenCriterionType(newNode, rivenNode.type, statPriority);
+        }
+
+        // return the riven criterion element we just added
+        return newNode;
+    }
+
+    // We want a separate radio button group for each stat's set of priority buttons, regardless of how many Riven
+    // Criteria are added or deleted.  The easy way is to just keep a global incrementing counter.
+    var radioId = 0;
+
+    function clearRivenCriterion(node) {
+        // reset all the priority selections back to "don't want".
+
+        // find all the individual "Don't Want" synthetic checkboxes
+        var checkmarks = getAllChildren(node, 'checkmark dontwant');
+        for (var i = 0; i < checkmarks.length; i++) {
+            // go up to the container and then find the actual checkbox input element
+            var parent = getParent(checkmarks[i], 'container');
+            var checkbox = getFirstChild(parent, 'radio');
+            // check it
+            checkbox.checked = "checked";
+            // have to call this manually
+            checkbox.onchange();
+        }
+    }
+
+    function setRivenCriterionType(node, type, statPriority) {
+        // find the stat priority table
+        var tableNode = getFirstChild(node, "rivenFieldTable");
+
+        // Just blow away all the current stat priorities and start over
+        // todo: migrate in place rather than rebuilding from scratch
+        tableNode.innerHTML = "";
+
+        // get the applicable stats for the given Riven type
+        var stats = getRivenStatGroup([type]);
+
+        for (var i = 0; i < stats.length; i++) {
+            var index = stats[i];
+            // if we have a starting set of priorities then use that, otherwise initialize to "Don't Want".
+            var priority = statPriority ? statPriority[index] : "d";
+            // increment the global radio button group counter
+            radioId++;
+
+            var html = `
+                    <tr class="rivenCriterionNode">
+                        <td>
+                            ${getStatName(index)}
+                        </td>
+                        <td>
+                            <div class="statPriorityGroup">`;
+            // if the stat is allowed for positive stats then show those checkboxes
+            if (statHasFlag(index, "p")) {
+                html += `
+                                <label class="container">
+                                    <input class="radio" type="radio" ${priority == "P" ? ' checked="checked"' : ""} name="radio${radioId}" onchange="setPriority(getParent(this, 'rivenCriterionNode'), 'P')">
+                                    <span class="checkmark positiveReq">++</span>
+                                </label>
+                                <label class="container">
+                                    <input class="radio" type="radio" ${priority == "p" ? ' checked="checked"' : ""} name="radio${radioId}" onchange="setPriority(getParent(this, 'rivenCriterionNode'), 'p')">
+                                    <span class="checkmark positive">+</span>
+                                </label>`;
+            }
+            // always show the "Don't Want" checkbox
+            html += `
+                                <label class="container">
+                                    <input class="radio" type="radio" ${priority == "d" ? ' checked="checked"' : ""} name="radio${radioId}" onchange="setPriority(getParent(this, 'rivenCriterionNode'), 'd')">
+                                    <span class="checkmark dontwant">?</span>
+                                </label>`;
+            // if the stat is allowed for negative stats then show those checkboxes
+            if (statHasFlag(index, "n")) {
+                html += `
+                                <label class="container">
+                                    <input class="radio" type="radio" ${priority == "n" ? ' checked="checked"' : ""} name="radio${radioId}" onchange="setPriority(getParent(this, 'rivenCriterionNode'), 'n')">
+                                    <span class="checkmark negative">-</span>
+                                </label>
+                                <!-- Required Negatives is pointless as long as you can only have one negative stat
+                                <label class="container">
+                                    <input class="radio" type="radio" ${priority == "N" ? ' checked="checked"' : ""} name="radio${radioId}" onchange="setPriority(getParent(this, 'rivenCriterionNode'), 'N')">
+                                    <span class="checkmark negativeReq">--</span>
+                                </label>
+                                -->`;
+            }
+
+            html += `
+                            </div>
+                        </td>
+                    </tr>
+            `;
+            //
+            tableNode.insertAdjacentHTML("beforeend", html);
+            newNode = getLastChild(tableNode, "rivenCriterionNode");
+            // the easy way, just save properties to the DOM element for the identifying index and the currently
+            // selected  priority
+            newNode.index = index;
+            newNode.priority = priority;
+        }
+    }
+
+    function setPriority(rivenCriterionNode, priority) {
+        // the easy way, just save a property to the DOM element
+        rivenCriterionNode.priority = priority;
+    }
+
+    //==============================================================
+    // misc UI
+    //==============================================================
 
     function showErrors(errors) {
         // find the error bar
@@ -1869,25 +3008,18 @@
 
         // loop over the missions
         for (var m = 0; m < scenarioModel.missions.length; m++) {
-            var missionModel = scenarioModel.missions[m];
-            // add a mission UI to the list
-            var mission = addMission(scenario, false);
-            // copy mission config
-            getFirstChild(mission, "inputName").value = missionModel.name;
-            getFirstChild(mission, "inputTime").value = missionModel.time;
-            getFirstChild(mission, "inputRequired").value = missionModel.requiredDrops;
-            getFirstChild(mission, "inputBailEarly").checked = missionModel.bailEarly;
+            var model = scenarioModel.missions[m];
+            if (model instanceof Enemy) {
+                var enemyModel = model;
 
-            // loop over the drops in this mission
-            for (var r = 0; r < missionModel.drops.length; r++) {
-                var dropModel = missionModel.drops[r];
-                // add a drop UI to the mission
-                var drop = addDrop(mission, false);
-                // copy drop config
-                getFirstChild(drop, "inputName").value = dropModel.name;
-                getFirstChild(drop, "inputCount").value = dropModel.dropsPerMission;
-                getFirstChild(drop, "inputTime").value = dropModel.time;
-                getFirstChild(drop, "inputRequired").value = dropModel.requiredItems;
+                // add a enemy UI to the list
+                var enemy = addEnemy(scenario, false);
+                // copy enemy config
+                getFirstChild(enemy, "inputName").value = enemyModel.name;
+                getFirstChild(enemy, "inputRequired").value = enemyModel.drops[0].requiredItems;
+
+                var dropModel = enemyModel.drops[0];
+                var drop = enemy;
 
                 // loop over the items in this drop
                 for (var d = 0; d < dropModel.items.length; d++) {
@@ -1898,6 +3030,62 @@
                     getFirstChild(item, "inputName").value = itemModel.name;
                     getFirstChild(item, "inputRate").value = itemModel.prob;
                     getFirstChild(item, "inputRequired").value = itemModel.required;
+                }
+
+            } else if (model instanceof Mission) {
+                var missionModel = model;
+
+                // add a mission UI to the list
+                var mission = addMission(scenario, false);
+                // copy mission config
+                getFirstChild(mission, "inputName").value = missionModel.name;
+                getFirstChild(mission, "inputTime").value = missionModel.time;
+                getFirstChild(mission, "inputRequired").value = missionModel.requiredDrops;
+                getFirstChild(mission, "inputBailEarly").checked = missionModel.bailEarly;
+
+                // loop over the drops in this mission
+                for (var r = 0; r < missionModel.drops.length; r++) {
+                    var dropModel = missionModel.drops[r];
+                    // add a drop UI to the mission
+                    var drop = addDrop(mission, false);
+                    // copy drop config
+                    getFirstChild(drop, "inputName").value = dropModel.name;
+                    getFirstChild(drop, "inputCount").value = dropModel.dropsPerMission;
+                    getFirstChild(drop, "inputTime").value = dropModel.time;
+                    getFirstChild(drop, "inputRequired").value = dropModel.requiredItems;
+
+                    // loop over the items in this drop
+                    for (var d = 0; d < dropModel.items.length; d++) {
+                        var itemModel = dropModel.items[d];
+                        // add a item UI to the drop
+                        var item = addItem(drop, false);
+                        // copy item config
+                        getFirstChild(item, "inputName").value = itemModel.name;
+                        getFirstChild(item, "inputRate").value = itemModel.prob;
+                        getFirstChild(item, "inputRequired").value = itemModel.required;
+                    }
+                }
+
+            } else if (model instanceof RivenRoll) {
+                var rivenRollModel = model;
+
+                // add a riven roll UI to the list
+                var rivenRoll = addRivenRoll(scenario, false);
+                // copy riven roll config
+                // getFirstChild(rivenRoll, "inputName").value = rivenRollModel.name;
+                getFirstChild(rivenRoll, "rivenTypeSelect").value = rivenRollModel.type;
+                setRivenType(rivenRoll, rivenRollModel.type);
+
+                // loop over the criteria in this riven roll
+                for (var c = 0; c < rivenRollModel.criteria.length; c++) {
+                    var criterionModel = rivenRollModel.criteria[c];
+                    // add a criterion UI to the riven roll
+                    // this will automatically select the criterion's stat priorities
+                    var criterion = addRivenCriterion(rivenRoll, false, criterionModel.statPriority);
+                    // copy other criterion config
+                    getFirstChild(criterion, "inputName").value = criterionModel.name;
+                    getFirstChild(criterion, "inputRequired").value = criterionModel.requiredNumPositives;
+                    getLastChild(criterion, "inputRequired").value = criterionModel.requiredNumNegatives;
                 }
             }
         }
@@ -1917,51 +3105,126 @@
         scenarioModel.resultElement = document.getElementById("scenarioResults");
 
         // loop over all the mission elements under the scenario
-        var missions = getAllChildren(scenario, "mission");
-        for (var m = 0; m < missions.length; m++) {
-            var mission = missions[m];
-            // create a new mission model and add it to the scenario
-            var missionModel = new Mission();
-            scenarioModel.add(missionModel);
-            // copy properties, sanitizing numeric inputs
-            missionModel.name = getFirstChild(mission, "inputName").value;
-            missionModel.time = readInt(getFirstChild(mission, "inputTime").value);
-            missionModel.bailEarly = getFirstChild(mission, "inputBailEarly").checked;
+        var missionRows = getAllChildren(scenario, "missionRow");
+        for (var m = 0; m < missionRows.length; m++) {
+            var missionRow = missionRows[m];
 
-            // add an extra property that stores the result element for the mission
-            missionModel.resultElement = getFirstChild(getParent(mission, "missionRow"), "missionResults");
-
-            // loop over all the drop elements under the mission
-            var drops = getAllChildren(mission, "drop");
-            for (var r = 0; r < drops.length; r++) {
-                var drop = drops[r];
-                // create a new drop model and add it to the mission
-                var dropModel = new Drop();
-                missionModel.add(dropModel);
+            // check for a Mission node
+            var mission = getFirstChild(missionRow, "mission");
+            if (mission) {
+                // create a new mission model and add it to the scenario
+                var missionModel = new Mission();
+                scenarioModel.add(missionModel);
                 // copy properties, sanitizing numeric inputs
-                dropModel.name = getFirstChild(drop, "inputName").value;
-                dropModel.dropsPerMission = readInt(getFirstChild(drop, "inputCount").value);
-                dropModel.time = readInt(getFirstChild(drop, "inputTime").value);
+                missionModel.name = getFirstChild(mission, "inputName").value;
+                missionModel.time = readInt(getFirstChild(mission, "inputTime").value);
+                missionModel.bailEarly = getFirstChild(mission, "inputBailEarly").checked;
 
-                // loop over all the item elements under the drop
-                var items = getAllChildren(drop, "item");
-                for (var d = 0; d < items.length; d++) {
-                    var item = items[d];
-                    // create a new item model and add it to the drop
-                    var itemModel = new Item();
-                    dropModel.add(itemModel);
+                // add an extra property that stores the result element for the mission
+                missionModel.resultElement = getFirstChild(getParent(mission, "missionRow"), "missionResults");
+
+                // loop over all the drop elements under the mission
+                var drops = getAllChildren(mission, "drop");
+                for (var r = 0; r < drops.length; r++) {
+                    var drop = drops[r];
+                    // create a new drop model and add it to the mission
+                    var dropModel = new Drop();
+                    missionModel.add(dropModel);
                     // copy properties, sanitizing numeric inputs
-                    itemModel.name = getFirstChild(item, "inputName").value;
-                    itemModel.prob = readFloat(getFirstChild(item, "inputRate").value);
-                    itemModel.required = readInt(getFirstChild(item, "inputRequired").value);
+                    dropModel.name = getFirstChild(drop, "inputName").value;
+                    dropModel.dropsPerMission = readInt(getFirstChild(drop, "inputCount").value);
+                    dropModel.time = readInt(getFirstChild(drop, "inputTime").value);
+
+                    // loop over all the item elements under the drop
+                    var items = getAllChildren(drop, "item");
+                    for (var d = 0; d < items.length; d++) {
+                        var item = items[d];
+                        // create a new item model and add it to the drop
+                        var itemModel = new Item();
+                        dropModel.add(itemModel);
+                        // copy properties, sanitizing numeric inputs
+                        itemModel.name = getFirstChild(item, "inputName").value;
+                        itemModel.prob = readFloat(getFirstChild(item, "inputRate").value);
+                        itemModel.required = readInt(getFirstChild(item, "inputRequired").value);
+                    }
+
+                    // since add() can change this, set it last
+                    dropModel.requiredItems = readInt(getFirstChild(drop, "inputRequired").value);
                 }
 
                 // since add() can change this, set it last
-                dropModel.requiredItems = readInt(getFirstChild(drop, "inputRequired").value);
-            }
+                missionModel.requiredDrops = readInt(getFirstChild(mission, "inputRequired").value);
 
-            // since add() can change this, set it last
-            missionModel.requiredDrops = readInt(getFirstChild(mission, "inputRequired").value);
+            } else {
+                // check for an Enemy node
+                var enemy = getFirstChild(missionRow, "enemy");
+                if (enemy) {
+                    // create a new enemy model and add it to the scenario
+                    var enemyModel = new Enemy();
+
+                    scenarioModel.add(enemyModel);
+                    // copy properties, sanitizing numeric inputs
+                    enemyModel.name = getFirstChild(enemy, "inputName").value;
+
+                    // add an extra property that stores the result element for the enemy
+                    enemyModel.resultElement = getFirstChild(getParent(enemy, "missionRow"), "missionResults");
+
+                    var drop = enemy;
+                    var dropModel = enemyModel.drops[0];
+                    dropModel.requiredItems = readInt(getFirstChild(drop, "inputRequired").value);
+
+                    // loop over all the item elements under the drop
+                    var items = getAllChildren(drop, "item");
+                    for (var d = 0; d < items.length; d++) {
+                        var item = items[d];
+                        // create a new item model and add it to the drop
+                        var itemModel = new Item();
+                        dropModel.add(itemModel);
+                        // copy properties, sanitizing numeric inputs
+                        itemModel.name = getFirstChild(item, "inputName").value;
+                        itemModel.prob = readFloat(getFirstChild(item, "inputRate").value);
+                        itemModel.required = readInt(getFirstChild(item, "inputRequired").value);
+                    }
+
+                } else {
+                    // check for a Riven Roll node
+                    var rivenRoll = getFirstChild(missionRow, "rivenRoll");
+                    if (rivenRoll) {
+                        // create a new riven roll model and add it to the scenario
+                        var rivenRollModel = new RivenRoll();
+                        scenarioModel.add(rivenRollModel);
+                        // copy properties, sanitizing numeric inputs
+                        // rivenRollModel.name = getFirstChild(rivenRoll, "inputName").value;
+                        rivenRollModel.type = rivenRoll.type;
+
+                        // add an extra property that stores the result element for the rivenRoll
+                        rivenRollModel.resultElement = getFirstChild(getParent(rivenRoll, "missionRow"), "missionResults");
+
+                        // loop over all the criterion elements under the riven roll
+                        var criteria = getAllChildren(rivenRoll, "drop");
+                        for (var r = 0; r < criteria.length; r++) {
+                            var criterion = criteria[r];
+
+                            // create a new criterion  model and add it to the riven roll
+                            var criterionModel = new RivenCriterion();
+                            rivenRollModel.add(criterionModel);
+
+                            // copy properties, sanitizing numeric inputs
+                            criterionModel.name = getFirstChild(criterion, "inputName").value;
+                            criterionModel.requiredNumPositives = readIntWithDefault(getFirstChild(criterion, "inputRequired").value, -1);
+                            criterionModel.requiredNumNegatives = readIntWithDefault(getLastChild(criterion, "inputRequired").value, -1);
+
+                            // loop over all the criterion elements
+                            var criterionNodes = getAllChildren(criterion, "rivenCriterionNode");
+                            for (var c = 0; c < criterionNodes.length; c++) {
+                                var criterionNode = criterionNodes[c];
+                                // pull the identifying stat index and priority from the DOM node properties
+                                criterionModel.statPriority[criterionNode.index] = criterionNode.priority;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         return scenarioModel;
@@ -1992,11 +3255,11 @@
     // smaller list for the histogram
     var percentilesForHistogram = [0.9, 0.99];
 
-    function updateResult(resultElement, title, unitName, trialData, time) {
+    function updateResult(resultElement, title, unitName, trialData, time, customResults) {
         // update a result element, either the run totals or time totals
 
         // if there's no data then clear the element
-        if (trialData === null) {
+        if (!trialData || trialData === null) {
             resultElement.innerHTML = "";
             return;
         }
@@ -2024,7 +3287,7 @@
         addResultContainer(resultElement, title, unitName);
 
         // update the statistics
-        updateResultStatistics(resultElement, title, unitName, trialData, dataScale);
+        updateResultStatistics(resultElement, title, unitName, trialData, dataScale, customResults);
 
         // (re)draw the histogram
         updateHistogram(resultElement, title, unitName, trialData, dataScale);
@@ -2110,7 +3373,7 @@
         updateAllResults(scenarioRunner);
     }
 
-    function updateResultStatistics(resultElement, title, unitName, trialData, dataScale) {
+    function updateResultStatistics(resultElement, title, unitName, trialData, dataScale, customResults) {
         // find and update the statistics element
         var statisticsElement = getFirstChild(resultElement, "statistics");
         var html = `
@@ -2212,6 +3475,24 @@
                         <tr>
                             <td class="statName">
                                 <div class="tooltip">
+                                    Best case:
+                                    <span class="tooltipTextBottom">This is the minimum result from the current simulation run.</span>
+                                </div>
+                            </td>
+                            <td class="statValue">
+                                ${(trialData.min * dataScale).toFixed(dataScale < 1 ? 2 : 0)} (${trialData.dist[trialData.min/trialData.scale]} time${trialData.dist[trialData.min/trialData.scale] > 1 ? "s" : ""})
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <div class="worstCase">
+                                    ${trialData.minString}
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="statName">
+                                <div class="tooltip">
                                     Worst case:
                                     <span class="tooltipTextBottom">This is the maximum result from the current simulation run.</span>
                                 </div>
@@ -2226,7 +3507,31 @@
                                     ${trialData.maxString}
                                 </div>
                             </td>
+                        </tr>`;
+
+            // throw custom results in there, if applicable
+            if (customResults && customResults != null) {
+                for (var i = 0; i < customResults.length; i++) {
+                    html += `
+                        <tr>
+                            <td class="statName">
+                                ${customResults[i][0]}:
+                            </td>
+                            <td class="statValue">
+                            </td>
                         </tr>
+                        <tr>
+                            <td colspan="2">
+                                <div class="worstCase">
+                                    ${customResults[i][1]}
+                                </div>
+                            </td>
+                        </tr>`;
+                }
+            }
+
+
+            html += `
                     </table>
             `;
         statisticsElement.innerHTML = html;
@@ -2271,13 +3576,8 @@
             var maxBucket = trialData.numTrials;
 
         } else {
-            // with probabilty density we have to search for the max value
-            var maxBucket = 0;
-            for (var n = 0; n < max + 1; n++) {
-                if (h[n] > maxBucket) {
-                    maxBucket = h[n];
-                }
-            }
+            // with probabilty density it's already tracking the max value for us
+            var maxBucket = trialData.maxBucketValue;
         }
 
         // get the average so we can mark it
@@ -2562,7 +3862,7 @@
 		    getFirstChild(scenarioRunner.scenario.resultElement, "trialResult"),
 		    scenarioRunner.scenario.name,
 		    scenarioRunner.missionRunners.length == 1 ? scenarioRunner.missionRunners[0].mission.name : "Total Missions",
-		    scenarioRunner.totalResults, false);
+		    scenarioRunner.totalResults, false, scenarioRunner.customResults());
 
         // update the total time results, or clear it if there is no time results
         updateResult(
@@ -2618,10 +3918,12 @@
     function startRun() {
         // disable/enable everything accordingly
         document.getElementById('startButton').disabled = true;
+        document.getElementById('startDiv').className = "utilHidden";
         document.getElementById('samplesSelect').disabled = true;
         document.getElementById('stopAfter').disabled = true;
         setAllInputsDisabled(getScenario(), true);
         document.getElementById('stopButton').disabled = false;
+        document.getElementById('stopDiv').className = "util";
         document.getElementById('clearButton').disabled = true;
 
         // update state
@@ -2677,10 +3979,14 @@
     function stopRun() {
         // disable/enable everything accordingly
         document.getElementById('startButton').disabled = false;
+        document.getElementById('startDiv').className = "util";
         document.getElementById('samplesSelect').disabled = false;
         document.getElementById('stopAfter').disabled = false;
         setAllInputsDisabled(getScenario(), false);
+        // the previous method will indiscriminately enable everthing, so we need to re-set the "Add X" buttons' states
+        updateAddMissionRivenButtons();
         document.getElementById('stopButton').disabled = true;
+        document.getElementById('stopDiv').className = "utilHidden";
         document.getElementById('clearButton').disabled = false;
         // update state
         stopped = true;
@@ -2778,49 +4084,55 @@
                 <span class="tooltip">
                     <select id="samplesSelect" onchange="setModelString(this.value)">
                         <option value="" disabled selected>Select one...</option>
-                        <option value="" disabled>Frames...</option>
+                        <option value="" disabled>---Frames---</option>
                         <!-- These frame samples are in rough order from least to most average time -->
-                        <option value="Standard+Boss+Frame_{Assassinate_1_10_y_{Complete_1_3_0_{Helmet_38.7200_1}_{Chassis_38.7200_1}_{Systems_22.5600_1}}}">Standard Boss Frame</option>
-                        <option value="Ash_{Grineer+Manic_1_0_y_{Kill_1_3_0_{Chassis_12.7776_1}_{Helmet_12.7776_1}_{Systems_7.4480_1}}}">Ash</option>
-                        <option value="Gara_{Bounty+5-15_0_0_y_{Stage+2_1_0_6_{Chassis_7.5200_1}}_{Stage+3_1_0_3_{Chassis_30.5600_1}}}_{Bounty+10-20_0_0_y_{Stage+2_1_0_6_{Systems_9.5200_1}}_{Stage+3_1_0_3_{Systems_21.8200_1}}}_{Bounty+20-30_0_0_y_{Stage+3_1_0_9_{Helmet_8.4200_1}}_{Stage+4_1_0_3_{Helmet_20.5100_1}}}">Gara</option>
-                        <option value="Octavia_{ODS_1_0_y_{Rotation+C_1_1_20_{Helmet_22.5600_1}}}_{Lua+Crossfire+With+Caches,+Music+Room_2_5_y_{Music+Room+(guessing+at+spawn+rate)_1_1_0_{Chassis_25.0000_1}}_{Cache+A_1_1_5_{Systems_22.5600_1}}}">Octavia</option>
-                        <option value="Revenant_{Bounty+20-40_1_3_y_{Stage+2_1_1_3_{Systems_8.8700_1}}_{Stage+3_1_1_3_{Systems_8.6833_1}}_{Stage+4_1_1_3_{Systems_20.1700_1}}}_{Bounty+30-50_1_3_y_{Stage+2,3_2_1_3_{Chassis_8.4500_1}}_{Stage+4_1_1_3_{Chassis_8.2733_1}}_{Stage+5_1_1_3_{Chassis_19.3667_1}}}_{Bounty+40-60_1_9_y_{Stage+4_1_1_3_{Helmet_6.7600_1}}_{Stage+5_1_1_3_{Helmet_10.0200_1}}}">Revenant</option>
-                        <option value="Revenant+(no+bail+early)_{Bounty+20-40_1_3_n_{Stage+2_1_1_3_{Systems_8.8700_1}}_{Stage+3_1_1_3_{Systems_8.6833_1}}_{Stage+4_1_1_3_{Systems_20.1700_1}}}_{Bounty+30-50_1_3_n_{Stage+2,3_2_1_3_{Chassis_8.4500_1}}_{Stage+4_1_1_3_{Chassis_8.2733_1}}_{Stage+5_1_1_3_{Chassis_19.3667_1}}}_{Bounty+40-60_1_9_n_{Stage+4_1_1_3_{Helmet_6.7600_1}}_{Stage+5_1_1_3_{Helmet_10.0200_1}}}">Revenant (no bail early)</option>
-                        <option value="Equinox_{Uranus+Assassinate_1_10_y_{Kill+Tyl_1_8_0_{Night+Aspect_11.2800_1}_{Night+Chassis_12.9100_1}_{Night+Systems_12.9100_1}_{Night+Helmet_12.9100_1}_{Day+Aspect_11.2800_1}_{Day+Chassis_12.9100_1}_{Day+Systems_12.9100_1}_{Day+Helmet_12.9100_1}}}">Equinox</option>
-                        <option value="Nidus_{Infested+Salvage_1_0_y_{Rotation+C_1_3_20_{Systems_14.2900_1}_{Helmet_14.2900_1}_{Chassis_14.2900_1}}}">Nidus</option>
-                        <option value="Ivara_{Tier+1+Spy_1_10_y_{Rotation+C_1_1_0_{Systems_9.0900_1}}}_{Tier+2+Spy_1_10_y_{Rotation+C_1_1_0_{Chassis_5.6400_1}}}_{Tier+3+Spy_1_10_y_{Rotation+C_1_2_0_{Helmet_7.5200_1}_{BP_7.5200_1}}}">Ivara</option>
-                        <option value="Khora_{Onslaught_3_0_y_{Rotation+A_2_1_5_{Chassis_8.3300_1}}_{Rotation+B_1_1_5_{Helmet_7.6900_1}}_{Rotation+C_1_2_5_{Systems_5.6400_1}_{BP_5.6400_1}}}">Khora</option>
+                        <option value="Standard+Boss+Frame_{m_Assassinate_0_10_y_{Complete_1_0_0_{Helmet_38.7200_1}_{Chassis_38.7200_1}_{Systems_22.5600_1}}}">Standard Boss Frame</option>
+                        <option value="Ash_{e_Grineer+Manic_0_0_y_{Kill_1_0_0_{Chassis_12.7776_1}_{Helmet_12.7776_1}_{Systems_7.4480_1}}}">Ash</option>
+                        <option value="Gara_{m_Bounty+5-15_0_0_y_{Stage+2_1_0_6_{Chassis_7.5200_1}}_{Stage+3_1_0_3_{Chassis_30.5600_1}}}_{m_Bounty+10-20_0_0_y_{Stage+2_1_0_6_{Systems_9.5200_1}}_{Stage+3_1_0_3_{Systems_21.8200_1}}}_{m_Bounty+20-30_0_0_y_{Stage+3_1_0_9_{Helmet_8.4200_1}}_{Stage+4_1_0_3_{Helmet_20.5100_1}}}">Gara</option>
+                        <option value="Octavia_{m_ODS_0_0_y_{Rotation+C_1_0_20_{Helmet_22.5600_1}}}_{m_Lua+Crossfire+With+Caches,+Music+Room_0_5_y_{Music+Room+(guessing+at+spawn+rate)_1_1_0_{Chassis_25.0000_1}}_{Cache+A_1_0_5_{Systems_22.5600_1}}}">Octavia</option>
+                        <option value="Revenant_{m_Bounty+20-40_0_3_y_{Stage+2_1_0_3_{Systems_8.8700_1}}_{Stage+3_1_0_3_{Systems_8.6833_1}}_{Stage+4_1_0_3_{Systems_20.1700_1}}}_{m_Bounty+30-50_0_3_y_{Stage+2,3_2_0_3_{Chassis_8.4500_1}}_{Stage+4_1_0_3_{Chassis_8.2733_1}}_{Stage+5_1_0_3_{Chassis_19.3667_1}}}_{m_Bounty+40-60_0_9_y_{Stage+4_1_0_3_{Helmet_6.7600_1}}_{Stage+5_1_0_3_{Helmet_10.0200_1}}}">Revenant</option>
+                        <option value="Revenant+(no+bail+early)_{m_Bounty+20-40_0_3_n_{Stage+2_1_0_3_{Systems_8.8700_1}}_{Stage+3_1_0_3_{Systems_8.6833_1}}_{Stage+4_1_0_3_{Systems_20.1700_1}}}_{m_Bounty+30-50_0_3_n_{Stage+2,3_2_0_3_{Chassis_8.4500_1}}_{Stage+4_1_0_3_{Chassis_8.2733_1}}_{Stage+5_1_0_3_{Chassis_19.3667_1}}}_{m_Bounty+40-60_0_9_n_{Stage+4_1_0_3_{Helmet_6.7600_1}}_{Stage+5_1_0_3_{Helmet_10.0200_1}}}">Revenant (no bail early)</option>
+                        <option value="Equinox_{m_Uranus+Assassinate_0_10_y_{Kill+Tyl_1_0_0_{Night+Aspect_11.2800_1}_{Night+Chassis_12.9100_1}_{Night+Systems_12.9100_1}_{Night+Helmet_12.9100_1}_{Day+Aspect_11.2800_1}_{Day+Chassis_12.9100_1}_{Day+Systems_12.9100_1}_{Day+Helmet_12.9100_1}}}">Equinox</option>
+                        <option value="Nidus_{m_Infested+Salvage_0_0_y_{Rotation+C_1_0_20_{Systems_14.2900_1}_{Helmet_14.2900_1}_{Chassis_14.2900_1}}}">Nidus</option>
+                        <option value="Ivara_{m_Tier+1+Spy_0_10_y_{Rotation+C_1_0_0_{Systems_9.0900_1}}}_{m_Tier+2+Spy_0_10_y_{Rotation+C_1_0_0_{Chassis_5.6400_1}}}_{m_Tier+3+Spy_0_10_y_{Rotation+C_1_0_0_{Helmet_7.5200_1}_{BP_7.5200_1}}}">Ivara</option>
+                        <option value="Khora_{m_Onslaught_0_0_y_{Rotation+A_2_0_5_{Chassis_8.3300_1}}_{Rotation+B_1_0_5_{Helmet_7.6900_1}}_{Rotation+C_1_0_5_{Systems_5.6400_1}_{BP_5.6400_1}}}">Khora</option>
                         <!-- The simulation isn't really built for these, but they do work -->
-                        <option value="" disabled>Mods...</option>
-                        <option value="Argon+Scope_{Torment_1_0_y_{Defeat_1_1_0_{Argon+Scope_4.0400_1}}}">Argon Scope</option>
-                        <option value="Four+Riders_{Grineer+Manic_1_0_y_{Kill_1_1_0_{Four+Riders_0.3350_1}}}">Four Riders</option>
-                        <option value="Vengeful+Revenant_{Conculyst_1_0_y_{Kill_1_1_0_{Vengeful+Revenant_0.4170_1}}}">Vengeful Revenant</option>
-                        <option value="Condition+Overload_{Drekar+Butcher_1_0_y_{Kill_1_1_0_{Condition+Overload_0.0201_1}}}">Condition Overload</option>
-                        <option value="Guardian+Derision_{Prod+Crewman_1_0_y_{Kill_1_1_0_{Guardian+Derision_0.0150_1}}}">Guardian Derision</option>
-                        <option value="Full+Hunter+Set_{Level+15-25+Ghoul+Bounty_3_0_y_{Stage+1_1_1_3_{Adrenaline_33.3300_1}}_{Stage+2,+3_2_2_3_{Adrenaline_11.7400_1}_{Munitions_9.3900_1}}_{Stage+4_1_2_3_{Munitions_11.9000_1}_{Track_11.9000_1}}}_{Level+40-50+Ghoul+Bounty_4_0_y_{Stage+1_1_1_3_{Recovery_33.3300_1}}_{Stage+2,+3_2_2_3_{Recovery_11.7400_1}_{Synergy_9.3900_1}}_{Stage+4_1_3_3_{Recovery_10.2900_1}_{Synergy_8.2300_1}_{Command_8.2300_1}}_{Stage+5_1_2_3_{Synergy_11.9000_1}_{Command_11.9000_1}}}">Full Hunter Set</option>
-                        <option value="All+Corrupted+Mods_{Derelict+Exterminate_1_5_y_{Vault_1_0_0_{Spoiled+Strike_4.1700_1}_{Corrupt+Charge_4.1700_1}_{Hollow+Point_4.1700_1}_{Magnum+Force_4.1700_1}_{Tainted+Clip_4.1700_1}_{Critical+Delay_4.1700_1}_{Heavy+Caliber_4.1700_1}_{Tainted+Mag_4.1700_1}_{Vile+Precision_4.1700_1}_{Narrow+Minded_4.1700_1}_{Fleeting+Expertise_4.1700_1}_{Blind+Rage_4.1700_1}_{Overextended_4.1700_1}_{Tainted+Shell_4.1700_1}_{Vicious+Spread_4.1700_1}_{Burdened+Magazine_4.1700_1}_{Anemic+Agility_4.1700_1}_{Vile+Acceleration_4.1700_1}_{Frail+Momentum_4.1700_1}_{Critical+Deceleration_4.1700_1}_{Creeping+Bullseye_4.1700_1}_{Transient+Fortitude_4.1700_1}_{Depleted+Reload_4.1700_1}}}">All Corrupted Mods</option>
+                        <option value="" disabled>---Mods---</option>
+                        <option value="Argon+Scope_{e_Torment_0_0_y_{Kill_1_0_0_{Argon+Scope_4.0400_1}}}">Argon Scope</option>
+                        <option value="Four+Riders_{e_Grineer+Manic_0_0_y_{Kill_1_0_0_{Four+Riders_0.3350_1}}}">Four Riders</option>
+                        <option value="Vengeful+Revenant_{e_Conculyst_0_0_y_{Kill_1_0_0_{Vengeful+Revenant_0.4170_1}}}">Vengeful Revenant</option>
+                        <option value="Condition+Overload_{e_Drekar+Butcher_0_0_y_{Kill_1_0_0_{Condition+Overload_0.0201_1}}}">Condition Overload</option>
+                        <option value="Guardian+Derision_{e_Prod+Crewman_0_0_y_{Kill_1_0_0_{Guardian+Derision_0.0150_1}}}">Guardian Derision</option>
+                        <option value="Full+Hunter+Set+(Ghouls)_{m_Level+15-25+Ghoul+Bounty_0_0_y_{Stage+1_1_0_3_{Adrenaline_33.3300_1}}_{Stage+2,+3_2_0_3_{Adrenaline_11.7400_1}_{Munitions_9.3900_1}}_{Stage+4_1_0_3_{Munitions_11.9000_1}_{Track_11.9000_1}}}_{m_Level+40-50+Ghoul+Bounty_0_0_y_{Stage+1_1_0_3_{Recovery_33.3300_1}}_{Stage+2,+3_2_0_3_{Recovery_11.7400_1}_{Synergy_9.3900_1}}_{Stage+4_1_0_3_{Recovery_10.2900_1}_{Synergy_8.2300_1}_{Command_8.2300_1}}_{Stage+5_1_0_3_{Synergy_11.9000_1}_{Command_11.9000_1}}}">Full Hunter Set (Ghouls)</option>
+                        <option value="Full+Hunter+Set+(Plague+Star)_{m_Plague+Star_0_15_y_{Kill+Hemocyte_4_0_0_{Hunter+Command_10.5300_1}_{Hunter+Recovery_28.9500_1}_{Hunter+Synergy_10.5300_1}_{Hunter+Munitions_10.5300_1}_{Hunter+Track_10.5300_1}_{Hunter+Adrenaline_28.9500_1}}}">Full Hunter Set (Plague Star)</option>
+                        <option value="All+Corrupted+Mods_{m_Derelict+Exterminate_0_5_y_{Vault_1_0_0_{Spoiled+Strike_4.1700_1}_{Corrupt+Charge_4.1700_1}_{Hollow+Point_4.1700_1}_{Magnum+Force_4.1700_1}_{Tainted+Clip_4.1700_1}_{Critical+Delay_4.1700_1}_{Heavy+Caliber_4.1700_1}_{Tainted+Mag_4.1700_1}_{Vile+Precision_4.1700_1}_{Narrow+Minded_4.1700_1}_{Fleeting+Expertise_4.1700_1}_{Blind+Rage_4.1700_1}_{Overextended_4.1700_1}_{Tainted+Shell_4.1700_1}_{Vicious+Spread_4.1700_1}_{Burdened+Magazine_4.1700_1}_{Anemic+Agility_4.1700_1}_{Vile+Acceleration_4.1700_1}_{Frail+Momentum_4.1700_1}_{Critical+Deceleration_4.1700_1}_{Creeping+Bullseye_4.1700_1}_{Transient+Fortitude_4.1700_1}_{Depleted+Reload_4.1700_1}}}">All Corrupted Mods</option>
+                        <!-- Riven-related scenarios -->
+                        <option value="" disabled>---Rivens---</option>
+                        <option value="90+Rivens_{m_Sortie_0_0_y_{Complete_1_0_0_{Riven_26.0800_90}}}">90 Rivens</option>
+                        <option value="Riven+for+a+Specific+Rifle_{m_Sortie_0_0_y_{Complete_1_0_0_{One+of+62+possible+Rifle+Rivens_0.1095_1}}}">Riven for a Specific Rifle</option>
+                        <option value="Decent+Melee+Riven_{r_Riven+Roll_m_{Decent_-1_-1_-pdddnnpppdppppn--d--p-dp-dpd--}}">Decent Melee Riven</option>
+                        <option value="Basic+Damage+Gun+Riven_{r_Riven+Roll_g_{Damage_-1_-1_n-ddd--p-p-pppp-pndnpppd-dddnnn}}">Basic Damage Gun Riven</option>
+                        <option value="Crit+or+Status+Melee+Riven_{r_Riven+Roll_m_{Crit_-1_-1_-pdddnnppPdppppn--d--p-dp-ddn--}_{Status_-1_-1_-pdddnnpdnndpppn--d--p-dp-pPp--}}">Crit or Status Melee Riven</option>
+                        <option value="Godlike+Lanka+Riven_{r_Riven+Roll_g_{Hallelujah_-1_-1_n-nnn--d-p-ppdd-ddndpddn-dnnnnn}}">Godlike Lanka Riven</option>
                         <!-- Just some miscellaneous rough grinds -->
-                        <option value="" disabled>Misc...</option>
-                        <option value="Radshare_{Fissure_1_0_y_{Crack+Relic_4_1_0_{Rare_10.0000_1}}}">Radshare</option>
-                        <option value="Solo+Radiant_{Fissure_1_0_y_{Crack+Relic_1_1_0_{Rare_10.0000_1}}}">Solo Radiant</option>
-                        <option value="Three+Axi+S3+Relics_{Mot_1_0_y_{Rotation+C_1_1_20_{Axi+S3_11.1100_3}}}">Three Axi S3 Relics</option>
-                        <option value="90+Rivens_{Sortie_1_0_y_{Complete_1_1_0_{Riven_26.0800_90}}}">90 Rivens</option>
-                        <option value="Specific+Rifle+Riven_{Sortie_1_0_y_{Complete_1_1_0_{One+of+62+possible+Rifle+Rivens_0.1095_1}}}">Specific Rifle Riven</option>
-                        <!-- The Riven roll probabilities are not published, so we don't actually know the odds for sure
-                        <option value="Really+Good+Lanka+Riven_{Roll_1_0_y_{Roll_1_1_0_{2+of+Crit+Chance,+Crit+Damage,+Multishot+and+harmless+negative+stat_0.6394_1}}}">Really Good Lanka Riven</option>
-                        -->
-                        <option value="Legendary+Core_{Sortie_1_0_y_{Complete_1_1_0_{Legendary+Core_0.1800_1}}}">Legendary Core</option>
-                        <option value="Miter_{Ceres+Ass_1_0_y_{Kill+Krill_1_5_0_{Barrel_16.6700_1}_{Blade_16.6700_1}_{Handle_16.6700_1}_{Chassis_16.6700_1}_{Blueprint_16.6700_1}}}">Miter</option>
+                        <option value="" disabled>---Misc---</option>
+                        <option value="Radshare_{m_Fissure_0_0_y_{Crack+Relic_4_0_0_{Rare_10.0000_1}}}">Radshare</option>
+                        <option value="Solo+Radiant_{m_Fissure_0_0_y_{Crack+Relic_1_0_0_{Rare_10.0000_1}}}">Solo Radiant</option>
+                        <option value="Three+Axi+S3+Relics_{m_Mot_0_0_y_{Rotation+C_1_0_20_{Axi+S3_11.1100_3}}}">Three Axi S3 Relics</option>
+                        <option value="Miter_{m_Ceres+Ass_0_10_y_{Kill+Krill_1_0_0_{Barrel_16.6700_1}_{Blade_16.6700_1}_{Handle_16.6700_1}_{Chassis_16.6700_1}_{Blueprint_16.6700_1}}}">Miter</option>
+                        <option value="Imperator+Vandal_{m_Fomorian_0_0_y_{Complete_1_0_0_{Barrel_11.2800_1}_{Receiver_11.2800_1}_{Blueprint_38.7200_1}}}">Imperator Vandal</option>
                         <!-- get ready to cry -->
-                        <option value="Arcane+Energize+Set_{Tridolon+Hunt_1_0_y_{Hydrolyst+Capture_1_1_0_{Arcane+Energize_5.0000_10}}}">Arcane Energize Set</option>
-                        <option value="Shadow+Stalker_{I+AM+YOUR+RECKONING_1_0_y_{WHAT+HAVE+YOU...+DONE_1_6_0_{Scimitar+Engines+BP_1.0050_1}_{Broken+War+BP_2.7650_1}_{Dread+BP_37.9400_1}_{Despair+BP_2.7650_1}_{Hate+BP_2.7650_1}_{War+BP_2.7650_1}}}">Shadow Stalker</option>
-                        <option value="War+Parts_{Conculyst_1_0_y_{Kill_1_2_0_{War+Hilt+BP_0.5000_2}_{War+Blade+BP_0.5000_1}}}">War Parts</option>
-                        <option value="Braton+and+Lato+Vandal_{Elite+Onslaught_3_0_y_{Rotation+A_2_1_5_{Lato+Receiver_2.0100_1}}_{Rotation+B_1_3_5_{Braton+Barrel_4.4200_1}_{Braton+Receiver_4.4200_1}_{Lato+BP_2.0100_1}}_{Rotation+C_1_3_5_{Braton+Stock_2.2100_1}_{Braton+BP_2.0100_1}_{Lato+Barrel_2.2100_1}}}">Braton and Lato Vandal</option>
-                        <option value="Xiphos_{Tier+1+Sabotage_1_10_y_{Rotation+C_1_1_0_{Fuselage_0.5000_1}}}_{Tier+2+Sabotage_1_10_y_{Rotation+C_1_1_0_{Engines_0.5000_1}}}_{Tier+3+Sabotage_1_10_y_{Rotation+C_1_1_0_{Avionics_0.5000_1}}}">Xiphos</option>
+                        <option value="All+Razorback+Drops_{e_Razorback_0_0_y_{Kill_1_0_0_{Gorgon+Wraith+Blueprint_18.9700_1}_{Gorgon+Wraith+Barrel_18.9700_1}_{Gorgon+Wraith+Receiver_18.9700_1}_{Gorgon+Wraith+Stock_18.9700_1}_{Bore_5.5300_1}_{Piercing+Caliber_5.5300_1}_{Breach+Loader_5.5300_1}_{Augur+Strike_5.5300_1}_{Magma+Chamber_1.0100_1}_{Searing+Steel_1.0100_1}}}">All Razorback Drops</option>
+                        <option value="Arcane+Energize+Set_{m_Tridolon+Hunt_0_0_y_{Hydrolyst+Capture_1_0_0_{Arcane+Energize_5.0000_10}}}">Arcane Energize Set</option>
+                        <option value="All+Shadow+Stalker+Drops_{e_I+AM+YOUR+RECKONING_0_0_y_{Kill_1_0_0_{Scimitar+Engines+BP_1.0050_1}_{Broken+War+BP_2.7650_1}_{Dread+BP_37.9400_1}_{Despair+BP_2.7650_1}_{Hate+BP_2.7650_1}_{War+BP_2.7650_1}}}">All Shadow Stalker Drops</option>
+                        <option value="War+Parts_{e_Conculyst_0_0_y_{Kill_1_0_0_{War+Hilt+BP_0.5000_2}_{War+Blade+BP_0.5000_1}}}">War Parts</option>
+                        <option value="Braton+and+Lato+Vandal_{m_Elite+Onslaught_0_0_y_{Rotation+A_2_0_5_{Lato+Receiver_2.0100_1}}_{Rotation+B_1_0_5_{Braton+Barrel_4.4200_1}_{Braton+Receiver_4.4200_1}_{Lato+BP_2.0100_1}}_{Rotation+C_1_0_5_{Braton+Stock_2.2100_1}_{Braton+BP_2.0100_1}_{Lato+Barrel_2.2100_1}}}">Braton and Lato Vandal</option>
+                        <option value="Legendary+Core_{m_Sortie_0_0_y_{Complete_1_0_0_{Legendary+Core_0.1800_1}}}">Legendary Core</option>
+                        <option value="Xiphos_{m_Tier+1+Sabotage_0_10_y_{Rotation+C_1_0_0_{Fuselage_0.5000_1}}}_{m_Tier+2+Sabotage_0_10_y_{Rotation+C_1_0_0_{Engines_0.5000_1}}}_{m_Tier+3+Sabotage_0_10_y_{Rotation+C_1_0_0_{Avionics_0.5000_1}}}">Xiphos</option>
                         <!-- just playing around -->
-                        <!--<option value="http://localhost:63342/phun/sandbox/src/html/dropsim.html?m=_{Mission_1_0_y_{Drop_1_34_0_{a_1.0000_1}_{b_3.0000_1}_{c_3.0000_1}_{d_3.0000_1}_{e_3.0000_1}_{f_3.0000_1}_{g_3.0000_1}_{h_3.0000_1}_{i_3.0000_1}_{j_3.0000_1}_{k_3.0000_1}_{l_3.0000_1}_{m_3.0000_1}_{n_3.0000_1}_{o_3.0000_1}_{p_3.0000_1}_{q_3.0000_1}_{r_3.0000_1}_{s_3.0000_1}_{t_3.0000_1}_{u_3.0000_1}_{v_3.0000_1}_{w_3.0000_1}_{x_3.0000_1}_{y_3.0000_1}_{z_3.0000_1}_{aa_3.0000_1}_{bb_3.0000_1}_{cc_3.0000_1}_{dd_3.0000_1}_{ee_3.0000_1}_{ff_3.0000_1}_{gg_3.0000_1}_{hh_3.0000_1}}}&s=1000000&start=start">High Kurtosis</option>-->
+                        <!--<option value="http://localhost:63342/phun/sandbox/src/html/dropsim.html?m=_{Mission_1_0_y_{Drop_1_0_0_{a_1.0000_1}_{b_3.0000_1}_{c_3.0000_1}_{d_3.0000_1}_{e_3.0000_1}_{f_3.0000_1}_{g_3.0000_1}_{h_3.0000_1}_{i_3.0000_1}_{j_3.0000_1}_{k_3.0000_1}_{l_3.0000_1}_{m_3.0000_1}_{n_3.0000_1}_{o_3.0000_1}_{p_3.0000_1}_{q_3.0000_1}_{r_3.0000_1}_{s_3.0000_1}_{t_3.0000_1}_{u_3.0000_1}_{v_3.0000_1}_{w_3.0000_1}_{x_3.0000_1}_{y_3.0000_1}_{z_3.0000_1}_{aa_3.0000_1}_{bb_3.0000_1}_{cc_3.0000_1}_{dd_3.0000_1}_{ee_3.0000_1}_{ff_3.0000_1}_{gg_3.0000_1}_{hh_3.0000_1}}}&s=1000000&start=start">High Kurtosis</option>-->
                     </select>
-                    <span class="tooltiptextbottom">Pre-fill the mission configuration with one of these examples.</span>
+                    <span class="tooltiptext">Pre-fill the mission configuration with one of these examples.</span>
                 </span>
             </div>
         </div>
@@ -2835,24 +4147,24 @@
 
 <div class="businessDiv">
     <div class="utilGroup">
-        <div class="util">
-            <span class="tooltip">
-                <input id="startButton" class="button start" type="submit" value="Start" onClick="startRun()"/>
-                <span class="tooltiptextbottom">Start the simulation.</span>
-            </span>
-        </div>
-        <div class="util">
-            <span class="tooltip">
-                <input id="stopButton" class="button stop" type="submit" value="Stop" onClick="stopRun()" disabled/>
-                <span class="tooltiptextbottom">Stop the simulation as soon as possible.</span>
-            </span>
-        </div>
         <div class="util stopAfterDiv">
             <div class="tooltip">
                 <span class="label">Stop after:</span>
                 <input id="stopAfter" class="inputStopAfter" type="number" value="1000000"/>
                 <span class="tooltiptextbottom">Automatically stop the simulation after the given number of runs.</span>
             </div>
+        </div>
+        <div id="startDiv" class="util">
+            <span class="tooltip">
+                <input id="startButton" class="button start" type="submit" value="Start" onClick="startRun()"/>
+                <span class="tooltiptextbottom">Start the simulation.</span>
+            </span>
+        </div>
+        <div id="stopDiv" class="utilHidden">
+            <span class="tooltip">
+                <input id="stopButton" class="button stop" type="submit" value="Stop" onClick="stopRun()" disabled/>
+                <span class="tooltiptextbottom">Stop the simulation as soon as possible.</span>
+            </span>
         </div>
         <div class="util">
             <span class="tooltip">
@@ -2909,9 +4221,19 @@
         <tr class="add">
             <td>
                 <span class="tooltip">
-                    <input class="button addButton" type="submit" value="Add Mission"
+                    <input class="button addButton" id="addMission" type="submit" value="Add Mission"
                            onclick="addMission(document.getElementById('scenario'), true)"/>
                     <span class="tooltiptext">Add a mission to the scenario</span>
+                </span>
+                <span class="tooltip">
+                    <input class="button addButton" id="addEnemy" type="submit" value="Add Enemy"
+                           onclick="addEnemy(document.getElementById('scenario'), true)"/>
+                    <span class="tooltiptext">Add an enemy drop to the scenario</span>
+                </span>
+                <span class="tooltip">
+                    <input class="button addButton" id="addRivenRoll" type="submit" value="Add Riven Roll"
+                           onclick="addRivenRoll(document.getElementById('scenario'), true)"/>
+                    <span class="tooltiptext">Add a Riven Roll to the scenario</span>
                 </span>
             </td>
         </tr>
@@ -2938,11 +4260,17 @@
                 actually takes to achieve success.
             </p>
             <p>
-                Most of the drop rates used in the examples from from the official
+                The purpose of this is to allow you to set your own expectations beforehand, as well as judging how
+                lucky or unlucky you were after the fact.  Nothing is absolutely guaranteed with RNG.  However, there
+                are statistically rigorous ways to set expectations and compare different scenarios, and that's what
+                this page is designed to do.
+            </p>
+            <p>
+                Most of the drop rates used in the examples are from from the official
                 <a href="https://n8k6e2y6.ssl.hwcdn.net/repos/hnfvc0o3jnfvc873njb03enrf56.html">Warframe PC Drops</a>
                 page.
             </p>
-            <h2>Getting started</h2>
+            <h1>Getting started</h1>
             <p>
                 Select one of the pre-built scenarios from the <strong class="examplesDiv">Examples</strong> drop down
                 at the top of the page.
@@ -2958,45 +4286,118 @@
                 the simulation is running it will display a bunch of statistics. The most important ones are:
             </p>
             <ul>
-                <li><strong>Average</strong>: This is the average number of missions or the average time that the
-                    scenario took to succeeed. This is also known as the <strong>expected value</strong>.
+                <li><strong>Average</strong>: This is the average number of missions, enemies, Riven rolls, or amount of
+                    time that the scenario took to succeeed. This is also known as the <strong>expected value</strong>.
                 </li>
-                <li><strong>90th Percentile</strong> and <strong>99th Percentile</strong>: This is the number of runs
-                    or the time necesary in order to have a 90% or 99% chance of success.
+                <li><strong>90th Percentile</strong> and <strong>99th Percentile</strong>: This is the number of
+                    missions, enemies, Riven rolls, or amount of time necesary in order to have a 90% or 99% chance of
+                    success.
                 </li>
             </ul>
 
-            <h1>In Depth</h1>
+            <h1>Table of Contents</h1>
+            <ul id="TOC">
+                <li>
+                    <a href="#ScenariosInDepth">Scenarios In Depth</a>
+                    <ul>
+                        <li>
+                            <a href="#MissionScenarios">Mission Scenarios</a>
+                            <ul>
+                                <li><a href="#DropEventorder">Drop Event order</a></li>
+                                <li><a href="#Definingthedroprate">Defining the drop rate</a></li>
+                                <li>
+                                    <a href="#DefiningSuccess">Defining Success</a>
+                                    <ul><li><a href="#ItemNaming">Item Naming</a></li></ul>
+                                </li>
+                                <li><a href="#Time">Time</a></li>
+                                <li><a href="#BailEarly">Bail Early</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="#EnemyScenarios">Enemy Scenarios</a></li>
+                        <li>
+                            <a href="#RivenRollScenarios">Riven Roll Scenarios</a>
+                            <ul>
+                                <li><a href="#RivenRoll">Riven Roll</a></li>
+                                <li><a href="#RivenCriteria">Riven Criteria</a></li>
+                                <li><a href="#RivenGenerationDetails">Riven Generation Details</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li><a href="#SavingTheScenario">Saving The Scenario</a></li>
+                <li>
+                    <a href="#Running">Running</a>
+                    <ul>
+                        <li><a href="#Stopping">Stopping</a></li>
+                        <li><a href="#Autostopping">Auto-stopping</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#Results">Results</a>
+                    <ul>
+                        <li><a href="#Statistics">Statistics</a></li>
+                        <li>
+                            <a href="#DistributionChart">Distribution Chart</a>
+                            <ul>
+                                <li><a href="#SavingaChart">Saving a Chart</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#NotesontheExamples">Notes on the Examples</a>
+                    <ul>
+                        <li><a href="#Frames">Frames</a></li>
+                        <li><a href="#Mods">Mods</a></li>
+                        <li><a href="#Rivens">Rivens</a></li>
+                        <li><a href="#Misc">Misc</a></li>
+                    </ul>
+                </li>
+                <li><a href="#KnownIssues">Known Issues</a></li>
+            </ul>
 
-            <h2>Building the scenario</h2>
+            <h1 id="ScenariosInDepth">Scenarios In Depth</h1>
             <p>
-                A <strong>Scenario</strong> repesents the overall goal, like "Obtaining Gara" or "Getting 90 Rivens".
-                A scenario is built up in three layers:
+                There are three types of Scenarios:
+            </p>
+            <ul>
+                <li><strong>Mission Scenario</strong>: These scenarios are about running a mission or series of
+                    missions.  These usually have some time duration associated with each mission.</li>
+                <li><strong>Enemy Scenario</strong>: These scenarios are about finding and killing a particular type of
+                    enemy.</li>
+                <li><strong>Riven Scenario</strong>: These scenarios are about rolling a Riven mod until its stats
+                    meet particular criteria</li>
+            </ul>
+
+            <h2 id="MissionScenarios">Mission Scenarios</h2>
+            <p>
+                A <strong>Mission Scenario</strong> is built up in three layers:
             </p>
             <ol>
-                <li>A Scenario contains one or more <strong>Missions</strong>. A Mission represents something that can
-                    be repeated as many times as necessary, like a Cetus Bounty or finding a specific enemy.
+                <li>The Scenario contains one or more <strong>Missions</strong>. A Mission represents something that can
+                    be repeated as many times as necessary, like a Cetus Bounty or a Sabotage mission.
                 </li>
                 <li>A Mission contains one or more <strong>Drop Events</strong>. A Drop Event represents something that
-                    triggers an RNG-based reward, like completing a survival rotation or killing a specific enemy.
+                    triggers an RNG-based reward, like completing a survival rotation or finding all three Sabotage
+                    Caches.
                 </li>
                 <li>A Drop Event contains one or more <strong>Items</strong>. An Item represents an individual object
                     that the Drop Event can reward, like a blueprint or a mod.
                 </li>
             </ol>
 
-            <h3>Drop Event order</h3>
+            <h3 id="DropEventorder">Drop Event order</h3>
             <p>
                 Each time a mission is run, each of its Drop Events is run in the order in which they are listed. A
                 Drop Event can be repeated in the same mission by setting <strong>Events Per Mission</strong>. This is
-                mostly for when the Drop Event is an A Rotation, which typically repeats twice per Mission.
+                for when the Drop Event is something like an A Rotation that repeats twice per Mission.
             </p>
             <p>
                 The order in which Drop Events are listed should be the order in which they actually occur during the
-                mission. See <strong>Bail Early</strong> below.
+                mission. See <a href="#BailEarly">Bail Early</a> below.
             </p>
 
-            <h3>Defining the drop rate(s)</h3>
+            <h3 id="Definingthedroprate">Defining the drop rate(s)</h3>
             <p>
                 A <strong>drop rate</strong> is defined for each individual Item. This represents the probability of
                 that Item being rewarded by the Drop Event containing it. The drop rate is a percentage, greater than
@@ -3008,11 +4409,11 @@
                 100% then that means the Drop Event has a chance of not dropping anything we're interested it.
             </p>
 
-            <h3>Defining Success</h3>
+            <h3 id="DefiningSuccess">Defining Success</h3>
             <p>
                 An individual <strong>Item</strong> defines a <strong>Number Required</strong>. This is the total
                 amount of that Item that must drop before that Item is considered successful. It's 1 by default, but
-                you can make it higher to simulate how long it would take to get that many muliples of an item.
+                you can make it higher to simulate how long it would take to get that many multiples of an item.
             </p>
             <p>
                 There are some more advanced success requirements you can set at the Drop Event and Mission levels. You
@@ -3027,21 +4428,21 @@
                     Event.
                 </li>
                 <li>By default, if a <strong>Mission</strong>'s <strong>Drop Events Required</strong> field is left at
-                    zero, then then we require all of the Drop Events under that Mission to reached their required
+                    zero, then then we require that all of the Drop Events under that Mission reach their required
                     Items. Like Required Items, You can make Required Drop Events greater than zero, in which case
                     only that many Drop Events have to be successful. Note that this is a count of Drop Events, not
                     individual Items. The value of Required Drop Events cannot be larger than the number of Drop Events
                     in the Mission.
                 </li>
             </ul>
-            <h4>Item Naming</h4>
+            <h4 id="ItemNaming">Item Naming</h4>
             <p>
                 A Name is assigned to each Item, uniquely identifying it. A single Drop Event can't contain two Items
                 with the same name. However the same Item name can appear in more than one Drop Event, and in more
                 than one Mission. When this happens, an Item dropping in one Drop Event counts towards every Item in
                 the Scenario with the same name.
             </p>
-            <h3>Time</h3>
+            <h3 id="Time">Time</h3>
             <p>
                 In addition to tracking the total number of missions it takes to get success, we can also assign a time
                 duration to each mission and/or drop event. The time is given as a <strong>whole number of
@@ -3079,7 +4480,7 @@
                 <li>Cetus <strong>bounty stage</strong>: 3 minutes</li>
                 <li><strong>Infested Salvage</strong>: 20 minutes</li>
             </ul>
-            <h3>Bail Early</h3>
+            <h3 id="BailEarly">Bail Early</h3>
             <p>
                 If there are multiple Drop Events in a Mission, then it's possible for the later Drop Events to succeed
                 during the run before the earlier ones. If there's a point in the mission after which all the Drop
@@ -3090,7 +4491,151 @@
                 This behavior is enabled by default in order to give us the shortest possible time. You can force a
                 particular mission not to bail early by unchecking the Bail Early checkbox under the mission.
             </p>
-            <h3>Saving the scenario</h3>
+            <h2 id="EnemyScenarios">Enemy Scenarios</h2>
+            <p>
+                An Enemy Scenario is basically a simplified Mission Scenario, where the mission and drop event
+                are just finding an enemy and killing it.
+            </p>
+            <p>
+                An Enemy Scenario just has single Enemy to kill, and a single Item list under the Enemy.  You still
+                have access to <strong>Required Items</strong> to control how many of the Item drops need to succeed for
+                the scenario to succeed, but there is no time duration or any other settings.
+            </p>
+
+            <h2 id="RivenRollScenarios">Riven Roll Scenarios</h2>
+            <p>
+                A <strong>Riven Roll Scenario</strong> tracks how many times a Riven needs to be rolled in
+                order to meet certain stat criteria.  A Riven-based scenario is built up in two layers:
+            </p>
+            <ol>
+                <li>A Scenario contains one <strong>Riven Roll</strong>.  A Riven Roll represents a single
+                    Riven Mod that can be rolled as many times as necessary.
+                </li>
+                <li>A Riven Roll contains one or more <strong>Riven Criteria</strong>. A Criteria represents a list of
+                    stats that are required or wanted as either positive or negative stats on the Riven mod.
+                </li>
+            </ol>
+            <h3 id="RivenRoll">Riven Roll</h3>
+            <p>
+                The only configuration for the <strong>Riven Roll</strong> is what kind of Riven it is,
+                <strong>Gun</strong> or <strong>Melee</strong>.  This determines the list of stats to choose from.
+            </p>
+            <h3 id="RivenCriteria">Riven Criteria</h3>
+            <p>
+                The <strong>Riven Criteria</strong> contains a few configuration fields followed by the full list of
+                possible stats for the Riven type.
+            </p>
+            <p>
+                <strong>Required Positives</strong> and <strong>Required Negatives</strong> can be used if you want a
+                specific number of positive or negative stats.  Valid values are <strong>2</strong> or <strong>3</strong>
+                for Required Positives, <strong>0</strong> or <strong>1</strong> for Required Negatives, or
+                <strong>-1</strong> for either of them if the exact number of positive or negative stats doesn't matter.
+            </p>
+            <p>
+                For the stats themselves, they are listed in alphabetical order.  For each one, one of four options is
+                available:
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        <strong class="checkmarkHelp positiveReqHelp">++</strong>: <strong>Required Positive</strong>
+                    </p>
+                    <p>
+                        This marks a stat that's <i>required</i> to be among the Riven's positive stats.  If this is
+                        selected for three stats then the Riven is automatically required to have three positive stats, and
+                        all three of the marked stats must be present.
+                    </p>
+                    <p>
+                        You cannot select more than three required positive stats.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <strong class="checkmarkHelp positiveHelp">+</strong>: <strong>Wanted Positive</strong>.
+                    </p>
+                    <p>
+                        This marks a stat that you <i>want</i> to be used in the Riven's positive stats.  You can mark
+                        as many stats as you like this way; the only requirement is that the Riven's positive stats
+                        come from the set of Wanted Positives.
+                    </p>
+                    <p>
+                        If there are less than three total Required and Wanted Positives, then the remaining positive
+                        stats in the Riven can come from the Don't Want set.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <strong class="checkmarkHelp negativeHelp">+</strong>: <strong>Wanted Negative</strong>.
+                    </p>
+                    <p>
+                        This marks a stat that you <i>want</i> to be used as the Riven's negative stat.  You can mark
+                        as many stats as you like this way; the only requirement is that the Riven's negative stat
+                        comes from the set of Wanted Negatives.
+                    </p>
+                    <p>
+                        If there are no Wanted Negatives, then the Riven's negative stat can come from the Don't
+                        Want set, unless Required Negatives is set to zero.
+                    </p>
+                    <p>
+                        If there is only one Wanted Negative marked, then the negative stat on the Riven, if present,
+                        must be that stat.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <strong class="checkmarkHelp dontwantHelp">?</strong>: <strong>Don't Want</strong>
+                    </p>
+                    <p>
+                        The Don't Want category is everything else.  If there aren't enough Wanted/Required Positive
+                        stats or Wanted Negative stats to fill out a Riven, then the remaining stats can come from the
+                        Don't Want list.  Otherwise, stats marked as Don't Want will not appear in accepted Rivens at
+                        all.
+                    </p>
+                </li>
+            </ul>
+            <p>
+                The Riven Criteria is only concerned with which stats appear on the Riven, not their actual numeric
+                values.
+            </p>
+            <h3 id="RivenGenerationDetails">Riven Generation Details</h3>
+            <p>
+                I've had to make a few assumtions about how Riven stats are generated, because the details are not
+                published like other drop rates.
+            </p>
+            <ul>
+                <li>
+                    <strong>Two vs Three Positive Stats</strong>: I'm assuming that the choice between two or three 
+                    positive stats is just a 50/50 chance.  My own my own sampling of about a hundred rolls on various 
+                    Rivens comes close enough to 50/50 to make this likely. 
+                </li>
+                <li>
+                    <strong>Zero vs One Negative Stat</strong>: I'm also assuming that the choice between zero or one
+                    negative stats is a 50/50 chance.  Again, this is backed up by my experience.
+                </li>
+                <li>
+                    <strong>No correlation</strong> between the number of positive stats and the number of negative
+                    stats.  I'm assuming that all four combinations of 2/3 positives and 0/1 negative are equally
+                    likely.
+                </li>
+                <li>
+                    <strong>Stat probability</strong>: I'm assuming that, on each roll, all applicable stats have the same
+                    probability of being chosen.
+                </li>
+                <li>
+                    <strong>Negative Stat Exclusions</strong>: I'm assuming that the following stats never appear as negative
+                    stats:
+                    <ul>
+                        <li>Cold Damage</li>
+                        <li>Electric Damage</li>
+                        <li>Heat Damage</li>
+                        <li>Toxin Damage</li>
+                        <li>Punch Through (This one has been confirmed)</li>
+                        <li>Combo Duration</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h1 id="SavingTheScenario">Saving The Scenario</h1>
             <p>
                 Use the <strong class="urlButton">Generate Link</strong> button to build a link to the current Scenario.
             </p>
@@ -3102,7 +4647,7 @@
                 automatically start the Scenario when opened.
             </p>
 
-            <h2>Running</h2>
+            <h1 id="Running">Running</h1>
             <p>
                 You can start the scenario at any time using the <strong class="start">Start</strong> button.
             </p>
@@ -3111,9 +4656,9 @@
             </p>
             <p>
                 The simulation itself is all in JavaScript, and runs entirely inside your browser.  You can actually
-                download this HTML file and run it offline, there are no external dependencies.
+                download this HTML file and run it offline; there are no required external dependencies.
             </p>
-            <h2>Stopping</h2>
+            <h2 id="Stopping">Stopping</h2>
             <p>
                 You can stop the simulation at any time using the <strong class="stop">Stop</strong> button.
             </p>
@@ -3130,51 +4675,61 @@
                 If you manually stop the simulation, and you haven't made any changes to the scenario, then you can
                 start it again and it will resume where it left off.
             </p>
-            <h2>Auto-stopping</h2>
+            <h2 id="Autostopping">Auto-stopping</h2>
             <p>
                 The <strong class="stopAfterDiv">Stop after</strong> field allows you to specify a number of trials.
             </p>
             <p>
                 The simulation will automatically stop after hitting that number. By default this is one million trials,
-                which seems to be a good estimate for when most of the example scenarios settle in on something close to
+                which seems to be a good estimate for when all the example scenarios settle in on something close to
                 their true statistics.
             </p>
             <p>
                 If the simulation has been automatically stopped, and you haven't made any changes to the scenario,
                 then you can start it again and it will run a second set of trials up to the <strong>Stop after</strong>
-                number. In other words, if your simulation reaches a million trials and you start it again, then it
+                number. In other words, if your simulation reaches a million trials and you start it again, then it will
                 run a million more, for a total of two million. Starting again will run up to three million, etc.
             </p>
 
-            <h2>Results</h2>
+            <h1 id="Results">Results</h1>
             <p>
                 While the simulation is running, and after it has completed, it will update the statistical results at
-                the top of the screen. If your scenario includes multiple missions, then each Mission will also get its
-                own results section with statistics from just that mission's runs.
+                the top of the screen. If your scenario is a Mission Scenario that includes multiple missions, then each
+                Mission will also get its own results section with statistics from just that mission's runs.
             </p>
             <p>
-                Each result section contains statistics for the total number of runs. For the overall Scenario this is
-                a
-                sum of all the missions that were run before success. For individual Mission results, this just counts
-                the number of that mission that were run.
+                Each result section contains statistics for the total number of missions/enemies/Riven rolls. For a
+                Mission Scenario this is a sum of all the missions that were run before success. For individual Mission
+                results, this just counts the number of that mission that were run.
             </p>
             <p>
-                If time data was provided in the scenario, then each results section will have a second set of
-                statistics for the time each run took. Again, the Scenario time result contains the sum of the times
-                for all the missions run, and the Mission time result only counts the time spent running that mission.
+                If time data was provided in a Mission Scenario, then each results section will have a second set of
+                statistics for the time each run took. Again, the Mission Scenario time result contains the sum of the
+                times for all the missions run, and the individual Mission time result only counts the time spent
+                running that mission.
             </p>
             <p>
                 Each result section is further divided into two parts, <strong>Statistics</strong> and a <strong>Distribution
                 Chart</strong>.
             </p>
-            <h3>Statistics</h3>
+            <h2 id="Statistics">Statistics</h2>
             <p>
                 The table on the right shows a number of statistics for the run:
             </p>
             <ul>
-                <li><strong>Trials</strong>: This shows the total number of trials that have been run.</li>
                 <li><strong>Average</strong>: This is the <a href="https://en.wikipedia.org/wiki/Expected_value">expected
-                    average</a> of the distribution.  This is the average number of trials or amount of time until success.
+                    average</a> of the distribution.  This is the average number of mission, enemies, Riven rolls, or
+                    average amount of time until success.
+                </li>
+                <li><strong>Median</strong>: The <a href="https://en.wikipedia.org/wiki/Median">median</a> is the
+                    midpoint of the data set, otherwise known as the 50th percentile.  If the distribution has a
+                    non-zero skew then the median will be different from the average.
+                </li>
+                <li><strong>90th Percentile</strong>: The expected amount of missions/enemies/Riven rolls/time required
+                    in order to have a 90% chance of success.
+                </li>
+                <li><strong>99th Percentile</strong>: The expected amount of missions/enemies/Riven rolls/time required
+                    in order to have a 99% chance of success.
                 </li>
                 <li><strong>Standard Deviation</strong>: <a href="https://en.wikipedia.org/wiki/Standard_deviation">Standard
                     Deviation</a>
@@ -3189,28 +4744,44 @@
                     basically describes how many extreme ouliers there are compared to a normal distribution. A
                     perfectly normal distribution has an excess kurtosis of zero.
                 </li>
-                <li><strong>Median</strong>: The <a href="https://en.wikipedia.org/wiki/Median">median</a> is the
-                    midpoint of the data set.  Half the results are less than the median, and half are greater than it.
-                    If the distribution has a non-zero skew then the median will be different from the average.
-                </li>
-                <li><strong>90th Percentile</strong>: The expected number of runs or expected amount of time required in
-                    order to have a 90% chance of success.
-                </li>
-                <li><strong>99th Percentile</strong>: The expected number of runs or expected amount of time required in
-                    order to have a 99% chance of success.
+                <li><strong>Trials</strong>: This shows the total number of trials that have been run to success.</li>
+                <li>
+                    <p>
+                        <strong>Best Case</strong>: This is the minimum result from the current simulation run. Below
+                        this statistic is shown the actual best case result, including the amount of
+                        missions/enemies/Riven Rolls/time, and how many of each Item ultimately dropped it the case of
+                        Mission and Enemy Scenarios, or what the actual Riven roll was in the case of Riven scenarios.
+                    </p>
+                    <p>
+                        The Best Case also includes a count of how many separate trials had that same result.
+                    </p>
                 </li>
                 <li><strong>Worst Case</strong>: This is the maximum result from the current simulation run. Below
-                    this statistic is shown the actual worst case result, including how many of each mission were run and
-                    how many of each Item ultimately dropped.
+                    this statistic is shown the actual worst case result, including the amount of
+                    missions/enemies/Riven Rolls/time, and how many of each Item ultimately dropped it the case of
+                    Mission and Enemy Scenarios, or what the actual Riven roll was in the case of Riven scenarios.
                 </li>
             </ul>
             <p>
-                <strong class="warn">The Worst Case should be taken with a grain of salt; it just shows the worst case
-                    from the current simulation run. Running the simulation over again with the same scenario can
-                    produce a wildly different worst case.</strong>
+                <strong class="warn">The Best Case and Worst Case should be taken with a grain of salt.  They just
+                    show the best and worst case from the current simulation run. Running the simulation over again
+                    with the same scenario can produce a wildly different best and worst cases.</strong>
             </p>
+            <ul>
+                <li><strong>Last Five Rolls</strong> (Riven Scenarios only): This shows the last five Riven rolls
+                    that successfully passed the criteria.</li>
+                <li>
+                    <p>
+                        <strong>Criteria met</strong> (Riven Scenarios only): If there are multiple criteria on the
+                        Riven Roll, then this shows what percentage of the time each criteria was matched. 
+                    </p>
+                    <p>
+                        Note that these may add to more than 100% if the criteria are not mutally exclusive.
+                    </p>
+                </li>
+            </ul>
 
-            <h3>Distribution Chart</h3>
+            <h2 id="DistributionChart">Distribution Chart</h2>
             <p>
                 The chart on the left shows a graphical view of the results. There are two possible views:
             </p>
@@ -3227,7 +4798,7 @@
                     <p>
                         Most of the results tend to cluster on the left side of this chart, below the average,
                         with a long tail of unlikely results extending very far to the right. The right edge of the
-                        chart cuts off at the 99.9th Percentile, but the <strong>Worst Case</strong> value shows you
+                        chart cuts off at the 99.9th Percentile, but the <strong>Worst Case</strong> result shows you
                         just how far it could extend if it was drawn out in full.
                     </p>
                 </li>
@@ -3246,7 +4817,7 @@
                 </li>
             </ul>
             <p>
-                You can switch between them using the buttons right above the chart.
+                You can switch between these two views using the buttons above the chart.
             </p>
             <p>
                 In both cases, there is a highlighted vertical line which shows where the average falls on the chart.
@@ -3262,22 +4833,23 @@
                 to try and calculate the exact statistics.
             </p>
 
-            <h4>Saving a chart</h4>
+            <h3 id="SavingaChart">Saving a Chart</h3>
             <p>
                 Most browsers should allow you to right-click on a chart and save it directly. However, if you simply
                 click on a chart then it will be converted in-place to a PNG image, which you should definitely be
                 able to save.
             </p>
-            <h1>Notes on the Examples</h1>
 
-            <h2>Frames</h2>
+            <h1 id="NotesontheExamples">Notes on the Examples</h1>
+
+            <h2 id="Frames">Frames</h2>
             <p>
                 The frame scenarios are listed roughly in order of how long each one takes.
             </p>
             <table class="notes">
                 <tr>
                     <td>
-                        <a href="?m=Standard+Boss+Frame_{Assassinate_1_10_y_{Complete_1_3_0_{Helmet_38.7200_1}_{Chassis_38.7200_1}_{Systems_22.5600_1}}}&start=start">Standard
+                        <a href="?m=Standard+Boss+Frame_{m_Assassinate_0_10_y_{Complete_1_0_0_{Helmet_38.7200_1}_{Chassis_38.7200_1}_{Systems_22.5600_1}}}&start=start">Standard
                             Boss Frame</a>:
                     </td>
                     <td>
@@ -3287,15 +4859,16 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Ash_{Grineer+Manic_1_0_y_{Kill_1_3_0_{Chassis_12.7776_1}_{Helmet_12.7776_1}_{Systems_7.4480_1}}}&start=start">Ash</a>:
+                        <a href="?m=Ash_{e_Grineer+Manic_0_0_y_{Kill_1_0_0_{Chassis_12.7776_1}_{Helmet_12.7776_1}_{Systems_7.4480_1}}}&start=start">Ash</a>:
                     </td>
                     <td>
-                        The "Mission" in this case is just killing a Manic.
+                        This is not something you can actively farm, but it's interesting that it doesn't actually take
+                        that many Manics to get.
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Gara_{Bounty+5-15_0_0_y_{Stage+2_1_0_6_{Chassis_7.5200_1}}_{Stage+3_1_0_3_{Chassis_30.5600_1}}}_{Bounty+10-20_0_0_y_{Stage+2_1_0_6_{Systems_9.5200_1}}_{Stage+3_1_0_3_{Systems_21.8200_1}}}_{Bounty+20-30_0_0_y_{Stage+3_1_0_9_{Helmet_8.4200_1}}_{Stage+4_1_0_3_{Helmet_20.5100_1}}}&start=start">Gara</a>:
+                        <a href="?m=Gara_{m_Bounty+5-15_0_0_y_{Stage+2_1_0_6_{Chassis_7.5200_1}}_{Stage+3_1_0_3_{Chassis_30.5600_1}}}_{m_Bounty+10-20_0_0_y_{Stage+2_1_0_6_{Systems_9.5200_1}}_{Stage+3_1_0_3_{Systems_21.8200_1}}}_{m_Bounty+20-30_0_0_y_{Stage+3_1_0_9_{Helmet_8.4200_1}}_{Stage+4_1_0_3_{Helmet_20.5100_1}}}&start=start">Gara</a>:
                     </td>
                     <td>
                         This is an example where the same Item can drop from multiple Drop Events, since each Gara part
@@ -3304,27 +4877,27 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Octavia_{ODS_1_0_y_{Rotation+C_1_1_20_{Helmet_22.5600_1}}}_{Lua+Crossfire+With+Caches,+Music+Room_2_5_y_{Music+Room+(guessing+at+spawn+rate)_1_1_0_{Chassis_25.0000_1}}_{Cache+A_1_1_5_{Systems_22.5600_1}}}&start=start">Octavia</a>:
+                        <a href="?m=Octavia_{m_ODS_0_0_y_{Rotation+C_1_0_20_{Helmet_22.5600_1}}}_{m_Lua+Crossfire+With+Caches,+Music+Room_0_5_y_{Music+Room+(guessing+at+spawn+rate)_1_1_0_{Chassis_25.0000_1}}_{Cache+A_1_0_5_{Systems_22.5600_1}}}&start=start">Octavia</a>:
                     </td>
                     <td>
-                        ODS is pretty straightforward. For the other two parts I combined the Lua cache hunt with the
-                        Music Room hunt, as you'll probably find the latter by accident while looking for caches. I took
-                        a wild guess that the Music Room spawn rate is about 25%.
+                        Getting the Neuroptics from ODS is pretty straightforward. For the other two parts I combined
+                        the Lua cache hunt with the Music Room hunt, as you'll probably find the latter by accident
+                        while looking for caches. I took a wild guess that the Music Room spawn rate is about 25%.
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Revenant_{Bounty+20-40_1_3_y_{Stage+2_1_1_3_{Systems_8.8700_1}}_{Stage+3_1_1_3_{Systems_8.6833_1}}_{Stage+4_1_1_3_{Systems_20.1700_1}}}_{Bounty+30-50_1_3_y_{Stage+2,3_2_1_3_{Chassis_8.4500_1}}_{Stage+4_1_1_3_{Chassis_8.2733_1}}_{Stage+5_1_1_3_{Chassis_19.3667_1}}}_{Bounty+40-60_1_9_y_{Stage+4_1_1_3_{Helmet_6.7600_1}}_{Stage+5_1_1_3_{Helmet_10.0200_1}}}&start=start">Revenant</a>:
+                        <a href="?m=Revenant_{m_Bounty+20-40_0_3_y_{Stage+2_1_0_3_{Systems_8.8700_1}}_{Stage+3_1_0_3_{Systems_8.6833_1}}_{Stage+4_1_0_3_{Systems_20.1700_1}}}_{m_Bounty+30-50_0_3_y_{Stage+2,3_2_0_3_{Chassis_8.4500_1}}_{Stage+4_1_0_3_{Chassis_8.2733_1}}_{Stage+5_1_0_3_{Chassis_19.3667_1}}}_{m_Bounty+40-60_0_9_y_{Stage+4_1_0_3_{Helmet_6.7600_1}}_{Stage+5_1_0_3_{Helmet_10.0200_1}}}&start=start">Revenant</a>:
                     </td>
                     <td>
                         Like Gara, Revanant's parts drop from multiple bounty stages with different drop rates in each
-                        one. Revanant takes a little longer tha Gara on average mostly because of the rare status on the
-                        third part.
+                        one. Revanant takes a little longer than Gara on average because of the longer bounties and the
+                        rare status of the third part.
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Revenant+(no+bail+early)_{Bounty+20-40_1_3_n_{Stage+2_1_1_3_{Systems_8.8700_1}}_{Stage+3_1_1_3_{Systems_8.6833_1}}_{Stage+4_1_1_3_{Systems_20.1700_1}}}_{Bounty+30-50_1_3_n_{Stage+2,3_2_1_3_{Chassis_8.4500_1}}_{Stage+4_1_1_3_{Chassis_8.2733_1}}_{Stage+5_1_1_3_{Chassis_19.3667_1}}}_{Bounty+40-60_1_9_n_{Stage+4_1_1_3_{Helmet_6.7600_1}}_{Stage+5_1_1_3_{Helmet_10.0200_1}}}&start=start">Revenant
+                        <a href="?m=Revenant+(no+bail+early)_{m_Bounty+20-40_0_3_n_{Stage+2_1_0_3_{Systems_8.8700_1}}_{Stage+3_1_0_3_{Systems_8.6833_1}}_{Stage+4_1_0_3_{Systems_20.1700_1}}}_{m_Bounty+30-50_0_3_n_{Stage+2,3_2_0_3_{Chassis_8.4500_1}}_{Stage+4_1_0_3_{Chassis_8.2733_1}}_{Stage+5_1_0_3_{Chassis_19.3667_1}}}_{m_Bounty+40-60_0_9_n_{Stage+4_1_0_3_{Helmet_6.7600_1}}_{Stage+5_1_0_3_{Helmet_10.0200_1}}}&start=start">Revenant
                             (no bail early)</a>:
                     </td>
                     <td>
@@ -3332,12 +4905,12 @@
                         This is an example of what happens when you disable Bail Early on these kinds of multi-rotation
                         missions. In this case, bailing early seems to save about 10-15 minutes on the average, from
                         2.8 hours down to 2.6. Also, not bailing early makes the probability density chart for the total
-                        time pretty cool.
+                        time look totally cool.
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Equinox_{Uranus+Assassinate_1_10_y_{Kill+Tyl_1_8_0_{Night+Aspect_11.2800_1}_{Night+Chassis_12.9100_1}_{Night+Systems_12.9100_1}_{Night+Helmet_12.9100_1}_{Day+Aspect_11.2800_1}_{Day+Chassis_12.9100_1}_{Day+Systems_12.9100_1}_{Day+Helmet_12.9100_1}}}&start=start">Equinox</a>:
+                        <a href="?m=Equinox_{m_Uranus+Assassinate_0_10_y_{Kill+Tyl_1_0_0_{Night+Aspect_11.2800_1}_{Night+Chassis_12.9100_1}_{Night+Systems_12.9100_1}_{Night+Helmet_12.9100_1}_{Day+Aspect_11.2800_1}_{Day+Chassis_12.9100_1}_{Day+Systems_12.9100_1}_{Day+Helmet_12.9100_1}}}&start=start">Equinox</a>:
                     </td>
                     <td>
                         Everyone's favorite example of a heavy grind is at most the fourth worst.
@@ -3345,7 +4918,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Nidus_{Infested+Salvage_1_0_y_{Rotation+C_1_3_20_{Systems_14.2900_1}_{Helmet_14.2900_1}_{Chassis_14.2900_1}}}&start=start">Nidus</a>:
+                        <a href="?m=Nidus_{m_Infested+Salvage_0_0_y_{Rotation+C_1_0_20_{Systems_14.2900_1}_{Helmet_14.2900_1}_{Chassis_14.2900_1}}}&start=start">Nidus</a>:
                     </td>
                     <td>
                         It varies how long it actually takes to hit rotation C on infested Salvage, depending on
@@ -3354,7 +4927,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Ivara_{Tier+1+Spy_1_10_y_{Rotation+C_1_1_0_{Systems_9.0900_1}}}_{Tier+2+Spy_1_10_y_{Rotation+C_1_1_0_{Chassis_5.6400_1}}}_{Tier+3+Spy_1_10_y_{Rotation+C_1_2_0_{Helmet_7.5200_1}_{BP_7.5200_1}}}&start=start">Ivara</a>:
+                        <a href="?m=Ivara_{m_Tier+1+Spy_0_10_y_{Rotation+C_1_0_0_{Systems_9.0900_1}}}_{m_Tier+2+Spy_0_10_y_{Rotation+C_1_0_0_{Chassis_5.6400_1}}}_{m_Tier+3+Spy_0_10_y_{Rotation+C_1_0_0_{Helmet_7.5200_1}_{BP_7.5200_1}}}&start=start">Ivara</a>:
                     </td>
                     <td>
                         I'm estimating 10 minutes for a Spy mission but if you're good at Spy, or have a friend who's
@@ -3364,19 +4937,20 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Khora_{Onslaught_3_0_y_{Rotation+A_2_1_5_{Chassis_8.3300_1}}_{Rotation+B_1_1_5_{Helmet_7.6900_1}}_{Rotation+C_1_2_5_{Systems_5.6400_1}_{BP_5.6400_1}}}&start=start">Khora</a>:
+                        <a href="?m=Khora_{m_Onslaught_0_0_y_{Rotation+A_2_0_5_{Chassis_8.3300_1}}_{Rotation+B_1_0_5_{Helmet_7.6900_1}}_{Rotation+C_1_0_5_{Systems_5.6400_1}_{BP_5.6400_1}}}&start=start">Khora</a>:
                     </td>
                     <td>
                         20 minutes to get to Rotation C is somewhat of an underestimate, but good enough. Disabling
-                        early bailing adds about 20 minutes to the average, bringing it close to an even ten hours.
+                        early bailing adds about 20 minutes to the expected average, bringing it close to an even ten
+                        hours.
                     </td>
                 </tr>
             </table>
-            <h2>Mods</h2>
+            <h2 id="Mods">Mods</h2>
             <table class="notes">
                 <tr>
                     <td>
-                        <a href="?m=Argon+Scope_{Torment_1_0_y_{Defeat_1_1_0_{Argon+Scope_4.0400_1}}}&start=start">Argon
+                        <a href="?m=Argon+Scope_{e_Torment_0_0_y_{Kill_1_0_0_{Argon+Scope_4.0400_1}}}&start=start">Argon
                             Scope</a>:
                     </td>
                     <td>
@@ -3385,7 +4959,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Four+Riders_{Grineer+Manic_1_0_y_{Kill_1_1_0_{Four+Riders_0.3350_1}}}&start=start">Four
+                        <a href="?m=Four+Riders_{e_Grineer+Manic_0_0_y_{Kill_1_0_0_{Four+Riders_0.3350_1}}}&start=start">Four
                             Riders</a>:
                     </td>
                     <td>
@@ -3394,7 +4968,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Vengeful+Revenant_{Conculyst_1_0_y_{Kill_1_1_0_{Vengeful+Revenant_0.4170_1}}}&start=start">Vengeful
+                        <a href="?m=Vengeful+Revenant_{e_Conculyst_0_0_y_{Kill_1_0_0_{Vengeful+Revenant_0.4170_1}}}&start=start">Vengeful
                             Revenant</a>:
                     </td>
                     <td>
@@ -3403,7 +4977,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Condition+Overload_{Drekar+Butcher_1_0_y_{Kill_1_1_0_{Condition+Overload_0.0201_1}}}&start=start">Condition
+                        <a href="?m=Condition+Overload_{e_Drekar+Butcher_0_0_y_{Kill_1_0_0_{Condition+Overload_0.0201_1}}}&start=start">Condition
                             Overload</a>:
                     </td>
                     <td>
@@ -3412,7 +4986,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Guardian+Derision_{Prod+Crewman_1_0_y_{Kill_1_1_0_{Guardian+Derision_0.0150_1}}}&start=start">Guardian
+                        <a href="?m=Guardian+Derision_{e_Prod+Crewman_0_0_y_{Kill_1_0_0_{Guardian+Derision_0.0150_1}}}&start=start">Guardian
                             Derision</a>:
                     </td>
                     <td>
@@ -3421,16 +4995,26 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Full+Hunter+Set_{Level+15-25+Ghoul+Bounty_3_0_y_{Stage+1_1_1_3_{Adrenaline_33.3300_1}}_{Stage+2,+3_2_2_3_{Adrenaline_11.7400_1}_{Munitions_9.3900_1}}_{Stage+4_1_2_3_{Munitions_11.9000_1}_{Track_11.9000_1}}}_{Level+40-50+Ghoul+Bounty_4_0_y_{Stage+1_1_1_3_{Recovery_33.3300_1}}_{Stage+2,+3_2_2_3_{Recovery_11.7400_1}_{Synergy_9.3900_1}}_{Stage+4_1_3_3_{Recovery_10.2900_1}_{Synergy_8.2300_1}_{Command_8.2300_1}}_{Stage+5_1_2_3_{Synergy_11.9000_1}_{Command_11.9000_1}}}&start=start">Full
-                            Hunter Set</a>:
+                        <a href="?m=Full+Hunter+Set_{m_Level+15-25+Ghoul+Bounty_0_0_y_{Stage+1_1_0_3_{Adrenaline_33.3300_1}}_{Stage+2,+3_2_0_3_{Adrenaline_11.7400_1}_{Munitions_9.3900_1}}_{Stage+4_1_0_3_{Munitions_11.9000_1}_{Track_11.9000_1}}}_{m_Level+40-50+Ghoul+Bounty_0_0_y_{Stage+1_1_0_3_{Recovery_33.3300_1}}_{Stage+2,+3_2_0_3_{Recovery_11.7400_1}_{Synergy_9.3900_1}}_{Stage+4_1_0_3_{Recovery_10.2900_1}_{Synergy_8.2300_1}_{Command_8.2300_1}}_{Stage+5_1_0_3_{Synergy_11.9000_1}_{Command_11.9000_1}}}&start=start">Full
+                            Hunter Set (Ghouls)</a>:
                     </td>
                     <td>
-                        Surprisingly easy to get a full set of these, even with the semi-limited nature of Ghoul events.
+                        It's not too hard to get a full set of these, even with the semi-limited nature of Ghoul events.
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=All+Corrupted+Mods_{Derelict+Exterminate_1_5_y_{Vault_1_0_0_{Spoiled+Strike_4.1700_1}_{Corrupt+Charge_4.1700_1}_{Hollow+Point_4.1700_1}_{Magnum+Force_4.1700_1}_{Tainted+Clip_4.1700_1}_{Critical+Delay_4.1700_1}_{Heavy+Caliber_4.1700_1}_{Tainted+Mag_4.1700_1}_{Vile+Precision_4.1700_1}_{Narrow+Minded_4.1700_1}_{Fleeting+Expertise_4.1700_1}_{Blind+Rage_4.1700_1}_{Overextended_4.1700_1}_{Tainted+Shell_4.1700_1}_{Vicious+Spread_4.1700_1}_{Burdened+Magazine_4.1700_1}_{Anemic+Agility_4.1700_1}_{Vile+Acceleration_4.1700_1}_{Frail+Momentum_4.1700_1}_{Critical+Deceleration_4.1700_1}_{Creeping+Bullseye_4.1700_1}_{Transient+Fortitude_4.1700_1}_{Depleted+Reload_4.1700_1}}}&start=start">All
+                        <a href="?m=Full+Hunter+Set+(Plague+Star)_{m_Plague+Star_0_15_y_{Kill+Hemocyte_4_0_0_{Hunter+Command_10.5300_1}_{Hunter+Recovery_28.9500_1}_{Hunter+Synergy_10.5300_1}_{Hunter+Munitions_10.5300_1}_{Hunter+Track_10.5300_1}_{Hunter+Adrenaline_28.9500_1}}}&start=start">Full
+                            Hunter Set (Plague Star)</a>:
+                    </td>
+                    <td>
+                        Even easier if you can manage to catch a Plague Star event, assuming you can kill four Hemocytes
+                        pretty quickly.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=All+Corrupted+Mods_{m_Derelict+Exterminate_0_5_y_{Vault_1_0_0_{Spoiled+Strike_4.1700_1}_{Corrupt+Charge_4.1700_1}_{Hollow+Point_4.1700_1}_{Magnum+Force_4.1700_1}_{Tainted+Clip_4.1700_1}_{Critical+Delay_4.1700_1}_{Heavy+Caliber_4.1700_1}_{Tainted+Mag_4.1700_1}_{Vile+Precision_4.1700_1}_{Narrow+Minded_4.1700_1}_{Fleeting+Expertise_4.1700_1}_{Blind+Rage_4.1700_1}_{Overextended_4.1700_1}_{Tainted+Shell_4.1700_1}_{Vicious+Spread_4.1700_1}_{Burdened+Magazine_4.1700_1}_{Anemic+Agility_4.1700_1}_{Vile+Acceleration_4.1700_1}_{Frail+Momentum_4.1700_1}_{Critical+Deceleration_4.1700_1}_{Creeping+Bullseye_4.1700_1}_{Transient+Fortitude_4.1700_1}_{Depleted+Reload_4.1700_1}}}&start=start">All
                             Corrupted Mods</a>:
                     </td>
                     <td>
@@ -3438,11 +5022,65 @@
                     </td>
                 </tr>
             </table>
-            <h2>Misc</h2>
+            <h2 id="Rivens">Rivens</h2>
             <table class="notes">
                 <tr>
                     <td>
-                        <a href="?m=Radshare_{Fissure_1_0_y_{Crack+Relic_4_1_0_{Rare_10.0000_1}}}&start=start">Radshare</a>:
+                        <a href="?m=90+Rivens_{m_Sortie_0_0_y_{Complete_1_0_0_{Riven_26.0800_90}}}&start=start">90 Rivens</a>:
+                    </td>
+                    <td>
+                        How many Sorties does it take to fill your Riven collection to capacity? This one's interesting,
+                        as it's very close to a normal distribution
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Riven+for+a+Specific+Rifle_{m_Sortie_0_0_y_{Complete_1_0_0_{One+of+62+possible+Rifle+Rivens_0.1095_1}}}&start=start">Riven for a Specific Rifle</a>:
+                    </td>
+                    <td>
+                        How many Sorties does it take to get a Riven for your favorite non-shotgun primary, out of 62
+                        possibilities as of September 2018?
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Basic+Damage+Gun+Riven_{r_Riven+Roll_g_{Damage_-1_-1_n-ddd--p-p-pppp-pndnpppd-dddnnn}}&start=start">Basic Damage Gun Riven</a>:
+                    </td>
+                    <td>
+                        Just a basic damage Riven for a gun isn't too hard to roll.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Decent+Melee+Riven_{r_Riven+Roll_m_{Decent_-1_-1_-pdddnnpppdppppn--d--p-dp-dpd--}}&start=start">Decent Melee Riven</a>:
+                    </td>
+                    <td>
+                        A decent Melee Riven is also not hard to roll if you're not picky.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Crit+or+Status+Melee+Riven_{r_Riven+Roll_m_{Crit_-1_-1_-pdddnnppPdppppn--d--p-dp-ddn--}_{Status_-1_-1_-pdddnnpdnndpppn--d--p-dp-pPp--}}&start=start">Crit or Status Melee Riven</a>:
+                    </td>
+                    <td>
+                        When rolling a Zaw Riven, I get the best results by rolling until I get either good crit stats
+                        or good status stats, and then building a Zaw accordingly.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Godlike+Lanka+Riven_{r_Riven+Roll_g_{Hallelujah_-1_-1_n-nnn--d-p-ppdd-ddndpddn-dnnnnn}}&start=start">Godlike Lanka Riven</a>:
+                    </td>
+                    <td>
+                        This is why picky players pay a very high price for these.
+                    </td>
+                </tr>
+            </table>
+            <h2 id="Misc">Misc</h2>
+            <table class="notes">
+                <tr>
+                    <td>
+                        <a href="?m=Radshare_{m_Fissure_0_0_y_{Crack+Relic_4_0_0_{Rare_10.0000_1}}}&start=start">Radshare</a>:
                     </td>
                     <td>
                         Radiant shares aren't bad on average.  However, I've personally seen it take 20 radshares to get
@@ -3451,7 +5089,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Solo+Radiant_{Fissure_1_0_y_{Crack+Relic_1_1_0_{Rare_10.0000_1}}}&start=start">Solo
+                        <a href="?m=Solo+Radiant_{m_Fissure_0_0_y_{Crack+Relic_1_0_0_{Rare_10.0000_1}}}&start=start">Solo
                             Radiant</a>:
                     </td>
                     <td>
@@ -3460,7 +5098,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Three+Axi+S3+Relics_{Mot_1_0_y_{Rotation+C_1_1_20_{Axi+S3_11.1100_3}}}&start=start">Three
+                        <a href="?m=Three+Axi+S3+Relics_{m_Mot_0_0_y_{Rotation+C_1_0_20_{Axi+S3_11.1100_3}}}&start=start">Three
                             Axi S3 Relics</a>:
                     </td>
                     <td>
@@ -3470,55 +5108,15 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=90+Rivens_{Sortie_1_0_y_{Complete_1_1_0_{Riven_26.0800_90}}}&start=start">90
-                            Rivens</a>:
+                        <a href="?m=Miter_{m_Ceres+Ass_0_10_y_{Kill+Krill_1_0_0_{Barrel_16.6700_1}_{Blade_16.6700_1}_{Handle_16.6700_1}_{Chassis_16.6700_1}_{Blueprint_16.6700_1}}}&start=start">Miter</a>:
                     </td>
                     <td>
-                        How many Sorties does it take to fill your Riven collection to capacity? This one's interesting,
-                        as it's very close to a normal distribution
+                        I bet you forgot about farming all five pieces of this thing.
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Specific+Rifle+Riven_{Sortie_1_0_y_{Complete_1_1_0_{One+of+62+possible+Rifle+Rivens_0.1095_1}}}&start=start">Specific
-                            Rifle Riven</a>:
-                    </td>
-                    <td>
-                        How many Sorties does it take to get a Riven for your favorite non-shotgun primary, out of 62
-                        possibilities as of September 2018?
-                    </td>
-                </tr>
-                <!-- The Riven roll probabilities are not published, so we don't actually know the odds for sure
-                <tr>
-                    <td>
-                        <a href="?m=Really+Good+Lanka+Riven_{Roll_1_0_y_{Roll_1_1_0_{2+of+Crit+Chance,+Crit+Damage,+Multishot+and+harmless+negative+stat_0.6394_1}}}&start=start">Really Good Lanka Riven</a>:
-                    </td>
-                    <td>
-                        Here, I'm definine "Really Good" as two of Crit Chance, Crit Damage, or Multishot; the chances of which
-                        are (3 choose 2) / (24 choose 2), and a harmless negative (10 out of 17).
-                    </td>
-                </tr>
-                -->
-                <tr>
-                    <td>
-                        <a href="?m=Legendary+Core_{Sortie_1_0_y_{Complete_1_1_0_{Legendary+Core_0.1800_1}}}&start=start">Legendary
-                            Core</a>:
-                    </td>
-                    <td>
-                        It's legendary for a reason.
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <a href="?m=Miter_{Ceres+Ass_1_0_y_{Kill+Krill_1_5_0_{Barrel_16.6700_1}_{Blade_16.6700_1}_{Handle_16.6700_1}_{Chassis_16.6700_1}_{Blueprint_16.6700_1}}}&start=start">Miter</a>:
-                    </td>
-                    <td>
-                        I bet you forgot about farming all five parts of this thing.
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <a href="?m=Arcane+Energize+Set_{Tridolon+Hunt_1_0_y_{Hydrolyst+Capture_1_1_0_{Arcane+Energize_5.0000_10}}}&start=start">Arcane
+                        <a href="?m=Arcane+Energize+Set_{m_Tridolon+Hunt_0_0_y_{Hydrolyst+Capture_1_0_0_{Arcane+Energize_5.0000_10}}}&start=start">Arcane
                             Energize Set</a>:
                     </td>
                     <td>
@@ -3527,18 +5125,34 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Shadow+Stalker_{I+AM+YOUR+RECKONING_1_0_y_{WHAT+HAVE+YOU...+DONE_1_6_0_{Scimitar+Engines+BP_1.0050_1}_{Broken+War+BP_2.7650_1}_{Dread+BP_37.9400_1}_{Despair+BP_2.7650_1}_{Hate+BP_2.7650_1}_{War+BP_2.7650_1}}}&start=start">Shadow
-                            Stalker</a>:
+                        <a href="?m=Imperator+Vandal_{m_Fomorian_0_0_y_{Complete_1_0_0_{Barrel_11.2800_1}_{Receiver_11.2800_1}_{Blueprint_38.7200_1}}}&start=start">Imperator Vandal</a>:
                     </td>
                     <td>
-                        This particular scenario ends up having this highest Excess Kurtosis of all the examples, which
+                        Not that bad on average.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=All+Razorback+Drops_{e_Razorback_0_0_y_{Kill_1_0_0_{Gorgon+Wraith+Blueprint_18.9700_1}_{Gorgon+Wraith+Barrel_18.9700_1}_{Gorgon+Wraith+Receiver_18.9700_1}_{Gorgon+Wraith+Stock_18.9700_1}_{Bore_5.5300_1}_{Piercing+Caliber_5.5300_1}_{Breach+Loader_5.5300_1}_{Augur+Strike_5.5300_1}_{Magma+Chamber_1.0100_1}_{Searing+Steel_1.0100_1}}}&start=start">All Razorback Drops</a>:
+                    </td>
+                    <td>
+                        The two ultra-rare mods that you can only obtain from the Razorback are what make this painful.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=All+Shadow+Stalker+Drops_{e_I+AM+YOUR+RECKONING_0_0_y_{Kill_1_0_0_{Scimitar+Engines+BP_1.0050_1}_{Broken+War+BP_2.7650_1}_{Dread+BP_37.9400_1}_{Despair+BP_2.7650_1}_{Hate+BP_2.7650_1}_{War+BP_2.7650_1}}}&start=start">All
+                            Shadow Stalker Drops</a>:
+                    </td>
+                    <td>
+                        This particular scenario ends up having the highest Excess Kurtosis of all the examples, which
                         explains the surprising number of players still missing some Stalker drops after playing for
                         years.
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=War+Parts_{Conculyst_1_0_y_{Kill_1_2_0_{War+Hilt+BP_0.5000_2}_{War+Blade+BP_0.5000_1}}}&start=start">War
+                        <a href="?m=War+Parts_{e_Conculyst_0_0_y_{Kill_1_0_0_{War+Hilt+BP_0.5000_2}_{War+Blade+BP_0.5000_1}}}&start=start">War
                             Parts</a>:
                     </td>
                     <td>
@@ -3547,7 +5161,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Braton+and+Lato+Vandal_{Elite+Onslaught_3_0_y_{Rotation+A_2_1_5_{Lato+Receiver_2.0100_1}}_{Rotation+B_1_3_5_{Braton+Barrel_4.4200_1}_{Braton+Receiver_4.4200_1}_{Lato+BP_2.0100_1}}_{Rotation+C_1_3_5_{Braton+Stock_2.2100_1}_{Braton+BP_2.0100_1}_{Lato+Barrel_2.2100_1}}}&start=start">Braton
+                        <a href="?m=Braton+and+Lato+Vandal_{m_Elite+Onslaught_0_0_y_{Rotation+A_2_0_5_{Lato+Receiver_2.0100_1}}_{Rotation+B_1_0_5_{Braton+Barrel_4.4200_1}_{Braton+Receiver_4.4200_1}_{Lato+BP_2.0100_1}}_{Rotation+C_1_0_5_{Braton+Stock_2.2100_1}_{Braton+BP_2.0100_1}_{Lato+Barrel_2.2100_1}}}&start=start">Braton
                             and Lato Vandal</a>:
                     </td>
                     <td>
@@ -3556,17 +5170,30 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Xiphos_{Tier+1+Sabotage_1_10_y_{Rotation+C_1_1_0_{Fuselage_0.5000_1}}}_{Tier+2+Sabotage_1_10_y_{Rotation+C_1_1_0_{Engines_0.5000_1}}}_{Tier+3+Sabotage_1_10_y_{Rotation+C_1_1_0_{Avionics_0.5000_1}}}&start=start">Xiphos</a>:
+                        <a href="?m=Legendary+Core_{m_Sortie_0_0_y_{Complete_1_0_0_{Legendary+Core_0.1800_1}}}&start=start">Legendary
+                            Core</a>:
+                    </td>
+                    <td>
+                        It's legendary for a reason.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Xiphos_{m_Tier+1+Sabotage_0_10_y_{Rotation+C_1_0_0_{Fuselage_0.5000_1}}}_{m_Tier+2+Sabotage_0_10_y_{Rotation+C_1_0_0_{Engines_0.5000_1}}}_{m_Tier+3+Sabotage_0_10_y_{Rotation+C_1_0_0_{Avionics_0.5000_1}}}&start=start">Xiphos</a>:
                     </td>
                     <td>
                         Possibly the most ludicrous grind in the game.
                     </td>
                 </tr>
             </table>
-            <h1>Known Issues</h1>
+            <h1 id="KnownIssues">Known Issues</h1>
             <ul>
                 <li>
                     The charts don't work in Microsoft Edge.  Don't use Edge.
+                </li>
+                <li>
+                    Running a lot of simulations on a mobile device will really tear your battery a new one.  That's
+                    just the way it is.
                 </li>
             </ul>
         </div>
@@ -3574,18 +5201,17 @@
 
     <div class="footerContainer">
         <div>
-            <table>
-                <tr>
-                    <td width="50%" align="right" valign="bottom">
-                        Buff00n
-                    </td>
-                    <td valign="bottom" width="24px"><img src="https://i.imgur.com/b5pNXKU.png" srcset="https://i.imgur.com/z6U8Oxs.png 2x"/></td>
-                    <td width="50%" align="left" valign="bottom">
-                        <a href="https://github.com/buff0000n/dropsim">source</a>
-                    </td>
-                </tr>
-            </table>
-            Updated: 2018-09-09
+            <img src="https://i.imgur.com/b5pNXKU.png" srcset="https://i.imgur.com/z6U8Oxs.png 2x"/>
+        </div>
+        <div>
+            Buff00n
+        </div>
+        <div>
+            <a href="https://github.com/buff0000n/rngsim">Source</a>
+            <a href="https://github.com/buff0000n/rngsim/issues/1">Feedback</a>
+        </div>
+        <div>
+            v1.1: 2018-09-09
         </div>
     </div>
 </div>
