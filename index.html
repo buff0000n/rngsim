@@ -3787,8 +3787,24 @@
         context.font = fontSize + "px Arial";
         context.textAlign = "left";
 
+        var xAxisLabelCount = 10;
+
+        // Scale back the number of labels when the actual values are huge
+        var maxLabelLength = (max * dataScale).toFixed(0).length;
+        // The larger the label length, the fewer labels we can have
+        if (maxLabelLength > 5) {
+            xAxisLabelCount = 6;
+        } else if ((max * dataScale).toFixed(0).length > 4) {
+            xAxisLabelCount = 8;
+        }
+
         // calculate an increment for the x axis that gives us up to 10 labels
-        var xAxisIncrement = Math.ceil(max / 100) * 10;
+        var xAxisIncrement = Math.ceil(max / (xAxisLabelCount*xAxisLabelCount)) * xAxisLabelCount;
+        // If there is a fractional data scale, pick an increment nearby which gives whole numbers when multiplied by
+        // the data scale.
+        if (dataScale < 1) {
+            xAxisIncrement = Math.round(Math.ceil(xAxisIncrement * dataScale) / dataScale);
+        }
         // loop over the increments
         for (var t = 0; t < max; t+= xAxisIncrement) {
             // calculate the X coordinate of the axis
@@ -3801,7 +3817,7 @@
             context.lineTo(x1, y1 + (fontSize * 0.5));
             context.stroke();
             // get the label as a string
-            var s = (t * dataScale).toFixed(dataScale < 1 ? 2 : 0);
+            var s = Math.round(t * dataScale).toFixed(0);
             // check if the string is probably too wide to fit before drawing it
             if (canvas.width - x1 > (s.length * fontSize)) {
                 context.fillText(s, x1 + (fontSize / 4), y1 + (fontSize * 1.0));
@@ -4314,6 +4330,15 @@
                         <option value="Full+Hunter+Set+(Ghouls)_{m_Level+15-25+Ghoul+Bounty_0_0_y_{Stage+1_1_0_3_{Adrenaline_33.3300_1}}_{Stage+2,+3_2_0_3_{Adrenaline_11.7400_1}_{Munitions_9.3900_1}}_{Stage+4_1_0_3_{Munitions_11.9000_1}_{Track_11.9000_1}}}_{m_Level+40-50+Ghoul+Bounty_0_0_y_{Stage+1_1_0_3_{Recovery_33.3300_1}}_{Stage+2,+3_2_0_3_{Recovery_11.7400_1}_{Synergy_9.3900_1}}_{Stage+4_1_0_3_{Recovery_10.2900_1}_{Synergy_8.2300_1}_{Command_8.2300_1}}_{Stage+5_1_0_3_{Synergy_11.9000_1}_{Command_11.9000_1}}}">Full Hunter Set (Ghouls)</option>
                         <option value="Full+Hunter+Set+(Plague+Star)_{m_Plague+Star_0_15_y_{Kill+Hemocyte_4_0_0_{Hunter+Command_10.5300_1}_{Hunter+Recovery_28.9500_1}_{Hunter+Synergy_10.5300_1}_{Hunter+Munitions_10.5300_1}_{Hunter+Track_10.5300_1}_{Hunter+Adrenaline_28.9500_1}}}">Full Hunter Set (Plague Star)</option>
                         <option value="All+Corrupted+Mods_{m_Derelict+Exterminate_0_5_y_{Vault_1_0_0_{Spoiled+Strike_4.1700_1}_{Corrupt+Charge_4.1700_1}_{Hollow+Point_4.1700_1}_{Magnum+Force_4.1700_1}_{Tainted+Clip_4.1700_1}_{Critical+Delay_4.1700_1}_{Heavy+Caliber_4.1700_1}_{Tainted+Mag_4.1700_1}_{Vile+Precision_4.1700_1}_{Narrow+Minded_4.1700_1}_{Fleeting+Expertise_4.1700_1}_{Blind+Rage_4.1700_1}_{Overextended_4.1700_1}_{Tainted+Shell_4.1700_1}_{Vicious+Spread_4.1700_1}_{Burdened+Magazine_4.1700_1}_{Anemic+Agility_4.1700_1}_{Vile+Acceleration_4.1700_1}_{Frail+Momentum_4.1700_1}_{Critical+Deceleration_4.1700_1}_{Creeping+Bullseye_4.1700_1}_{Transient+Fortitude_4.1700_1}_{Depleted+Reload_4.1700_1}}}">All Corrupted Mods</option>
+                        <!-- Relic-related scenarios -->
+                        <option value="" disabled>---Relics---</option>
+                        <option value="Radshare_{m_Fissure_0_0_y_{Crack+Relic_4_0_0_{Rare_10.0000_1}}}">Radshare</option>
+                        <option value="Solo+Radiant_{m_Fissure_0_0_y_{Crack+Relic_1_0_0_{Rare_10.0000_1}}}">Solo Radiant</option>
+                        <option value="Uncommon+Intact+Share_{m_Fissure_0_0_y_{Crack+Relic_4_0_0_{Uncommon_11.0000_1}}}">Uncommon Intact Share</option>
+                        <option value="Uncommon+Radshare_{m_Fissure_0_0_y_{Crack+Relic_4_0_0_{Uncommon_20.0000_1}}}">Uncommon Radshare</option>
+                        <option value="Three+Axi+S3+Relics_{m_Mot_0_0_y_{Rotation+C_1_0_20_{Axi+S3_11.1100_3}}}">Three Axi S3 Relics</option>
+                        <option value="Three+Axi+C3/G1_{m_Bounty+40-60_0_3_y_{Stage+2,3_2_0_3_{Axi+C3/G1_33.0400_3}}_{Stage+4_1_0_3_{Axi+C3/G1_25.6800_1}}_{Stage+5_1_0_3_{Axi+C3/G1_38.7800_1}}}">Three Axi C3/G1 Relics</option>
+                        <option value="Three+Neo+G1+Relics_{m_Bounty+30-50_0_3_y_{Stage+2,3_2_0_3_{Axi+C3/G1_15.9600_3}}_{Stage+4_1_0_3_{Axi+C3/G1_15.6300_1}}_{Stage+5_1_0_3_{Axi+C3/G1_35.7100_1}}}">Three Neo G1 Relics</option>
                         <!-- Riven-related scenarios -->
                         <option value="" disabled>---Rivens---</option>
                         <option value="90+Rivens_{m_Sortie_0_0_y_{Complete_1_0_0_{Riven_26.0800_90}}}">90 Rivens</option>
@@ -4326,12 +4351,9 @@
                         <option value="Godlike+Lanka+Riven_{r_Riven+Roll_g_{Hallelujah_-1_-1_n-nnn--d-p-ppdd-ddndpddn-dnnnnn}}">Godlike Lanka Riven</option>
                         <option value="Godlike+Vectis+Riven_{r_Riven+Roll_g_{Damage,+-Mag+Cap_-1_1_d-ddd--p-p-pppp-pddnppdd-pddddd}}">Godlike Vectis Riven</option>
                         <option value="Perfect+Rubico+Riven_{r_Riven+Roll_g_{Crits+for+days_2_-1_n-ddd--d-P-Pppp-dnddpddd-dnnnnn}}">Perfect Rubico Riven</option>
+                        <option value="Riven+with+Exact+Stats_{r_Riven+Roll_g_{IT+HAS+TO+BE+THESE_3_1_d-ddd--d-P-Pddd-ddddPddd-dddddn}}">Riven with Exact Stats</option>
                         <!-- Just some miscellaneous rough grinds -->
                         <option value="" disabled>---Misc---</option>
-                        <option value="Radshare_{m_Fissure_0_0_y_{Crack+Relic_4_0_0_{Rare_10.0000_1}}}">Radshare</option>
-                        <option value="Solo+Radiant_{m_Fissure_0_0_y_{Crack+Relic_1_0_0_{Rare_10.0000_1}}}">Solo Radiant</option>
-                        <option value="Three+Axi+S3+Relics_{m_Mot_0_0_y_{Rotation+C_1_0_20_{Axi+S3_11.1100_3}}}">Three Axi S3 Relics</option>
-                        <option value="Three+Axi+C3/G1_{m_Bounty+40-60_0_3_y_{Stage+2,3_2_0_3_{Axi+C3/G1_33.0400_3}}_{Stage+4_1_0_3_{Axi+C3/G1_25.6800_1}}_{Stage+5_1_0_3_{Axi+C3/G1_38.7800_1}}}">Three Axi C3/G1 Relics</option>
                         <option value="Miter_{m_Ceres+Ass_0_10_y_{Kill+Krill_1_0_0_{Barrel_16.6700_1}_{Blade_16.6700_1}_{Handle_16.6700_1}_{Chassis_16.6700_1}_{Blueprint_16.6700_1}}}">Miter</option>
                         <option value="Imperator+Vandal_{m_Fomorian_0_0_y_{Complete_1_0_0_{Barrel_11.2800_1}_{Receiver_11.2800_1}_{Blueprint_38.7200_1}}}">Imperator Vandal</option>
                         <!-- get ready to cry -->
@@ -4562,6 +4584,7 @@
                     <ul>
                         <li><a href="#Frames">Frames</a></li>
                         <li><a href="#Mods">Mods</a></li>
+                        <li><a href="#Relics">Relics</a></li>
                         <li><a href="#Rivens">Rivens</a></li>
                         <li><a href="#Misc">Misc</a></li>
                     </ul>
@@ -5241,6 +5264,72 @@
                     </td>
                 </tr>
             </table>
+            <h2 id="Relics">Relics</h2>
+            <table class="notes">
+                <tr>
+                    <td>
+                        <a href="?m=Radshare_{m_Fissure_0_0_y_{Crack+Relic_4_0_0_{Rare_10.0000_1}}}&start=start">Radshare</a>:
+                    </td>
+                    <td>
+                        Radiant shares aren't bad on average.  However, I've personally seen it take 20 radshares to get
+                        the rare, which put that particular run in the 99.98th percentile.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Solo+Radiant_{m_Fissure_0_0_y_{Crack+Relic_1_0_0_{Rare_10.0000_1}}}&start=start">Solo
+                            Radiant</a>:
+                    </td>
+                    <td>
+                        And this is why you find Radiant shares.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Uncommon+Intact+Share_{m_Fissure_0_0_y_{Crack+Relic_4_0_0_{Uncommon_11.0000_1}}}&start=start">Uncommon Intact Share</a>:
+                    </td>
+                    <td>
+                        If you just want an uncommon reward, is it still worth it to refine the relic to Radiant?
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Uncommon+Radshare_{m_Fissure_0_0_y_{Crack+Relic_4_0_0_{Uncommon_20.0000_1}}}&start=start">Uncommon Radshare</a>:
+                    </td>
+                    <td>
+                        ...Probably.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Three+Axi+S3+Relics_{m_Mot_0_0_y_{Rotation+C_1_0_20_{Axi+S3_11.1100_3}}}&start=start">Three
+                            Axi S3 Relics</a>:
+                    </td>
+                    <td>
+                        The vaulted relics drop only in the Void, so your options for efficient farming are limited.
+                        This is how long it takes to get enough for the average number of necessary Radiant shares.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Three+Axi+C3/G1_{m_Bounty+40-60_0_3_y_{Stage+2,3_2_0_3_{Axi+C3/G1_33.0400_3}}_{Stage+4_1_0_3_{Axi+C3/G1_25.6800_1}}_{Stage+5_1_0_3_{Axi+C3/G1_38.7800_1}}}&start=start">Three
+                            Axi C3/G1 Relics</a>:
+                    </td>
+                    <td>
+                        The new Axi relics have a very nice drop rate in the Cetus bounties, assuming you can catch the
+                        right rotation.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Three+Neo+G1+Relics_{m_Bounty+30-50_0_3_y_{Stage+2,3_2_0_3_{Axi+C3/G1_15.9600_3}}_{Stage+4_1_0_3_{Axi+C3/G1_15.6300_1}}_{Stage+5_1_0_3_{Axi+C3/G1_35.7100_1}}}&start=start">Three
+                            Neo G1 Relics</a>:
+                    </td>
+                    <td>
+                        Some of the new Neo relics are also relatively easy to get in Cetus bounties.
+                    </td>
+                </tr>
+            </table>
             <h2 id="Rivens">Rivens</h2>
             <table class="notes">
                 <tr>
@@ -5307,7 +5396,7 @@
                         <a href="?m=Godlike+Lanka+Riven_{r_Riven+Roll_g_{Hallelujah_-1_-1_n-nnn--d-p-ppdd-ddndpddn-dnnnnn}}&start=start">Godlike Lanka Riven</a>:
                     </td>
                     <td>
-                        This is why picky players pay a very high price for these.
+                        This is why players pay a very high price for these.
                     </td>
                 </tr>
                 <tr>
@@ -5323,61 +5412,29 @@
                         <a href="?m=Perfect+Rubico+Riven_{r_Riven+Roll_g_{Crits+for+days_2_-1_n-ddd--d-P-Pppp-dnddpddd-dnnnnn}}&start=start">Perfect Rubico Riven</a>:
                     </td>
                     <td>
-                        This is about as picky as you can get before the simulation starts seriously bogging down on my
-                        laptop.
+                        Getting super ridiculous now.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Riven+with+Exact+Stats_{r_Riven+Roll_g_{IT+HAS+TO+BE+THESE_3_1_d-ddd--d-P-Pddd-ddddPddd-dddddn}}&start=start">Riven with Exact Stats</a>:
+                    </td>
+                    <td>
+                        <p>
+                            Okay, so you're going to have to accept some wiggle room in the Riven stats you're looking
+                            for. If you absolutely must have a Riven with three specific positive stats and one
+                            specific negative stat, then you will be rolling it for an astonomically long time.
+                        </p>
+                        <p>
+                            Honestly, this is mostly here as a joke.  It's just past the point where the simulation
+                            really starts bogging down on my laptop.  Still, it's interesting to watch each data point
+                            appear one-by-one in slow motion after hundreds of thousands of rolls.
+                        </p>
                     </td>
                 </tr>
             </table>
             <h2 id="Misc">Misc</h2>
             <table class="notes">
-                <tr>
-                    <td>
-                        <a href="?m=Radshare_{m_Fissure_0_0_y_{Crack+Relic_4_0_0_{Rare_10.0000_1}}}&start=start">Radshare</a>:
-                    </td>
-                    <td>
-                        Radiant shares aren't bad on average.  However, I've personally seen it take 20 radshares to get
-                        the rare, which put that particular run in the 99.98th percentile.
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <a href="?m=Solo+Radiant_{m_Fissure_0_0_y_{Crack+Relic_1_0_0_{Rare_10.0000_1}}}&start=start">Solo
-                            Radiant</a>:
-                    </td>
-                    <td>
-                        And this is why you find Radiant shares.
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <a href="?m=Three+Axi+S3+Relics_{m_Mot_0_0_y_{Rotation+C_1_0_20_{Axi+S3_11.1100_3}}}&start=start">Three
-                            Axi S3 Relics</a>:
-                    </td>
-                    <td>
-                        The vaulted relics drop only in the Void, so your options for efficient farming are limited.
-                        This is how long it takes to get enough for the average number of necessary Radiant shares.
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <a href="?m=Three+Axi+C3/G1_{m_Bounty+40-60_0_3_y_{Stage+2,3_2_0_3_{Axi+C3/G1_33.0400_3}}_{Stage+4_1_0_3_{Axi+C3/G1_25.6800_1}}_{Stage+5_1_0_3_{Axi+C3/G1_38.7800_1}}}&start=start">Three
-                            Axi C3/G1 Relics</a>:
-                    </td>
-                    <td>
-                        The new Axi relics have a very nice drop rate in the Cetus bounties, assuming you can catch the
-                        right rotation.
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <a href="?m=Three+Neo+G1+Relics_{m_Bounty+30-50_0_3_y_{Stage+2,3_2_0_3_{Axi+C3/G1_15.9600_3}}_{Stage+4_1_0_3_{Axi+C3/G1_15.6300_1}}_{Stage+5_1_0_3_{Axi+C3/G1_35.7100_1}}}&start=start">Three
-                            Neo G1 Relics</a>:
-                    </td>
-                    <td>
-                        The new Axi relics have a very nice drop rate in the Cetus bounties, assuming you can catch the
-                        right rotation.
-                    </td>
-                </tr>
                 <tr>
                     <td>
                         <a href="?m=Miter_{m_Ceres+Ass_0_10_y_{Kill+Krill_1_0_0_{Barrel_16.6700_1}_{Blade_16.6700_1}_{Handle_16.6700_1}_{Chassis_16.6700_1}_{Blueprint_16.6700_1}}}&start=start">Miter</a>:
