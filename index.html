@@ -262,7 +262,7 @@
         color: #B0B0B0;
         cursor: not-allowed;
     }
-    .inputName:disabled, .inputTime:disabled, .inputRequired:disabled, .inputCount:disabled, .inputRate:disabled, .inputStopAfter:disabled {
+    .inputName:disabled, .inputTime:disabled, .inputRequired:disabled, .inputCount:disabled, .inputRate:disabled, .inputRange:disabled, .inputStopAfter:disabled {
         background-color: #202020;
         color: #B0B0B0;
         cursor: not-allowed;
@@ -524,23 +524,25 @@
 	    constructor() {
     		this.name = "Item";
     		this.prob = 10.0;
+    		this.range = new Range();
     		this.required = 1;
         }
 
 		toString() {
 		    // serialize to a string
-			return writeName(this.name) + FIELD_SEP + this.prob.toFixed(4) + FIELD_SEP + this.required;
+			return writeName(this.name) + FIELD_SEP + this.prob.toFixed(4) + FIELD_SEP + this.range.toString() + FIELD_SEP + this.required;
 		}
 
 		fromString(s) {
 		    // deserialize from a string
 			var fields = split(s);
-			if (fields.length != 3) {
+			if (fields.length != 4) {
 				throw "Invalid format: \"" + s + "\"";
 			}
 			this.name = readName(fields[0]);
 			this.prob = readFloat(fields[1]);
-			this.required = readInt(fields[2]);
+			this.range = new Range().fromString(fields[2]);
+			this.required = readInt(fields[3]);
 			return this;
 		}
 	}
@@ -566,7 +568,7 @@
 			s += this.requiredItems + FIELD_SEP;
 			s += this.time;
 			for (var i = 0; i < this.items.length; i++) {
-				s += FIELD_SEP + GROUP_START + this.items[i].toString() + GROUP_END;
+				s += FIELD_SEP + GROUP_START + "i_" + this.items[i].toString() + GROUP_END;
 			}
 			return s;
 		}
@@ -581,7 +583,9 @@
    			this.dropsPerMission = readInt(fields[1]);
 			this.time = readInt(fields[3]);
 			for (var i = 4; i < fields.length; i++) {
-				this.add(new Item().fromString(fields[i]));
+			    if (fields[i].startsWith("i_")) {
+    				this.add(new Item().fromString(fields[i].substring(2)));
+    			}
 			}
 
             // read this after adding the items
@@ -636,7 +640,7 @@
 			s += this.time + FIELD_SEP;
 			s += this.bailEarly ? "y" : "n";
 			for (var i = 0; i < this.drops.length; i++) {
-				s += FIELD_SEP + GROUP_START + this.drops[i].toString() + GROUP_END;
+				s += FIELD_SEP + GROUP_START + "d_" + this.drops[i].toString() + GROUP_END;
 			}
 			return s;
 		}
@@ -651,7 +655,9 @@
 			this.time = readInt(fields[2]);
 			this.bailEarly = fields[3].toLowerCase() == "y";
 			for (var i = 4; i < fields.length; i++) {
-				this.add(new Drop().fromString(fields[i]));
+			    if (fields[i].startsWith("d_")) {
+    				this.add(new Drop().fromString(fields[i].substring(2)));
+    		    }
 			}
 
             // read this after adding the drops
@@ -1098,7 +1104,7 @@
 			s += writeName(this.name) + FIELD_SEP;
 		    s += writeName(this.type);
 			for (var i = 0; i < this.criteria.length; i++) {
-			    s += FIELD_SEP + GROUP_START + this.criteria[i].toString() + GROUP_END;
+			    s += FIELD_SEP + GROUP_START + "c_" + this.criteria[i].toString() + GROUP_END;
 			}
 			return s;
 		}
@@ -1112,7 +1118,9 @@
 			this.name = readName(fields[0]);
 			this.type = readName(fields[1]);
 			for (var i = 2; i < fields.length; i++) {
-			    this.add(new RivenCriterion().fromString(fields[i]));
+			    if (fields[i].startsWith("c_")) {
+			        this.add(new RivenCriterion().fromString(fields[i].substring(2)));
+			    }
 			}
 
 			return this;
@@ -1568,9 +1576,12 @@
             // order, from 0 to 1.
             // note that this will not go all the way to 1 if the sum of the drop's desired items do not add to 100%
 			this.cProbs = toCumulativeProbs(this.drop.items);
+
 			// need to keep track of the last item from this drop in order to cross reference with other
 			// drops that may have the same item
 			this.lastItem = null;
+			// also track how many of the last item dropped
+			this.lastItemCount = 0;
 
     		// if the drop's required items is 0 then all items are required
             this.requiredItems = this.drop.requiredItems > 0 ? this.drop.requiredItems : this.drop.items.length;
@@ -1594,8 +1605,14 @@
 		        }
 		        if (dropNames[item.name]) {
     		        errors.push("duplicate item name: '" + item.name + "'");
+
 		        } else {
     		        dropNames[item.name] = item.name;
+    		    }
+
+    		    var rangeErrors = item.range.verify();
+    		    for (var i = 0; i < rangeErrors.length; i++) {
+    		        errors.push("item '" + item.name + "' -> range -> " + rangeErrors[i]);
     		    }
 		    }
 		    // need to have some leeway for rounding errors
@@ -1640,9 +1657,11 @@
 			// if the index is not past the end of the cumulative probability list
 			if (i1 < this.x.length) {
 			    // one of our items successfuly dropped.  increment the corresponding count
-				this.x[i1]++;
-				// check that item's count against its required number
-				if (this.x[i1] + this.otherx[i1] == this.drop.items[i1].required) {
+			    var count = this.drop.items[i1].range.generate();
+				this.x[i1] += count;
+	            // see if the total count has just now met or exceeded the required number
+				if (this.x[i1] + this.otherx[i1] - count < this.drop.items[i1].required &&
+				    this.x[i1] + this.otherx[i1] >= this.drop.items[i1].required) {
 				    // if the item has hit its required number, increment the number of successful items
 					this.numSuccess++;
 					// if the number of successful items has hit the drop's required number successes, then
@@ -1652,20 +1671,24 @@
 					}
 				}
 				this.lastItem = this.drop.items[i1];
+				this.lastItemCount = count;
 
 			} else {
 				this.lastItem = null;
+				this.lastItemCount = 0;
 			}
 
 			return ret;
 		}
 
-		otherSuccess(itemName) {
+		otherSuccess(itemName, count) {
 			var ret = false;
 		    for (var d = 0; d < this.drop.items.length; d++) {
 		        if (this.drop.items[d].name == itemName) {
-		            this.otherx[d]++;
-                    if (this.x[d] + this.otherx[d] == this.drop.items[d].required) {
+		            this.otherx[d] += count;
+		            // see if the total count has just now met or exceeded the required number
+                    if (this.x[d] + this.otherx[d] - count < this.drop.items[d].required &&
+                        this.x[d] + this.otherx[d] >= this.drop.items[d].required) {
                         // if the item has hit its required number, increment the number of successful items
                         this.numSuccess++;
                         // if the number of successful items has hit the drop's required number successes, then
@@ -1678,6 +1701,85 @@
 		    }
 			return ret;
 		}
+	}
+
+	class Range {
+	    constructor() {
+	        this.min = 1;
+	        this.max = 1;
+	        this.increment = 1;
+	    }
+
+	    generate() {
+	        if (this.min == this.max) {
+	            // shortcut
+	            return this.min;
+	        }
+
+	        // Here's where more RNG happens
+
+	        // pick a random integer between min and max, inclusive
+	        return this.min +
+	            // random number between 0 (inclusive) and 1 (exclusive)
+	            Math.floor(Math.random() *
+	                // multiply by the number of increments there are between min and max, inclusive
+	                Math.floor((this.max - this.min)/this.increment + 1)
+                ) * this.increment;
+	    }
+
+	    verify() {
+	        var errors = Array();
+	        if (this.min > this.max) {
+	            errors.push("minimum is greater than maximum");
+	        }
+	        if (this.max <= 0) {
+	            errors.push("must be greater than zero");
+	        }
+	        if (this.min < 0) {
+	            errors.push("minimum must be zero or greater");
+	        }
+	        if (this.increment <= 0) {
+	            errors.push("increment must be greater than zero");
+	        }
+	        return errors;
+	    }
+
+	    toString() {
+	        if (this.min == this.max) {
+	            return this.min.toFixed(0);
+	        }
+	        if (this.increment == 1) {
+    	        return this.min + "-" + this.max;
+    	    }
+            return this.min + "-" + this.max + "," + this.increment;
+	    }
+
+	    fromString(s) {
+            var regex = /(\d+)(?:-(\d+)(?:,(\d+))?)?/g;
+            var match = regex.exec(s);
+            if (!match) {
+                throw "Invalid format: \"" + s + "\"";
+            }
+
+            this.min = readInt(match[1]);
+
+            if (match[2]) {
+	            this.max = readInt(match[2]);
+
+	            if (match[3]) {
+    	            this.increment = readInt(match[3]);
+
+	            } else {
+	                this.increment = 1;
+	            }
+
+	        } else {
+                this.max = this.min;
+                this.increment = 1;
+	        }
+
+	        return this;
+	    }
 	}
 
     // data model for generating and tracking the results from running a single mission
@@ -1778,14 +1880,14 @@
 						if (dropRunner.lastItem) {
 						    // if the event had a successful item drop then we need to cross reference that item's name
 						    // with the other drops.
-						    var otherNumGot = this.otherSuccess(dropRunner, dropRunner.lastItem.name);
+						    var otherNumGot = this.otherSuccess(dropRunner, dropRunner.lastItem.name, dropRunner.lastItemCount);
 						    if (otherNumGot > 0) {
                                 numGot += otherNumGot;
                                 success = true;
                             }
 
                             // we also need to cross reference with later missions in the scenario
-                            scenaroRunner.otherSuccess(this, dropRunner.lastItem.name);
+                            scenaroRunner.otherSuccess(this, dropRunner.lastItem.name, dropRunner.lastItemCount);
 						}
 
                         // if there was a item that made any drop successful and early bailing is enabled, then
@@ -1822,11 +1924,11 @@
 			}
 		}
 
-		otherSuccess(dropRunner, lastItemName) {
+		otherSuccess(dropRunner, lastItemName, lastItemCount) {
     		var numGot = 0;
             for (var r2 = 0; r2 < this.dropRunners.length; r2++) {
                 var dropRunner2 = this.dropRunners[r2];
-                if (dropRunner2 !== dropRunner && dropRunner2.otherSuccess(lastItemName)) {
+                if (dropRunner2 !== dropRunner && dropRunner2.otherSuccess(lastItemName, lastItemCount)) {
                     // the item made another drop successful, so increment the number of successful drops
                     numGot++;
                 }
@@ -2020,7 +2122,7 @@
 		var cProbs = new Array(items.length);
 		cProbs[0] = items[0].prob;
 		for (var i = 1; i < items.length; i++) {
-			cProbs[i] = cProbs[i - 1] + items[i].prob;
+    	    cProbs[i] = cProbs[i - 1] + (items[i].prob ? items[i].prob : 0);
 		}
 		return cProbs;
 	}
@@ -2571,8 +2673,6 @@
             addItem(newNode);
         }
 
-        // todo: increment the 'Drop Events Required' field under the Mission if it was equal to the number of drop events before
-
         // return the drop element we just added
         return newNode;
     }
@@ -2607,6 +2707,15 @@
                             </tr>
                             <tr>
                                 <td class="tooltip">
+                                    Drop Count:
+                                    <span class="tooltiptextbottom">The number of items that drop at one time. This can be a single number, or a range like "6-30", or a range with an increment, like "6-30,2".</span>
+                                </td>
+                                <td>
+                                    <input class="inputRange" type="text" value="1"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="tooltip">
                                     Number Required:
                                     <span class="tooltiptextbottom">The number of times this item must drop during the course of a run to consider this item successful.</span>
                                 </td>
@@ -2625,8 +2734,6 @@
 
         // find the "item" element we just added
         newNode = addNode.previousElementSibling
-
-        // todo: increment the 'Items Required' field under the Drop Event if it was equal to the number of items before
 
         // return the item element we just added
         return newNode;
@@ -3026,8 +3133,13 @@
     function initModel() {
         // javascript is working
         clearErrors();
+
+        if (getQueryParam("h")) {
+            about();
+        }
+
         // on page load, see if there's a "m=..." query string
-        modelString = getQueryParam("m");
+        var modelString = getQueryParam("m");
         // if there is, then initialize our config
         setModelString(modelString);
 
@@ -3151,6 +3263,7 @@
                     // copy item config
                     getFirstChild(item, "inputName").value = itemModel.name;
                     getFirstChild(item, "inputRate").value = itemModel.prob;
+                    getFirstChild(item, "inputRange").value = itemModel.range.toString();
                     getFirstChild(item, "inputRequired").value = itemModel.required;
                 }
 
@@ -3184,6 +3297,7 @@
                         // copy item config
                         getFirstChild(item, "inputName").value = itemModel.name;
                         getFirstChild(item, "inputRate").value = itemModel.prob;
+                        getFirstChild(item, "inputRange").value = itemModel.range.toString();
                         getFirstChild(item, "inputRequired").value = itemModel.required;
                     }
                 }
@@ -3267,6 +3381,7 @@
                         // copy properties, sanitizing numeric inputs
                         itemModel.name = getFirstChild(item, "inputName").value;
                         itemModel.prob = readFloat(getFirstChild(item, "inputRate").value);
+                        itemModel.range = new Range().fromString(getFirstChild(item, "inputRange").value);
                         itemModel.required = readInt(getFirstChild(item, "inputRequired").value);
                     }
 
@@ -3305,6 +3420,7 @@
                         // copy properties, sanitizing numeric inputs
                         itemModel.name = getFirstChild(item, "inputName").value;
                         itemModel.prob = readFloat(getFirstChild(item, "inputRate").value);
+                        itemModel.range = new Range().fromString(getFirstChild(item, "inputRange").value);
                         itemModel.required = readInt(getFirstChild(item, "inputRequired").value);
                     }
 
@@ -3605,7 +3721,10 @@
                                 </div>
                             </td>
                             <td class="statValue">
-                                ${(trialData.min * dataScale).toFixed(dataScale < 1 ? 2 : 0)} (${trialData.dist[trialData.min/trialData.scale]} time${trialData.dist[trialData.min/trialData.scale] > 1 ? "s" : ""})
+                                ${(trialData.min * dataScale).toFixed(dataScale < 1 ? 2 : 0)}
+                                (${trialData.dist[trialData.min/trialData.scale]}
+                                time${trialData.dist[trialData.min/trialData.scale] > 1 ? "s" : ""} -
+                                ${(100 * trialData.dist[trialData.min/trialData.scale] / trialData.numTrials).toFixed(2)}%)
                             </td>
                         </tr>
                         <tr>
@@ -3693,7 +3812,7 @@
 		var h = cumulative ? trialData.cDist : trialData.dist;
 		// find the 99.9% percentile.  We will cut the data off there, otherwise the data may get very, very wide
 		// with the extreme 0.1% outliers.
-		var max = Math.round(trialData.percentileToResult(0.999));
+		var max = Math.ceil(trialData.percentileToResult(0.999));
 
         // find the maximum value of the distribution
         if (cumulative) {
@@ -3789,24 +3908,31 @@
 
         var xAxisLabelCount = 10;
 
-        // Scale back the number of labels when the actual values are huge
-        var maxLabelLength = (max * dataScale).toFixed(0).length;
-        // The larger the label length, the fewer labels we can have
-        if (maxLabelLength > 5) {
-            xAxisLabelCount = 6;
-        } else if ((max * dataScale).toFixed(0).length > 4) {
-            xAxisLabelCount = 8;
+        if (max <= xAxisLabelCount) {
+            var xAxisIncrement = 1;
+
+        } else {
+
+            // Scale back the number of labels when the actual values are huge
+            var maxLabelLength = (max * dataScale).toFixed(0).length;
+            // The larger the label length, the fewer labels we can have
+            if (maxLabelLength > 5) {
+                xAxisLabelCount = 6;
+            } else if ((max * dataScale).toFixed(0).length > 4) {
+                xAxisLabelCount = 8;
+            }
+
+            // calculate an increment for the x axis that gives us up to 10 labels
+            var xAxisIncrement = Math.ceil(max / (xAxisLabelCount*xAxisLabelCount)) * xAxisLabelCount;
+            // If there is a fractional data scale, pick an increment nearby which gives whole numbers when multiplied by
+            // the data scale.
+            if (dataScale < 1) {
+                xAxisIncrement = Math.round(Math.ceil(xAxisIncrement * dataScale) / dataScale);
+            }
         }
 
-        // calculate an increment for the x axis that gives us up to 10 labels
-        var xAxisIncrement = Math.ceil(max / (xAxisLabelCount*xAxisLabelCount)) * xAxisLabelCount;
-        // If there is a fractional data scale, pick an increment nearby which gives whole numbers when multiplied by
-        // the data scale.
-        if (dataScale < 1) {
-            xAxisIncrement = Math.round(Math.ceil(xAxisIncrement * dataScale) / dataScale);
-        }
         // loop over the increments
-        for (var t = 0; t < max; t+= xAxisIncrement) {
+        for (var t = 0; t <= max; t+= xAxisIncrement) {
             // calculate the X coordinate of the axis
             var x1 = graphXStart + ((t + 0.5) * (graphWidth - margin)) / (max + 1);
             // starting Y coord is the bottom of the graph
@@ -3842,7 +3968,7 @@
 
         if (trialData.average > max/2) {
             // data is closer to a normal distribution, put the text on the left
-            var textX = graphWidth * 0.33;
+            var textX = canvas.width - (graphWidth * 0.67);
 
         } else {
             // data is closer to a skewed negative binomial distribution, put the text on the right
@@ -4126,9 +4252,18 @@
             // check if the model has changed by comparing toString()s.
             if (model.toString() == scenarioRunner.scenario.toString()) {
                 // model hasn't changed, we can just resume where we left off
-                // if we were auto-stopped then increment the number we will stop after
-                if (stopNum > 0 && scenarioRunner.totalResults.numTrials >= stopNum) {
-                    stopNum += readInt(document.getElementById('stopAfter').value);
+
+                // read the auto stop number from the UI
+                var stopAfter = readInt(document.getElementById('stopAfter').value);
+
+                if (stopAfter == 0) {
+                    // If the user has entered 0 for stopAfter then run until stop is clicked.
+                    stopNum = Number.MAX_SAFE_INTEGER;
+
+                } else {
+                    // Run until we hit the next multiple of stopAfter
+                    // add 1 to the current total in case we're currently at a multiple, or 0.
+                    stopNum = stopAfter * (Math.ceil((scenarioRunner.totalResults.numTrials + 1) / stopAfter));
                 }
 
             } else {
@@ -4287,13 +4422,34 @@
 
     function about() {
         var container = document.getElementById("lotsOfWordsContainer")
+        var urlString = "&h=yes";
+
         if (container.style.display === "none") {
             container.style.display = "block";
 
+            // perform some history shenanigans to make sure that if you display Help, click a link, and then go back,
+            // then Help is still displayed and you don't lose your place.
+            var href = window.location.href;
+            if (href.indexOf(urlString) < 0) {
+                if (href.indexOf("?") < 0) {
+                    href += "?";
+                }
+                href += urlString;
+                history.replaceState( {} , document.title, href );
+            }
+
         } else {
             container.style.display = "none";
+            var href = window.location.href;
+            var index = href.indexOf(urlString)
+            if (index >= 0) {
+                href = href.substring(0, index) + href.substring(index + urlString.length);
+                history.replaceState( {} , document.title, href );
+            }
         }
     }
+
+
 
 
 </script>
@@ -4310,62 +4466,64 @@
                         <option value="" disabled selected>Select one...</option>
                         <option value="" disabled>---Frames---</option>
                         <!-- These frame samples are in rough order from least to most average time -->
-                        <option value="Standard+Boss+Frame_{m_Assassinate_0_10_y_{Complete_1_0_0_{Helmet_38.7200_1}_{Chassis_38.7200_1}_{Systems_22.5600_1}}}">Standard Boss Frame</option>
-                        <option value="Ash_{e_Grineer+Manic_0_0_y_{Kill_1_0_0_{Chassis_12.7776_1}_{Helmet_12.7776_1}_{Systems_7.4480_1}}}">Ash</option>
-                        <option value="Gara_{m_Bounty+5-15_0_0_y_{Stage+2_1_0_6_{Chassis_7.5200_1}}_{Stage+3_1_0_3_{Chassis_30.5600_1}}}_{m_Bounty+10-20_0_0_y_{Stage+2_1_0_6_{Systems_9.5200_1}}_{Stage+3_1_0_3_{Systems_21.8200_1}}}_{m_Bounty+20-30_0_0_y_{Stage+3_1_0_9_{Helmet_8.4200_1}}_{Stage+4_1_0_3_{Helmet_20.5100_1}}}">Gara</option>
-                        <option value="Octavia_{m_ODS_0_0_y_{Rotation+C_1_0_20_{Helmet_22.5600_1}}}_{m_Lua+Crossfire+With+Caches,+Music+Room_0_5_y_{Music+Room+(guessing+at+spawn+rate)_1_1_0_{Chassis_25.0000_1}}_{Cache+A_1_0_5_{Systems_22.5600_1}}}">Octavia</option>
-                        <option value="Revenant_{m_Bounty+20-40_0_3_y_{Stage+2_1_0_3_{Systems_8.8700_1}}_{Stage+3_1_0_3_{Systems_8.6833_1}}_{Stage+4_1_0_3_{Systems_20.1700_1}}}_{m_Bounty+30-50_0_3_y_{Stage+2,3_2_0_3_{Chassis_8.4500_1}}_{Stage+4_1_0_3_{Chassis_8.2733_1}}_{Stage+5_1_0_3_{Chassis_19.3667_1}}}_{m_Bounty+40-60_0_9_y_{Stage+4_1_0_3_{Helmet_6.7600_1}}_{Stage+5_1_0_3_{Helmet_10.0200_1}}}">Revenant</option>
-                        <option value="Revenant+(no+bail+early)_{m_Bounty+20-40_0_3_n_{Stage+2_1_0_3_{Systems_8.8700_1}}_{Stage+3_1_0_3_{Systems_8.6833_1}}_{Stage+4_1_0_3_{Systems_20.1700_1}}}_{m_Bounty+30-50_0_3_n_{Stage+2,3_2_0_3_{Chassis_8.4500_1}}_{Stage+4_1_0_3_{Chassis_8.2733_1}}_{Stage+5_1_0_3_{Chassis_19.3667_1}}}_{m_Bounty+40-60_0_9_n_{Stage+4_1_0_3_{Helmet_6.7600_1}}_{Stage+5_1_0_3_{Helmet_10.0200_1}}}">Revenant (no bail early)</option>
-                        <option value="Equinox_{m_Uranus+Assassinate_0_10_y_{Kill+Tyl_1_0_0_{Night+Aspect_11.2800_1}_{Night+Chassis_12.9100_1}_{Night+Systems_12.9100_1}_{Night+Helmet_12.9100_1}_{Day+Aspect_11.2800_1}_{Day+Chassis_12.9100_1}_{Day+Systems_12.9100_1}_{Day+Helmet_12.9100_1}}}">Equinox</option>
-                        <option value="Nidus_{m_Infested+Salvage_0_0_y_{Rotation+C_1_0_20_{Systems_14.2900_1}_{Helmet_14.2900_1}_{Chassis_14.2900_1}}}">Nidus</option>
-                        <option value="Ivara_{m_Tier+1+Spy_0_10_y_{Rotation+C_1_0_0_{Systems_9.0900_1}}}_{m_Tier+2+Spy_0_10_y_{Rotation+C_1_0_0_{Chassis_5.6400_1}}}_{m_Tier+3+Spy_0_10_y_{Rotation+C_1_0_0_{Helmet_7.5200_1}_{BP_7.5200_1}}}">Ivara</option>
-                        <option value="Khora_{m_Onslaught_0_0_y_{Rotation+A_2_0_5_{Chassis_8.3300_1}}_{Rotation+B_1_0_5_{Helmet_7.6900_1}}_{Rotation+C_1_0_5_{Systems_5.6400_1}_{BP_5.6400_1}}}">Khora</option>
+                        <option value="Standard+Boss+Frame_{m_Assassinate_0_10_y_{d_Complete_1_0_0_{i_Helmet_38.7200_1_1}_{i_Chassis_38.7200_1_1}_{i_Systems_22.5600_1_1}}}">Standard Boss Frame</option>
+                        <option value="Ash_{e_Grineer+Manic_0_0_y_{d_Kill_1_0_0_{i_Chassis_12.7776_1_1}_{i_Helmet_12.7776_1_1}_{i_Systems_7.4480_1_1}}}">Ash</option>
+                        <option value="Gara_{m_Bounty+5-15_0_0_y_{d_Stage+2_1_0_6_{i_Chassis_7.5200_1_1}}_{d_Stage+3_1_0_3_{i_Chassis_30.5600_1_1}}}_{m_Bounty+10-20_0_0_y_{d_Stage+2_1_0_6_{i_Systems_9.5200_1_1}}_{d_Stage+3_1_0_3_{i_Systems_21.8200_1_1}}}_{m_Bounty+20-30_0_0_y_{d_Stage+3_1_0_9_{i_Helmet_8.4200_1_1}}_{d_Stage+4_1_0_3_{i_Helmet_20.5100_1_1}}}">Gara</option>
+                        <option value="Octavia_{m_ODS_0_0_y_{d_Rotation+C_1_0_20_{i_Helmet_22.5600_1_1}}}_{m_Lua+Crossfire+With+Caches,+Music+Room_0_5_y_{d_Music+Room+(guessing+at+spawn+rate)_1_1_0_{i_Chassis_25.0000_1_1}}_{d_Cache+A_1_0_5_{i_Systems_22.5600_1_1}}}">Octavia</option>
+                        <option value="Revenant_{m_Bounty+20-40_0_3_y_{d_Stage+2_1_0_3_{i_Systems_8.8700_1_1}}_{d_Stage+3_1_0_3_{i_Systems_8.6833_1_1}}_{d_Stage+4_1_0_3_{i_Systems_20.1700_1_1}}}_{m_Bounty+30-50_0_3_y_{d_Stage+2,3_2_0_3_{i_Chassis_8.4500_1_1}}_{d_Stage+4_1_0_3_{i_Chassis_8.2733_1_1}}_{d_Stage+5_1_0_3_{i_Chassis_19.3667_1_1}}}_{m_Bounty+40-60_0_9_y_{d_Stage+4_1_0_3_{i_Helmet_6.7600_1_1}}_{d_Stage+5_1_0_3_{i_Helmet_10.0200_1_1}}}">Revenant</option>
+                        <option value="Revenant+(no+bail+early)_{m_Bounty+20-40_0_3_n_{d_Stage+2_1_0_3_{i_Systems_8.8700_1_1}}_{d_Stage+3_1_0_3_{i_Systems_8.6833_1_1}}_{d_Stage+4_1_0_3_{i_Systems_20.1700_1_1}}}_{m_Bounty+30-50_0_3_n_{d_Stage+2,3_2_0_3_{i_Chassis_8.4500_1_1}}_{d_Stage+4_1_0_3_{i_Chassis_8.2733_1_1}}_{d_Stage+5_1_0_3_{i_Chassis_19.3667_1_1}}}_{m_Bounty+40-60_0_9_n_{d_Stage+4_1_0_3_{i_Helmet_6.7600_1_1}}_{d_Stage+5_1_0_3_{i_Helmet_10.0200_1_1}}}">Revenant (no bail early)</option>
+                        <option value="Equinox_{m_Uranus+Assassinate_0_10_y_{d_Kill+Tyl_1_0_0_{i_Night+Aspect_11.2800_1_1}_{i_Night+Chassis_12.9100_1_1}_{i_Night+Systems_12.9100_1_1}_{i_Night+Helmet_12.9100_1_1}_{i_Day+Aspect_11.2800_1_1}_{i_Day+Chassis_12.9100_1_1}_{i_Day+Systems_12.9100_1_1}_{i_Day+Helmet_12.9100_1_1}}}">Equinox</option>
+                        <option value="Nidus_{m_Infested+Salvage_0_0_y_{d_Rotation+C_1_0_20_{i_Systems_14.2900_1_1}_{i_Helmet_14.2900_1_1}_{i_Chassis_14.2900_1_1}}}">Nidus</option>
+                        <option value="Ivara_{m_Tier+1+Spy_0_10_y_{d_Rotation+C_1_0_0_{i_Systems_9.0900_1_1}}}_{m_Tier+2+Spy_0_10_y_{d_Rotation+C_1_0_0_{i_Chassis_5.6400_1_1}}}_{m_Tier+3+Spy_0_10_y_{d_Rotation+C_1_0_0_{i_Helmet_7.5200_1_1}_{i_BP_7.5200_1_1}}}">Ivara</option>
+                        <option value="Khora_{m_Onslaught_0_0_y_{d_Rotation+A_2_0_5_{i_Chassis_8.3300_1_1}}_{d_Rotation+B_1_0_5_{i_Helmet_7.6900_1_1}}_{d_Rotation+C_1_0_5_{i_Systems_5.6400_1_1}_{i_BP_5.6400_1_1}}}">Khora</option>
                         <!-- The simulation isn't really built for these, but they do work -->
                         <option value="" disabled>---Mods---</option>
-                        <option value="Argon+Scope_{e_Torment_0_0_y_{Kill_1_0_0_{Argon+Scope_4.0400_1}}}">Argon Scope</option>
-                        <option value="Four+Riders_{e_Grineer+Manic_0_0_y_{Kill_1_0_0_{Four+Riders_0.3350_1}}}">Four Riders</option>
-                        <option value="Vengeful+Revenant_{e_Conculyst_0_0_y_{Kill_1_0_0_{Vengeful+Revenant_0.4170_1}}}">Vengeful Revenant</option>
-                        <option value="Condition+Overload_{e_Drekar+Butcher_0_0_y_{Kill_1_0_0_{Condition+Overload_0.0201_1}}}">Condition Overload</option>
-                        <option value="Guardian+Derision_{e_Prod+Crewman_0_0_y_{Kill_1_0_0_{Guardian+Derision_0.0150_1}}}">Guardian Derision</option>
-                        <option value="Full+Hunter+Set+(Ghouls)_{m_Level+15-25+Ghoul+Bounty_0_0_y_{Stage+1_1_0_3_{Adrenaline_33.3300_1}}_{Stage+2,+3_2_0_3_{Adrenaline_11.7400_1}_{Munitions_9.3900_1}}_{Stage+4_1_0_3_{Munitions_11.9000_1}_{Track_11.9000_1}}}_{m_Level+40-50+Ghoul+Bounty_0_0_y_{Stage+1_1_0_3_{Recovery_33.3300_1}}_{Stage+2,+3_2_0_3_{Recovery_11.7400_1}_{Synergy_9.3900_1}}_{Stage+4_1_0_3_{Recovery_10.2900_1}_{Synergy_8.2300_1}_{Command_8.2300_1}}_{Stage+5_1_0_3_{Synergy_11.9000_1}_{Command_11.9000_1}}}">Full Hunter Set (Ghouls)</option>
-                        <option value="Full+Hunter+Set+(Plague+Star)_{m_Plague+Star_0_15_y_{Kill+Hemocyte_4_0_0_{Hunter+Command_10.5300_1}_{Hunter+Recovery_28.9500_1}_{Hunter+Synergy_10.5300_1}_{Hunter+Munitions_10.5300_1}_{Hunter+Track_10.5300_1}_{Hunter+Adrenaline_28.9500_1}}}">Full Hunter Set (Plague Star)</option>
-                        <option value="All+Corrupted+Mods_{m_Derelict+Exterminate_0_5_y_{Vault_1_0_0_{Spoiled+Strike_4.1700_1}_{Corrupt+Charge_4.1700_1}_{Hollow+Point_4.1700_1}_{Magnum+Force_4.1700_1}_{Tainted+Clip_4.1700_1}_{Critical+Delay_4.1700_1}_{Heavy+Caliber_4.1700_1}_{Tainted+Mag_4.1700_1}_{Vile+Precision_4.1700_1}_{Narrow+Minded_4.1700_1}_{Fleeting+Expertise_4.1700_1}_{Blind+Rage_4.1700_1}_{Overextended_4.1700_1}_{Tainted+Shell_4.1700_1}_{Vicious+Spread_4.1700_1}_{Burdened+Magazine_4.1700_1}_{Anemic+Agility_4.1700_1}_{Vile+Acceleration_4.1700_1}_{Frail+Momentum_4.1700_1}_{Critical+Deceleration_4.1700_1}_{Creeping+Bullseye_4.1700_1}_{Transient+Fortitude_4.1700_1}_{Depleted+Reload_4.1700_1}}}">All Corrupted Mods</option>
+                        <option value="Argon+Scope_{e_Torment_0_0_y_{d_Kill_1_0_0_{i_Argon+Scope_4.0400_1_1}}}">Argon Scope</option>
+                        <option value="Four+Riders_{e_Grineer+Manic_0_0_y_{d_Kill_1_0_0_{i_Four+Riders_0.3350_1_1}}}">Four Riders</option>
+                        <option value="Vengeful+Revenant_{e_Conculyst_0_0_y_{d_Kill_1_0_0_{i_Vengeful+Revenant_0.4170_1_1}}}">Vengeful Revenant</option>
+                        <option value="Tempo+Royale+(Bursa)_{e_Isolator+Bursa_0_0_y_{d_Kill_1_0_0_{i_Tempo+Royale_0.0603_1_1}}}">Tempo Royale (Bursa)</option>
+                        <option value="Tempo+Royale+(Incursion)_{m_Plains+Incursion_0_5_y_{d_Rotation+A_1_0_0_{i_Tempo+Royale_1.0100_1_1}}}">Tempo Royale (Incursion)</option>
+                        <option value="Condition+Overload_{e_Drekar+Butcher_0_0_y_{d_Kill_1_0_0_{i_Condition+Overload_0.0201_1_1}}}">Condition Overload</option>
+                        <option value="Guardian+Derision_{e_Prod+Crewman_0_0_y_{d_Kill_1_0_0_{i_Guardian+Derision_0.0150_1_1}}}">Guardian Derision</option>
+                        <option value="Full+Hunter+Set+(Ghouls)_{m_Level+15-25+Ghoul+Bounty_0_0_y_{d_Stage+1_1_0_3_{i_Adrenaline_33.3300_1_1}}_{d_Stage+2,+3_2_0_3_{i_Adrenaline_11.7400_1_1}_{i_Munitions_9.3900_1_1}}_{d_Stage+4_1_0_3_{i_Munitions_11.9000_1_1}_{i_Track_11.9000_1_1}}}_{m_Level+40-50+Ghoul+Bounty_0_0_y_{d_Stage+1_1_0_3_{i_Recovery_33.3300_1_1}}_{d_Stage+2,+3_2_0_3_{i_Recovery_11.7400_1_1}_{i_Synergy_9.3900_1_1}}_{d_Stage+4_1_0_3_{i_Recovery_10.2900_1_1}_{i_Synergy_8.2300_1_1}_{i_Command_8.2300_1_1}}_{d_Stage+5_1_0_3_{i_Synergy_11.9000_1_1}_{i_Command_11.9000_1_1}}}">Full Hunter Set (Ghouls)</option>
+                        <option value="Full+Hunter+Set+(Plague+Star)_{m_Plague+Star_0_15_y_{d_Kill+Hemocyte_4_0_0_{i_Hunter+Command_10.5300_1_1}_{i_Hunter+Recovery_28.9500_1_1}_{i_Hunter+Synergy_10.5300_1_1}_{i_Hunter+Munitions_10.5300_1_1}_{i_Hunter+Track_10.5300_1_1}_{i_Hunter+Adrenaline_28.9500_1_1}}}">Full Hunter Set (Plague Star)</option>
+                        <option value="All+Corrupted+Mods_{m_Derelict+Exterminate_0_5_y_{d_Vault_1_0_0_{i_Spoiled+Strike_4.1700_1_1}_{i_Corrupt+Charge_4.1700_1_1}_{i_Hollow+Point_4.1700_1_1}_{i_Magnum+Force_4.1700_1_1}_{i_Tainted+Clip_4.1700_1_1}_{i_Critical+Delay_4.1700_1_1}_{i_Heavy+Caliber_4.1700_1_1}_{i_Tainted+Mag_4.1700_1_1}_{i_Vile+Precision_4.1700_1_1}_{i_Narrow+Minded_4.1700_1_1}_{i_Fleeting+Expertise_4.1700_1_1}_{i_Blind+Rage_4.1700_1_1}_{i_Overextended_4.1700_1_1}_{i_Tainted+Shell_4.1700_1_1}_{i_Vicious+Spread_4.1700_1_1}_{i_Burdened+Magazine_4.1700_1_1}_{i_Anemic+Agility_4.1700_1_1}_{i_Vile+Acceleration_4.1700_1_1}_{i_Frail+Momentum_4.1700_1_1}_{i_Critical+Deceleration_4.1700_1_1}_{i_Creeping+Bullseye_4.1700_1_1}_{i_Transient+Fortitude_4.1700_1_1}_{i_Depleted+Reload_4.1700_1_1}}}">All Corrupted Mods</option>
                         <!-- Relic-related scenarios -->
                         <option value="" disabled>---Relics---</option>
-                        <option value="Radshare_{m_Fissure_0_0_y_{Crack+Relic_4_0_0_{Rare_10.0000_1}}}">Radshare</option>
-                        <option value="Solo+Radiant_{m_Fissure_0_0_y_{Crack+Relic_1_0_0_{Rare_10.0000_1}}}">Solo Radiant</option>
-                        <option value="Uncommon+Intact+Share_{m_Fissure_0_0_y_{Crack+Relic_4_0_0_{Uncommon_11.0000_1}}}">Uncommon Intact Share</option>
-                        <option value="Uncommon+Radshare_{m_Fissure_0_0_y_{Crack+Relic_4_0_0_{Uncommon_20.0000_1}}}">Uncommon Radshare</option>
-                        <option value="Three+Axi+S3+Relics_{m_Mot_0_0_y_{Rotation+C_1_0_20_{Axi+S3_11.1100_3}}}">Three Axi S3 Relics</option>
-                        <option value="Three+Axi+C3/G1_{m_Bounty+40-60_0_3_y_{Stage+2,3_2_0_3_{Axi+C3/G1_33.0400_3}}_{Stage+4_1_0_3_{Axi+C3/G1_25.6800_1}}_{Stage+5_1_0_3_{Axi+C3/G1_38.7800_1}}}">Three Axi C3/G1 Relics</option>
-                        <option value="Three+Neo+G1+Relics_{m_Bounty+30-50_0_3_y_{Stage+2,3_2_0_3_{Axi+C3/G1_15.9600_3}}_{Stage+4_1_0_3_{Axi+C3/G1_15.6300_1}}_{Stage+5_1_0_3_{Axi+C3/G1_35.7100_1}}}">Three Neo G1 Relics</option>
+                        <option value="Radshare_{m_Fissure_0_0_y_{d_Crack+Relic_4_0_0_{i_Rare_10.0000_1_1}}}">Radshare</option>
+                        <option value="Solo+Radiant_{m_Fissure_0_0_y_{d_Crack+Relic_1_0_0_{i_Rare_10.0000_1_1}}}">Solo Radiant</option>
+                        <option value="Uncommon+Intact+Share_{m_Fissure_0_0_y_{d_Crack+Relic_4_0_0_{i_Uncommon_11.0000_1_1}}}">Uncommon Intact Share</option>
+                        <option value="Uncommon+Radshare_{m_Fissure_0_0_y_{d_Crack+Relic_4_0_0_{i_Uncommon_20.0000_1_1}}}">Uncommon Radshare</option>
+                        <option value="Three+Axi+S3+Relics+(Mot)_{m_Mot_0_0_y_{d_Rotation+C_1_0_20_{i_Axi+S3_11.1100_1_3}}}">Three Axi S3 Relics (Mot)</option>
+                        <option value="Three+Axi+C3/G1+Relics+(Bounties)_{m_Bounty+40-60_0_3_y_{d_Stage+2,3_2_0_3_{i_Axi+C3/G1_33.0400_1_3}}_{d_Stage+4_1_0_3_{i_Axi+C3/G1_25.6800_1_1}}_{d_Stage+5_1_0_3_{i_Axi+C3/G1_38.7800_1_1}}}">Three Axi C3/G1 Relics (Bounties)</option>
+                        <option value="Three+Neo+G1+Relics+(Bounties)_{m_Bounty+30-50_0_3_y_{d_Stage+2,3_2_0_3_{i_Axi+C3/G1_15.9600_1_3}}_{d_Stage+4_1_0_3_{i_Axi+C3/G1_15.6300_1_1}}_{d_Stage+5_1_0_3_{i_Axi+C3/G1_35.7100_1_1}}}">Three Neo G1 Relics (Bounties)</option>
+                        <option value="100+Void+Traces_{m_Quick+Fissure_0_5_y_{d_Crack+Relic_1_0_0_{i_Void+Trace_100.0000_6-30_100}}}">100 Void Traces</option>
+                        <option value="1000+Void+Traces+w/+Booster_{m_Quick+Fissure_0_5_y_{d_Crack+Relic_1_0_0_{i_Void+Trace_100.0000_12-60,2_1000}}}">1000 Void Traces with Booster</option>
                         <!-- Riven-related scenarios -->
                         <option value="" disabled>---Rivens---</option>
-                        <option value="90+Rivens_{m_Sortie_0_0_y_{Complete_1_0_0_{Riven_26.0800_90}}}">90 Rivens</option>
-                        <option value="Riven+for+a+Specific+Rifle_{m_Sortie_0_0_y_{Complete_1_0_0_{One+of+62+possible+Rifle+Rivens_0.1095_1}}}">Riven for a Specific Rifle</option>
-                        <option value="Decent+Melee+Riven_{r_Riven+Roll_m_{Decent_-1_-1_-pdddnnpppdppppn--d--p-dp-dpd--}}">Decent Melee Riven</option>
-                        <option value="Basic+Damage+Gun+Riven_{r_Riven+Roll_g_{Damage_-1_-1_n-ddd--p-p-pppp-pndnpppd-dddnnn}}">Basic Damage Gun Riven</option>
-                        <option value="Crit+or+Status+Melee+Riven_{r_Riven+Roll_m_{Crit_-1_-1_-pdddnnppPdppppn--d--p-dp-ddn--}_{Status_-1_-1_-pdddnnpdnndpppn--d--p-dp-pPp--}}">Crit or Status Melee Riven</option>
-                        <option value="Status+Gun+Riven_{r_Riven+Roll_g_{Status_-1_-1_n-ddd--p-d-dppp-pnnnpppn-npPpnn}}">Status Gun Riven</option>
-                        <option value="Crit+Gun+Riven_{r_Riven+Roll_g_{Crit_-1_-1_n-ddd--p-P-pppp-dndnpppd-nddnnn}}">Crit Gun Riven</option>
-                        <option value="Godlike+Lanka+Riven_{r_Riven+Roll_g_{Hallelujah_-1_-1_n-nnn--d-p-ppdd-ddndpddn-dnnnnn}}">Godlike Lanka Riven</option>
-                        <option value="Godlike+Vectis+Riven_{r_Riven+Roll_g_{Damage,+-Mag+Cap_-1_1_d-ddd--p-p-pppp-pddnppdd-pddddd}}">Godlike Vectis Riven</option>
-                        <option value="Perfect+Rubico+Riven_{r_Riven+Roll_g_{Crits+for+days_2_-1_n-ddd--d-P-Pppp-dnddpddd-dnnnnn}}">Perfect Rubico Riven</option>
-                        <option value="Riven+with+Exact+Stats_{r_Riven+Roll_g_{IT+HAS+TO+BE+THESE_3_1_d-ddd--d-P-Pddd-ddddPddd-dddddn}}">Riven with Exact Stats</option>
+                        <option value="90+Rivens_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_Riven_26.0800_1_90}}}">90 Rivens</option>
+                        <option value="Riven+for+a+Specific+Rifle_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_One+of+62+possible+Rifle+Rivens_0.1095_1_1}}}">Riven for a Specific Rifle</option>
+                        <option value="Decent+Melee+Riven_{r_Riven+Roll_m_{c_Decent_-1_-1_-pdddnnpppdppppn--d--p-dp-dpd--}}">Decent Melee Riven</option>
+                        <option value="Basic+Damage+Gun+Riven_{r_Riven+Roll_g_{c_Damage_-1_-1_n-ddd--p-p-pppp-pndnpppd-dddnnn}}">Basic Damage Gun Riven</option>
+                        <option value="Crit+or+Status+Melee+Riven_{r_Riven+Roll_m_{c_Crit_-1_-1_-pdddnnppPdppppn--d--p-dp-ddn--}_{c_Status_-1_-1_-pdddnnpdnndpppn--d--p-dp-pPp--}}">Crit or Status Melee Riven</option>
+                        <option value="Status+Gun+Riven_{r_Riven+Roll_g_{c_Status_-1_-1_n-ddd--p-d-dppp-pnnnpppn-npPpnn}}">Status Gun Riven</option>
+                        <option value="Crit+Gun+Riven_{r_Riven+Roll_g_{c_Crit_-1_-1_n-ddd--p-P-pppp-dndnpppd-nddnnn}}">Crit Gun Riven</option>
+                        <option value="Godlike+Lanka+Riven_{r_Riven+Roll_g_{c_Hallelujah_-1_-1_n-nnn--d-p-ppdd-ddndpddn-dnnnnn}}">Godlike Lanka Riven</option>
+                        <option value="Godlike+Vectis+Riven_{r_Riven+Roll_g_{c_Damage,+-Mag+Cap_-1_1_d-ddd--p-p-pppp-pddnppdd-pddddd}}">Godlike Vectis Riven</option>
+                        <option value="Perfect+Rubico+Riven_{r_Riven+Roll_g_{c_Crits+for+days_-1_-1_n-ddd--d-P-Pppp-dnddpddd-dnnnnn}}">Perfect Rubico Riven</option>
+                        <option value="Riven+with+Exact+Stats_{r_Riven+Roll_g_{c_IT+HAS+TO+BE+THESE_3_1_d-ddd--d-P-Pddd-ddddPddd-dddddn}}">Riven with Exact Stats</option>
                         <!-- Just some miscellaneous rough grinds -->
                         <option value="" disabled>---Misc---</option>
-                        <option value="Miter_{m_Ceres+Ass_0_10_y_{Kill+Krill_1_0_0_{Barrel_16.6700_1}_{Blade_16.6700_1}_{Handle_16.6700_1}_{Chassis_16.6700_1}_{Blueprint_16.6700_1}}}">Miter</option>
-                        <option value="Imperator+Vandal_{m_Fomorian_0_0_y_{Complete_1_0_0_{Barrel_11.2800_1}_{Receiver_11.2800_1}_{Blueprint_38.7200_1}}}">Imperator Vandal</option>
+                        <option value="Miter_{m_Ceres+Ass_0_10_y_{d_Kill+Krill_1_0_0_{i_Barrel_16.6700_1_1}_{i_Blade_16.6700_1_1}_{i_Handle_16.6700_1_1}_{i_Chassis_16.6700_1_1}_{i_Blueprint_16.6700_1_1}}}">Miter</option>
+                        <option value="Imperator+Vandal_{m_Fomorian_0_0_y_{d_Complete_1_0_0_{i_Barrel_11.2800_1_1}_{i_Receiver_11.2800_1_1}_{i_Blueprint_38.7200_1_1}}}">Imperator Vandal</option>
                         <!-- get ready to cry -->
-                        <option value="All+Razorback+Drops_{e_Razorback_0_0_y_{Kill_1_0_0_{Gorgon+Wraith+Blueprint_18.9700_1}_{Gorgon+Wraith+Barrel_18.9700_1}_{Gorgon+Wraith+Receiver_18.9700_1}_{Gorgon+Wraith+Stock_18.9700_1}_{Bore_5.5300_1}_{Piercing+Caliber_5.5300_1}_{Breach+Loader_5.5300_1}_{Augur+Strike_5.5300_1}_{Magma+Chamber_1.0100_1}_{Searing+Steel_1.0100_1}}}">All Razorback Drops</option>
-                        <option value="Arcane+Energize+Set_{m_Tridolon+Hunt_0_0_y_{Hydrolyst+Capture_1_0_0_{Arcane+Energize_5.0000_10}}}">Arcane Energize Set</option>
-                        <option value="All+Shadow+Stalker+Drops_{e_I+AM+YOUR+RECKONING_0_0_y_{Kill_1_0_0_{Scimitar+Engines+BP_1.0050_1}_{Broken+War+BP_2.7650_1}_{Dread+BP_37.9400_1}_{Despair+BP_2.7650_1}_{Hate+BP_2.7650_1}_{War+BP_2.7650_1}}}">All Shadow Stalker Drops</option>
-                        <option value="War+Parts_{e_Conculyst_0_0_y_{Kill_1_0_0_{War+Hilt+BP_0.5000_2}_{War+Blade+BP_0.5000_1}}}">War Parts</option>
-                        <option value="Braton+and+Lato+Vandal_{m_Elite+Onslaught_0_0_y_{Rotation+A_2_0_5_{Lato+Receiver_2.0100_1}}_{Rotation+B_1_0_5_{Braton+Barrel_4.4200_1}_{Braton+Receiver_4.4200_1}_{Lato+BP_2.0100_1}}_{Rotation+C_1_0_5_{Braton+Stock_2.2100_1}_{Braton+BP_2.0100_1}_{Lato+Barrel_2.2100_1}}}">Braton and Lato Vandal</option>
-                        <option value="Legendary+Core_{m_Sortie_0_0_y_{Complete_1_0_0_{Legendary+Core_0.1800_1}}}">Legendary Core</option>
-                        <option value="Xiphos_{m_Tier+1+Sabotage_0_10_y_{Rotation+C_1_0_0_{Fuselage_0.5000_1}}}_{m_Tier+2+Sabotage_0_10_y_{Rotation+C_1_0_0_{Engines_0.5000_1}}}_{m_Tier+3+Sabotage_0_10_y_{Rotation+C_1_0_0_{Avionics_0.5000_1}}}">Xiphos</option>
-                        <!-- just playing around -->
-                        <!--<option value="http://localhost:63342/phun/sandbox/src/html/dropsim.html?m=_{Mission_1_0_y_{Drop_1_0_0_{a_1.0000_1}_{b_3.0000_1}_{c_3.0000_1}_{d_3.0000_1}_{e_3.0000_1}_{f_3.0000_1}_{g_3.0000_1}_{h_3.0000_1}_{i_3.0000_1}_{j_3.0000_1}_{k_3.0000_1}_{l_3.0000_1}_{m_3.0000_1}_{n_3.0000_1}_{o_3.0000_1}_{p_3.0000_1}_{q_3.0000_1}_{r_3.0000_1}_{s_3.0000_1}_{t_3.0000_1}_{u_3.0000_1}_{v_3.0000_1}_{w_3.0000_1}_{x_3.0000_1}_{y_3.0000_1}_{z_3.0000_1}_{aa_3.0000_1}_{bb_3.0000_1}_{cc_3.0000_1}_{dd_3.0000_1}_{ee_3.0000_1}_{ff_3.0000_1}_{gg_3.0000_1}_{hh_3.0000_1}}}&s=1000000&start=start">High Kurtosis</option>-->
+                        <option value="All+Razorback+Drops_{e_Razorback_0_0_y_{d_Kill_1_0_0_{i_Gorgon+Wraith+Blueprint_18.9700_1_1}_{i_Gorgon+Wraith+Barrel_18.9700_1_1}_{i_Gorgon+Wraith+Receiver_18.9700_1_1}_{i_Gorgon+Wraith+Stock_18.9700_1_1}_{i_Bore_5.5300_1_1}_{i_Piercing+Caliber_5.5300_1_1}_{i_Breach+Loader_5.5300_1_1}_{i_Augur+Strike_5.5300_1_1}_{i_Magma+Chamber_1.0100_1_1}_{i_Searing+Steel_1.0100_1_1}}}">All Razorback Drops</option>
+                        <option value="Arcane+Energize+Set_{m_Tridolon+Hunt_0_0_y_{d_Hydrolyst+Capture_1_0_0_{i_Arcane+Energize_5.0000_1_10}}}">Arcane Energize Set</option>
+                        <option value="All+Shadow+Stalker+Drops_{e_I+AM+YOUR+RECKONING_0_0_y_{d_Kill_1_0_0_{i_Scimitar+Engines+BP_1.0050_1_1}_{i_Broken+War+BP_2.7650_1_1}_{i_Dread+BP_37.9400_1_1}_{i_Despair+BP_2.7650_1_1}_{i_Hate+BP_2.7650_1_1}_{i_War+BP_2.7650_1_1}}}">All Shadow Stalker Drops</option>
+                        <option value="War+Parts_{e_Conculyst_0_0_y_{d_Kill_1_0_0_{i_War+Hilt+BP_0.5000_1_2}_{i_War+Blade+BP_0.5000_1_1}}}">War Parts</option>
+                        <option value="Braton+and+Lato+Vandal_{m_Elite+Onslaught_0_0_y_{d_Rotation+A_2_0_5_{i_Lato+Receiver_2.0100_1_1}}_{d_Rotation+B_1_0_5_{i_Braton+Barrel_4.4200_1_1}_{i_Braton+Receiver_4.4200_1_1}_{i_Lato+BP_2.0100_1_1}}_{d_Rotation+C_1_0_5_{i_Braton+Stock_2.2100_1_1}_{i_Braton+BP_2.0100_1_1}_{i_Lato+Barrel_2.2100_1_1}}}">Braton and Lato Vandal</option>
+                        <option value="Legendary+Core_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_Legendary+Core_0.1800_1_1}}}">Legendary Core</option>
+                        <option value="Xiphos_{m_Tier+1+Sabotage_0_10_y_{d_Rotation+C_1_0_0_{i_Fuselage_0.5000_1_1}}}_{m_Tier+2+Sabotage_0_10_y_{d_Rotation+C_1_0_0_{i_Engines_0.5000_1_1}}}_{m_Tier+3+Sabotage_0_10_y_{d_Rotation+C_1_0_0_{i_Avionics_0.5000_1_1}}}">Xiphos</option>
                     </select>
                     <span class="tooltiptext">Pre-fill the scenario with one of these examples.</span>
                 </span>
@@ -4403,7 +4561,8 @@
         </div>
         <div class="util">
             <span class="tooltip">
-                <input id="clearResultsButton" class="button clear" type="submit" value="Clear" onClick="stopAndclearResults()"/>
+                <input id="clearResultsButton" class="button clear" type="submit" value="Clear"
+                       onClick="stopAndclearResults()"/>
                 <span class="tooltiptextbottom">Clear all results.</span>
             </span>
         </div>
@@ -4496,7 +4655,7 @@
             </p>
             <p>
                 The purpose of this is to allow you to set your own expectations beforehand, as well as judging how
-                lucky or unlucky you were after the fact.  Nothing is absolutely guaranteed with RNG.  However, there
+                lucky or unlucky you were after the fact. Nothing is absolutely guaranteed with RNG. However, there
                 are statistically rigorous ways to set expectations and compare different scenarios, and that's what
                 this page is designed to do.
             </p>
@@ -4533,34 +4692,6 @@
             <h1>Table of Contents</h1>
             <ul id="TOC">
                 <li>
-                    <a href="#ScenariosInDepth">Scenarios In Depth</a>
-                    <ul>
-                        <li>
-                            <a href="#MissionScenarios">Mission Scenarios</a>
-                            <ul>
-                                <li><a href="#DropEventorder">Drop Event order</a></li>
-                                <li><a href="#Definingthedroprate">Defining the drop rate</a></li>
-                                <li>
-                                    <a href="#DefiningSuccess">Defining Success</a>
-                                    <ul><li><a href="#ItemNaming">Item Naming</a></li></ul>
-                                </li>
-                                <li><a href="#Time">Time</a></li>
-                                <li><a href="#BailEarly">Bail Early</a></li>
-                            </ul>
-                        </li>
-                        <li><a href="#EnemyScenarios">Enemy Scenarios</a></li>
-                        <li>
-                            <a href="#RivenRollScenarios">Riven Roll Scenarios</a>
-                            <ul>
-                                <li><a href="#RivenRoll">Riven Roll</a></li>
-                                <li><a href="#RivenCriteria">Riven Criteria</a></li>
-                                <li><a href="#RivenGenerationDetails">Riven Generation Details</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                </li>
-                <li><a href="#SavingTheScenario">Saving The Scenario</a></li>
-                <li>
                     <a href="#Running">Running</a>
                     <ul>
                         <li><a href="#Stopping">Stopping</a></li>
@@ -4580,6 +4711,42 @@
                     </ul>
                 </li>
                 <li>
+                    <a href="#ScenariosInDepth">Scenarios In Depth</a>
+                    <ul>
+                        <li>
+                            <a href="#MissionScenarios">Mission Scenarios</a>
+                            <ul>
+                                <li><a href="#DropEventorder">Drop Event order</a></li>
+                                <li><a href="#Definingthedroprate">Defining the drop rate</a></li>
+                                <li>
+                                    <a href="#DropCount">Drop Count</a>
+                                    <ul>
+                                        <li><a href="#DropCountRange">Drop Count Range</a></li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <a href="#DefiningSuccess">Defining Success</a>
+                                    <ul>
+                                        <li><a href="#ItemNaming">Item Naming</a></li>
+                                    </ul>
+                                </li>
+                                <li><a href="#Time">Time</a></li>
+                                <li><a href="#BailEarly">Bail Early</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="#EnemyScenarios">Enemy Scenarios</a></li>
+                        <li>
+                            <a href="#RivenRollScenarios">Riven Roll Scenarios</a>
+                            <ul>
+                                <li><a href="#RivenRoll">Riven Roll</a></li>
+                                <li><a href="#RivenCriteria">Riven Criteria</a></li>
+                                <li><a href="#RivenGenerationDetails">Riven Generation Details</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="#SavingTheScenario">Saving The Scenario</a></li>
+                    </ul>
+                </li>
+                <li>
                     <a href="#NotesontheExamples">Notes on the Examples</a>
                     <ul>
                         <li><a href="#Frames">Frames</a></li>
@@ -4589,299 +4756,9 @@
                         <li><a href="#Misc">Misc</a></li>
                     </ul>
                 </li>
+                <li><a href="#ToDo">To Do</a></li>
                 <li><a href="#KnownIssues">Known Issues</a></li>
             </ul>
-
-            <h1 id="ScenariosInDepth">Scenarios In Depth</h1>
-            <p>
-                There are three types of Scenarios:
-            </p>
-            <ul>
-                <li><strong>Mission Scenario</strong>: These scenarios are about running a mission or series of
-                    missions.  These usually have some time duration associated with each mission.</li>
-                <li><strong>Enemy Scenario</strong>: These scenarios are about finding and killing a particular type of
-                    enemy.</li>
-                <li><strong>Riven Scenario</strong>: These scenarios are about rolling a Riven mod until its stats
-                    meet particular criteria</li>
-            </ul>
-
-            <h2 id="MissionScenarios">Mission Scenarios</h2>
-            <p>
-                A <strong>Mission Scenario</strong> is built up in three layers:
-            </p>
-            <ol>
-                <li>The Scenario contains one or more <strong>Missions</strong>. A Mission represents something that can
-                    be repeated as many times as necessary, like a Cetus Bounty or a Sabotage mission.
-                </li>
-                <li>A Mission contains one or more <strong>Drop Events</strong>. A Drop Event represents something that
-                    triggers an RNG-based reward, like completing a survival rotation or finding all three Sabotage
-                    Caches.
-                </li>
-                <li>A Drop Event contains one or more <strong>Items</strong>. An Item represents an individual object
-                    that the Drop Event can reward, like a blueprint or a mod.
-                </li>
-            </ol>
-
-            <h3 id="DropEventorder">Drop Event order</h3>
-            <p>
-                Each time a mission is run, each of its Drop Events is run in the order in which they are listed. A
-                Drop Event can be repeated in the same mission by setting <strong>Events Per Mission</strong>. This is
-                for when the Drop Event is something like an A Rotation that repeats twice per Mission.
-            </p>
-            <p>
-                The order in which Drop Events are listed should be the order in which they actually occur during the
-                mission. See <a href="#BailEarly">Bail Early</a> below.
-            </p>
-
-            <h3 id="Definingthedroprate">Defining the drop rate(s)</h3>
-            <p>
-                A <strong>drop rate</strong> is defined for each individual Item. This represents the probability of
-                that Item being rewarded by the Drop Event containing it. The drop rate is a percentage, greater than
-                0% and less than 100%.
-            </p>
-            <p>
-                The sum of the drop rates for all the Items under a single Drop Event cannot add up to more than 100%.
-                They can, however, add up to less than 100%. When the drop rates under a Drop Event add up to less than
-                100% then that means the Drop Event has a chance of not dropping anything we're interested it.
-            </p>
-
-            <h3 id="DefiningSuccess">Defining Success</h3>
-            <p>
-                An individual <strong>Item</strong> defines a <strong>Number Required</strong>. This is the total
-                amount of that Item that must drop before that Item is considered successful. It's 1 by default, but
-                you can make it higher to simulate how long it would take to get that many multiples of an item.
-            </p>
-            <p>
-                There are some more advanced success requirements you can set at the Drop Event and Mission levels. You
-                probably won't have to mess with these.
-            </p>
-            <ul>
-                <li>By default, if a <strong>Drop Event</strong>'s <strong>Items Required</strong> field is left at
-                    zero, then we require that all of its Items under that Drop Event reach their required numbers.
-                    You can make Required Items greater than zero, in which case only that many Items have to be
-                    sucessful. Note that this is a count of unique Items, and does not count multiples of a single
-                    Item. The value of Required Items cannot be larger than the number of unique Items in the Drop
-                    Event.
-                </li>
-                <li>By default, if a <strong>Mission</strong>'s <strong>Drop Events Required</strong> field is left at
-                    zero, then then we require that all of the Drop Events under that Mission reach their required
-                    Items. Like Required Items, You can make Required Drop Events greater than zero, in which case
-                    only that many Drop Events have to be successful. Note that this is a count of Drop Events, not
-                    individual Items. The value of Required Drop Events cannot be larger than the number of Drop Events
-                    in the Mission.
-                </li>
-            </ul>
-            <h4 id="ItemNaming">Item Naming</h4>
-            <p>
-                A Name is assigned to each Item, uniquely identifying it. A single Drop Event can't contain two Items
-                with the same name. However the same Item name can appear in more than one Drop Event, and in more
-                than one Mission. When this happens, an Item dropping in one Drop Event counts towards every Item in
-                the Scenario with the same name.
-            </p>
-            <h3 id="Time">Time</h3>
-            <p>
-                In addition to tracking the total number of missions it takes to get success, we can also assign a time
-                duration to each mission and/or drop event. The time is given as a <strong>whole number of
-                minutes</strong>.
-            </p>
-            <ul>
-                <li><strong>Mission</strong> time is used when a mission has some set amount of time it takes. This is
-                    the base amount of time a mission takes regardless of drop events/rotations.
-                </li>
-                <li><strong>Drop Event</strong> time is used when a drop event itself has some set amount of time it
-                    takes to trigger, like a survival rotation. If a drop event repeats more than once then its time
-                    will be multipled by how many times it occurred during that mission.
-                </li>
-            </ul>
-            <p>
-                To determine the total amount of time a mission takes the base misson time, if any, is added to the
-                times for each drop event that occurred, if any.
-            </p>
-            <p>
-                Some missions, like Survival and Onslaught, have a set amount of time they and their drop
-                events/rotations will take. With other mission types you have come up with an estimate.
-            </p>
-            <p>
-                In the examples at the top of this page, I'm using the following time estimates:
-            </p>
-            <ul>
-                <li><strong>Exterminate</strong>: 5 minutes</li>
-                <li><strong>Capture</strong>: 5 minutes</li>
-                <li><strong>Assassinate</strong>: 10 minutes.
-                </li>
-                <li>Finding all three supply caches during <strong>Sabotage</strong> or <strong>Lua Crossfire</strong>:
-                    10 minutes
-                </li>
-                <li><strong>Spy</strong> if you're bad at Spy: 10 minutes</li>
-                <li>Cetus <strong>bounty stage</strong>: 3 minutes</li>
-                <li><strong>Infested Salvage</strong>: 20 minutes</li>
-            </ul>
-            <h3 id="BailEarly">Bail Early</h3>
-            <p>
-                If there are multiple Drop Events in a Mission, then it's possible for the later Drop Events to succeed
-                during the run before the earlier ones. If there's a point in the mission after which all the Drop
-                Events have already been successful, then we can <strong>bail early</strong>, ending the mission there
-                and saving time.
-            </p>
-            <p>
-                This behavior is enabled by default in order to give us the shortest possible time. You can force a
-                particular mission not to bail early by unchecking the Bail Early checkbox under the mission.
-            </p>
-            <h2 id="EnemyScenarios">Enemy Scenarios</h2>
-            <p>
-                An Enemy Scenario is basically a simplified Mission Scenario, where the mission and drop event
-                are just finding an enemy and killing it.
-            </p>
-            <p>
-                An Enemy Scenario just has single Enemy to kill, and a single Item list under the Enemy.  You still
-                have access to <strong>Required Items</strong> to control how many of the Item drops need to succeed for
-                the scenario to succeed, but there is no time duration or any other settings.
-            </p>
-
-            <h2 id="RivenRollScenarios">Riven Roll Scenarios</h2>
-            <p>
-                A <strong>Riven Roll Scenario</strong> tracks how many times a Riven needs to be rolled in
-                order to meet certain stat criteria.  A Riven-based scenario is built up in two layers:
-            </p>
-            <ol>
-                <li>A Scenario contains one <strong>Riven Roll</strong>.  A Riven Roll represents a single
-                    Riven Mod that can be rolled as many times as necessary.
-                </li>
-                <li>A Riven Roll contains one or more <strong>Riven Criteria</strong>. A Criteria represents a list of
-                    stats that are required or wanted as either positive or negative stats on the Riven mod.
-                </li>
-            </ol>
-            <h3 id="RivenRoll">Riven Roll</h3>
-            <p>
-                The only configuration for the <strong>Riven Roll</strong> is what kind of Riven it is,
-                <strong>Gun</strong> or <strong>Melee</strong>.  This determines the list of stats to choose from.
-            </p>
-            <h3 id="RivenCriteria">Riven Criteria</h3>
-            <p>
-                The <strong>Riven Criteria</strong> contains a few configuration fields followed by the full list of
-                possible stats for the Riven type.
-            </p>
-            <p>
-                <strong>Required Positives</strong> and <strong>Required Negatives</strong> can be used if you want a
-                specific number of positive or negative stats.  Valid values are <strong>2</strong> or <strong>3</strong>
-                for Required Positives, <strong>0</strong> or <strong>1</strong> for Required Negatives, or
-                <strong>-1</strong> for either of them if the exact number of positive or negative stats doesn't matter.
-            </p>
-            <p>
-                For the stats themselves, they are listed in alphabetical order.  For each one, one of four options is
-                available:
-            </p>
-            <ul>
-                <li>
-                    <p>
-                        <strong class="checkmarkHelp positiveReqHelp">++</strong>: <strong>Required Positive</strong>
-                    </p>
-                    <p>
-                        This marks a stat that's <i>required</i> to be among the Riven's positive stats.  If this is
-                        selected for three stats then the Riven is automatically required to have three positive stats, and
-                        all three of the marked stats must be present.
-                    </p>
-                    <p>
-                        You cannot select more than three required positive stats.
-                    </p>
-                </li>
-                <li>
-                    <p>
-                        <strong class="checkmarkHelp positiveHelp">+</strong>: <strong>Wanted Positive</strong>.
-                    </p>
-                    <p>
-                        This marks a stat that you <i>want</i> to be used in the Riven's positive stats.  You can mark
-                        as many stats as you like this way; the only requirement is that the Riven's positive stats
-                        come from the set of Wanted Positives.
-                    </p>
-                    <p>
-                        If there are less than three total Required and Wanted Positives, then the remaining positive
-                        stats in the Riven can come from the Don't Want set.
-                    </p>
-                </li>
-                <li>
-                    <p>
-                        <strong class="checkmarkHelp negativeHelp">+</strong>: <strong>Wanted Negative</strong>.
-                    </p>
-                    <p>
-                        This marks a stat that you <i>want</i> to be used as the Riven's negative stat.  You can mark
-                        as many stats as you like this way; the only requirement is that the Riven's negative stat
-                        comes from the set of Wanted Negatives.
-                    </p>
-                    <p>
-                        If there are no Wanted Negatives, then the Riven's negative stat can come from the Don't
-                        Want set, unless Required Negatives is set to zero.
-                    </p>
-                    <p>
-                        If there is only one Wanted Negative marked, then the negative stat on the Riven, if present,
-                        must be that stat.
-                    </p>
-                </li>
-                <li>
-                    <p>
-                        <strong class="checkmarkHelp dontwantHelp">?</strong>: <strong>Don't Want</strong>
-                    </p>
-                    <p>
-                        The Don't Want category is everything else.  If there aren't enough Wanted/Required Positive
-                        stats or Wanted Negative stats to fill out a Riven, then the remaining stats can come from the
-                        Don't Want list.  Otherwise, stats marked as Don't Want will not appear in accepted Rivens at
-                        all.
-                    </p>
-                </li>
-            </ul>
-            <p>
-                The Riven Criteria is only concerned with which stats appear on the Riven, not their actual numeric
-                values.
-            </p>
-            <h3 id="RivenGenerationDetails">Riven Generation Details</h3>
-            <p>
-                I've had to make a few assumtions about how Riven stats are generated, because the details are not
-                published like other drop rates.
-            </p>
-            <ul>
-                <li>
-                    <strong>Two vs Three Positive Stats</strong>: I'm assuming that the choice between two or three 
-                    positive stats is just a 50/50 chance.  My own my own sampling of about a hundred rolls on various 
-                    Rivens comes close enough to 50/50 to make this likely. 
-                </li>
-                <li>
-                    <strong>Zero vs One Negative Stat</strong>: I'm also assuming that the choice between zero or one
-                    negative stats is a 50/50 chance.  Again, this is backed up by my experience.
-                </li>
-                <li>
-                    <strong>No correlation</strong> between the number of positive stats and the number of negative
-                    stats.  I'm assuming that all four combinations of 2/3 positives and 0/1 negative are equally
-                    likely.
-                </li>
-                <li>
-                    <strong>Stat probability</strong>: I'm assuming that, on each roll, all applicable stats have the same
-                    probability of being chosen.
-                </li>
-                <li>
-                    <strong>Negative Stat Exclusions</strong>: I'm assuming that the following stats never appear as negative
-                    stats:
-                    <ul>
-                        <li>Cold Damage</li>
-                        <li>Electric Damage</li>
-                        <li>Heat Damage</li>
-                        <li>Toxin Damage</li>
-                        <li>Punch Through (This one has been confirmed)</li>
-                        <li>Combo Duration</li>
-                    </ul>
-                </li>
-            </ul>
-
-            <h1 id="SavingTheScenario">Saving The Scenario</h1>
-            <p>
-                Use the <strong class="urlButton">Generate Link</strong> button to build a link to the current Scenario.
-            </p>
-            <p>
-                This link can be copied and shared. Opening it will pre-fill the page exactly how it currently appears.
-            </p>
-            <p>
-                If you check the <strong class="autoStartDiv">Auto Start</strong> checkbox then the link will
-                automatically start the Scenario when opened.
-            </p>
 
             <h1 id="Running">Running</h1>
             <p>
@@ -4891,7 +4768,7 @@
                 Note that while the scenario is running you can't make any changes or load up another scenario.
             </p>
             <p>
-                The simulation itself is all in JavaScript, and runs entirely inside your browser.  You can actually
+                The simulation itself is all in JavaScript, and runs entirely inside your browser. You can actually
                 download this HTML file and run it offline; there are no required external dependencies.
             </p>
             <h2 id="Stopping">Stopping</h2>
@@ -4922,6 +4799,10 @@
                 number. In other words, if your simulation reaches a million trials and you start it again, then it will
                 run a million more, for a total of two million. Starting again will run up to three million, etc.
             </p>
+            <p>
+                Setting Stop After to 0 disables automatic stopping. The simulation will run until Stop is clicked or
+                the page is closed.
+            </p>
 
             <h1 id="Results">Results</h1>
             <p>
@@ -4950,11 +4831,11 @@
             </p>
             <ul>
                 <li><strong>Average</strong>: This is the <a href="https://en.wikipedia.org/wiki/Expected_value">expected
-                    average</a> of the distribution.  This is the average number of mission, enemies, Riven rolls, or
+                    average</a> of the distribution. This is the average number of mission, enemies, Riven rolls, or
                     average amount of time until success.
                 </li>
                 <li><strong>Median</strong>: The <a href="https://en.wikipedia.org/wiki/Median">median</a> is the
-                    midpoint of the data set, otherwise known as the 50th percentile.  If the distribution has a
+                    midpoint of the data set, otherwise known as the 50th percentile. If the distribution has a
                     non-zero skew then the median will be different from the average.
                 </li>
                 <li><strong>90th Percentile</strong>: The expected amount of missions/enemies/Riven rolls/time required
@@ -4995,13 +4876,14 @@
                 </li>
             </ul>
             <p>
-                <strong class="warn">The Best Case and Worst Case should be taken with a grain of salt.  They just
+                <strong class="warn">The Best Case and Worst Case should be taken with a grain of salt. They just
                     show the best and worst case from the current simulation run. Running the simulation over again
                     with the same scenario can produce different best and worst cases.</strong>
             </p>
             <ul>
                 <li><strong>Last 5 Trials</strong> (Riven Scenarios only): This shows the last five Riven rolls
-                    that successfully passed the criteria.</li>
+                    that successfully passed the criteria.
+                </li>
                 <li>
                     <p>
                         <strong>Criteria met</strong> (Riven Scenarios only): If there are multiple criteria on the
@@ -5082,16 +4964,348 @@
                 able to save.
             </p>
 
+            <h1 id="ScenariosInDepth">Scenarios In Depth</h1>
+            <p>
+                There are three types of Scenarios:
+            </p>
+            <ul>
+                <li><strong>Mission Scenario</strong>: These scenarios are about running a mission or series of
+                    missions. These usually have some time duration associated with each mission.
+                </li>
+                <li><strong>Enemy Scenario</strong>: These scenarios are about finding and killing a particular type of
+                    enemy.
+                </li>
+                <li><strong>Riven Scenario</strong>: These scenarios are about rolling a Riven mod until its stats
+                    meet particular criteria
+                </li>
+            </ul>
+
+            <h2 id="MissionScenarios">Mission Scenarios</h2>
+            <p>
+                A <strong>Mission Scenario</strong> is built up in three layers:
+            </p>
+            <ol>
+                <li>The Scenario contains one or more <strong>Missions</strong>. A Mission represents something that can
+                    be repeated as many times as necessary, like a Cetus Bounty or a Sabotage mission.
+                </li>
+                <li>A Mission contains one or more <strong>Drop Events</strong>. A Drop Event represents something that
+                    triggers an RNG-based reward, like completing a survival rotation or finding all three Sabotage
+                    Caches.
+                </li>
+                <li>A Drop Event contains one or more <strong>Items</strong>. An Item represents an individual object
+                    that the Drop Event can reward, like a blueprint or a mod.
+                </li>
+            </ol>
+
+            <h3 id="DropEventorder">Drop Event order</h3>
+            <p>
+                Each time a mission is run, each of its Drop Events is run in the order in which they are listed. A
+                Drop Event can be repeated in the same mission by setting <strong>Events Per Mission</strong>. This is
+                for when the Drop Event is something like an A Rotation that repeats twice per Mission.
+            </p>
+            <p>
+                The order in which Drop Events are listed should be the order in which they actually occur during the
+                mission. See <a href="#BailEarly">Bail Early</a> below.
+            </p>
+
+            <h3 id="Definingthedroprate">Defining the drop rate(s)</h3>
+            <p>
+                A <strong>drop rate</strong> is defined for each individual Item. This represents the probability of
+                that Item being rewarded by the Drop Event containing it. The drop rate is a percentage, greater than
+                0% and less than 100%.
+            </p>
+            <p>
+                The sum of the drop rates for all the Items under a single Drop Event cannot add up to more than 100%.
+                They can, however, add up to less than 100%. When the drop rates under a Drop Event add up to less than
+                100% then that means the Drop Event has a chance of not dropping anything we're interested it.
+            </p>
+
+            <h3 id="DropCount">Drop Count</h3>
+            <p>
+                For each Item, <strong>Drop Count</strong> is the number of that Item that drops from a single Drop
+                Event.
+            </p>
+            <p>
+                Most of the time you'll want to leave this at <strong>1</strong>. For the vast majority of drops we
+                care about analyzing, they drop one at a time.
+            </p>
+            <h4 id="DropCountRange">Drop Count Range</h4>
+            <p>
+                There are a couple of "resource"-like items that drop many at a time, like Void Traces and
+                Kuva. For this, you can actually specific a <strong>range</strong> in the Drop Count field. Range is
+                specified as a minimum count and a maximum count, separate by a dash, like <strong>6-30</strong> or
+                <strong>550-700</strong>.  Any number between the minimum and maximum, inclusive, has an equal chance
+                of occurring.
+            </p>
+            <p>
+                You can tweak this by adding a comma and then an increment.  This causes it to choose only numbers in
+                that increment between the minimum and maximum, rather than every possible number.  For example,
+                <strong>12-60,2</strong> causes it to pick only even numbers between 12 and 60, and
+                <strong>500-750,10</strong> causes it to pick only multiples of 10 between 500 and 750.
+                In most cases this only makes a small difference, but it does make a difference.
+            </p>
+
+            <h3 id="DefiningSuccess">Defining Success</h3>
+            <p>
+                An individual <strong>Item</strong> defines a <strong>Number Required</strong>. This is the total
+                amount of that Item that must drop before that Item is considered successful. It's 1 by default, but
+                you can make it higher to simulate how long it would take to get that many multiples of an item, or
+                if the Items' Drop Count is something other than 1.
+            </p>
+            <p>
+                There are some more advanced success requirements you can set at the Drop Event and Mission levels. You
+                probably won't have to mess with these.
+            </p>
+            <ul>
+                <li>By default, if a <strong>Drop Event</strong>'s <strong>Items Required</strong> field is left at
+                    zero, then we require that all of its Items under that Drop Event reach their required numbers.
+                    You can make Required Items greater than zero, in which case only that many Items have to be
+                    sucessful. Note that this is a count of unique Items, and does not count multiples of a single
+                    Item. The value of Required Items cannot be larger than the number of unique Items in the Drop
+                    Event.
+                </li>
+                <li>By default, if a <strong>Mission</strong>'s <strong>Drop Events Required</strong> field is left at
+                    zero, then then we require that all of the Drop Events under that Mission reach their required
+                    Items. Like Required Items, You can make Required Drop Events greater than zero, in which case
+                    only that many Drop Events have to be successful. Note that this is a count of Drop Events, not
+                    individual Items. The value of Required Drop Events cannot be larger than the number of Drop Events
+                    in the Mission.
+                </li>
+            </ul>
+            <h4 id="ItemNaming">Item Naming</h4>
+            <p>
+                A Name is assigned to each Item, uniquely identifying it. A single Drop Event can't contain two Items
+                with the same name. However the same Item name can appear in more than one Drop Event, and in more
+                than one Mission. When this happens, an Item dropping in one Drop Event counts towards every Item in
+                the Scenario with the same name.
+            </p>
+            <h3 id="Time">Time</h3>
+            <p>
+                In addition to tracking the total number of missions it takes to get success, we can also assign a time
+                duration to each mission and/or drop event. The time is given as a <strong>whole number of
+                minutes</strong>.
+            </p>
+            <ul>
+                <li><strong>Mission</strong> time is used when a mission has some set amount of time it takes. This is
+                    the base amount of time a mission takes regardless of drop events/rotations.
+                </li>
+                <li><strong>Drop Event</strong> time is used when a drop event itself has some set amount of time it
+                    takes to trigger, like a survival rotation. If a drop event repeats more than once then its time
+                    will be multipled by how many times it occurred during that mission.
+                </li>
+            </ul>
+            <p>
+                To determine the total amount of time a mission takes the base misson time, if any, is added to the
+                times for each drop event that occurred, if any.
+            </p>
+            <p>
+                Some missions, like Survival and Onslaught, have a set amount of time they and their drop
+                events/rotations will take. With other mission types you have come up with an estimate.
+            </p>
+            <p>
+                In the examples at the top of this page, I'm using the following time estimates:
+            </p>
+            <ul>
+                <li><strong>Exterminate</strong>: 5 minutes</li>
+                <li><strong>Capture</strong>: 5 minutes</li>
+                <li><strong>Assassinate</strong>: 10 minutes.
+                </li>
+                <li>Finding all three supply caches during <strong>Sabotage</strong> or <strong>Lua Crossfire</strong>:
+                    10 minutes
+                </li>
+                <li><strong>Spy</strong> if you're bad at Spy: 10 minutes</li>
+                <li>Cetus <strong>bounty stage</strong>: 3 minutes</li>
+                <li>Cetus <strong>Incursion</strong>, waiting for it to appear and then doing it: about 5 minutes</li>
+                <li><strong>Infested Salvage</strong>: 20 minutes to rotation C</li>
+                <li><strong>Onlsaught/Elite Onslaught</strong>: 20 minutes to rotation C</li>
+            </ul>
+            <h3 id="BailEarly">Bail Early</h3>
+            <p>
+                If there are multiple Drop Events in a Mission, then it's possible for the later Drop Events to succeed
+                during the run before the earlier ones. If there's a point in the mission after which all the Drop
+                Events have already been successful, then we can <strong>bail early</strong>, ending the mission there
+                and saving time.
+            </p>
+            <p>
+                This behavior is enabled by default in order to give us the shortest possible time. You can force a
+                particular mission not to bail early by unchecking the Bail Early checkbox under the mission.
+            </p>
+            <h2 id="EnemyScenarios">Enemy Scenarios</h2>
+            <p>
+                An Enemy Scenario is basically a simplified Mission Scenario, where the mission and drop event
+                are just finding an enemy and killing it.
+            </p>
+            <p>
+                An Enemy Scenario just has single Enemy to kill, and a single Item list under the Enemy. You still
+                have access to <strong>Required Items</strong> to control how many of the Item drops need to succeed for
+                the scenario to succeed, but there is no time duration or any other settings.
+            </p>
+
+            <h2 id="RivenRollScenarios">Riven Roll Scenarios</h2>
+            <p>
+                A <strong>Riven Roll Scenario</strong> tracks how many times a Riven needs to be rolled in
+                order to meet certain stat criteria. A Riven-based scenario is built up in two layers:
+            </p>
+            <ol>
+                <li>A Scenario contains one <strong>Riven Roll</strong>. A Riven Roll represents a single
+                    Riven Mod that can be rolled as many times as necessary.
+                </li>
+                <li>A Riven Roll contains one or more <strong>Riven Criteria</strong>. A Criteria represents a list of
+                    stats that are required or wanted as either positive or negative stats on the Riven mod.
+                </li>
+            </ol>
+            <h3 id="RivenRoll">Riven Roll</h3>
+            <p>
+                The only configuration for the <strong>Riven Roll</strong> is what kind of Riven it is,
+                <strong>Gun</strong> or <strong>Melee</strong>. This determines the list of stats to choose from.
+            </p>
+            <h3 id="RivenCriteria">Riven Criteria</h3>
+            <p>
+                The <strong>Riven Criteria</strong> contains a few configuration fields followed by the full list of
+                possible stats for the Riven type.
+            </p>
+            <p>
+                <strong>Required Positives</strong> and <strong>Required Negatives</strong> can be used if you want a
+                specific number of positive or negative stats. Valid values are <strong>2</strong> or <strong>3</strong>
+                for Required Positives, <strong>0</strong> or <strong>1</strong> for Required Negatives, or
+                <strong>-1</strong> for either of them if the exact number of positive or negative stats doesn't matter.
+            </p>
+            <p>
+                For the stats themselves, they are listed in alphabetical order. For each one, one of four options is
+                available:
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        <strong class="checkmarkHelp positiveReqHelp">++</strong>: <strong>Required Positive</strong>
+                    </p>
+                    <p>
+                        This marks a stat that's <i>required</i> to be among the Riven's positive stats. If this is
+                        selected for three stats then the Riven is automatically required to have three positive stats,
+                        and
+                        all three of the marked stats must be present.
+                    </p>
+                    <p>
+                        You cannot select more than three required positive stats.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <strong class="checkmarkHelp positiveHelp">+</strong>: <strong>Wanted Positive</strong>.
+                    </p>
+                    <p>
+                        This marks a stat that you <i>want</i> to be used in the Riven's positive stats. You can mark
+                        as many stats as you like this way; the only requirement is that the Riven's positive stats
+                        come from the set of Wanted Positives.
+                    </p>
+                    <p>
+                        If there are less than three total Required and Wanted Positives, then the remaining positive
+                        stats in the Riven can come from the Don't Want set.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <strong class="checkmarkHelp negativeHelp">+</strong>: <strong>Wanted Negative</strong>.
+                    </p>
+                    <p>
+                        This marks a stat that you <i>want</i> to be used as the Riven's negative stat. You can mark
+                        as many stats as you like this way; the only requirement is that the Riven's negative stat
+                        comes from the set of Wanted Negatives.
+                    </p>
+                    <p>
+                        If there are no Wanted Negatives, then the Riven's negative stat can come from the Don't
+                        Want set, unless Required Negatives is set to zero.
+                    </p>
+                    <p>
+                        If there is only one Wanted Negative marked, then the negative stat on the Riven, if present,
+                        must be that stat.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <strong class="checkmarkHelp dontwantHelp">?</strong>: <strong>Don't Want</strong>
+                    </p>
+                    <p>
+                        The Don't Want category is everything else. If there aren't enough Wanted/Required Positive
+                        stats or Wanted Negative stats to fill out a Riven, then the remaining stats can come from the
+                        Don't Want list. Otherwise, stats marked as Don't Want will not appear in accepted Rivens at
+                        all.
+                    </p>
+                </li>
+            </ul>
+            <p>
+                The Riven Criteria is only concerned with which stats appear on the Riven, not their actual numeric
+                values.
+            </p>
+            <h3 id="RivenGenerationDetails">Riven Generation Details</h3>
+            <p>
+                I've had to make a few assumtions about how Riven stats are generated, because the details are not
+                published like other drop rates.
+            </p>
+            <ul>
+                <li>
+                    <strong>Two vs Three Positive Stats</strong>: I'm assuming that the choice between two or three
+                    positive stats is just a 50/50 chance. My own my own sampling of about a hundred rolls on various
+                    Rivens comes close enough to 50/50 to make this likely.
+                </li>
+                <li>
+                    <strong>Zero vs One Negative Stat</strong>: I'm also assuming that the choice between zero or one
+                    negative stats is a 50/50 chance. Again, this is backed up by my experience.
+                </li>
+                <li>
+                    <strong>No correlation</strong> between the number of positive stats and the number of negative
+                    stats. I'm assuming that all four combinations of 2/3 positives and 0/1 negative are equally
+                    likely.
+                </li>
+                <li>
+                    <strong>Stat probability</strong>: I'm assuming that, on each roll, all applicable stats have the
+                    same
+                    probability of being chosen.
+                </li>
+                <li>
+                    <strong>Negative Stat Exclusions</strong>: I'm assuming that the following stats never appear as
+                    negative
+                    stats:
+                    <ul>
+                        <li>Cold Damage</li>
+                        <li>Electric Damage</li>
+                        <li>Heat Damage</li>
+                        <li>Toxin Damage</li>
+                        <li>Punch Through (This one has been confirmed)</li>
+                        <li>Combo Duration</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h1 id="SavingTheScenario">Saving The Scenario</h1>
+            <p>
+                Use the <strong class="urlButton">Generate Link</strong> button to build a link to the current Scenario.
+            </p>
+            <p>
+                This link can be copied and shared. Opening it will pre-fill the page exactly how it currently appears.
+            </p>
+            <p>
+                If you check the <strong class="autoStartDiv">Auto Start</strong> checkbox then the link will
+                automatically start the Scenario when opened.
+            </p>
+
             <h1 id="NotesontheExamples">Notes on the Examples</h1>
 
             <h2 id="Frames">Frames</h2>
             <p>
                 The frame scenarios are listed roughly in order of how long each one takes.
             </p>
+            <p>
+                Just guessing, but I think the line between being faster to farm the frame directly and being faster to
+                run Tridolons, sell Arcanes for Plat, and buy the frame, is somewhere between Nidus and Ivara. I still
+                recommend spending some time farming Ivara, if only for the Spy practice. However, Khora is firmly on
+                the plat side of that line, with very little else to get from that mission besides maybe ranking up
+                other warframes.
+            </p>
             <table class="notes">
                 <tr>
                     <td>
-                        <a href="?m=Standard+Boss+Frame_{m_Assassinate_0_10_y_{Complete_1_0_0_{Helmet_38.7200_1}_{Chassis_38.7200_1}_{Systems_22.5600_1}}}&start=start">Standard
+                        <a href="?m=Standard+Boss+Frame_{m_Assassinate_0_10_y_{d_Complete_1_0_0_{i_Helmet_38.7200_1_1}_{i_Chassis_38.7200_1_1}_{i_Systems_22.5600_1_1}}}&start=start">Standard
                             Boss Frame</a>:
                     </td>
                     <td>
@@ -5101,7 +5315,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Ash_{e_Grineer+Manic_0_0_y_{Kill_1_0_0_{Chassis_12.7776_1}_{Helmet_12.7776_1}_{Systems_7.4480_1}}}&start=start">Ash</a>:
+                        <a href="?m=Ash_{e_Grineer+Manic_0_0_y_{d_Kill_1_0_0_{i_Chassis_12.7776_1_1}_{i_Helmet_12.7776_1_1}_{i_Systems_7.4480_1_1}}}&start=start">Ash</a>:
                     </td>
                     <td>
                         This is not something you can actively farm, but it's interesting that it doesn't actually take
@@ -5110,7 +5324,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Gara_{m_Bounty+5-15_0_0_y_{Stage+2_1_0_6_{Chassis_7.5200_1}}_{Stage+3_1_0_3_{Chassis_30.5600_1}}}_{m_Bounty+10-20_0_0_y_{Stage+2_1_0_6_{Systems_9.5200_1}}_{Stage+3_1_0_3_{Systems_21.8200_1}}}_{m_Bounty+20-30_0_0_y_{Stage+3_1_0_9_{Helmet_8.4200_1}}_{Stage+4_1_0_3_{Helmet_20.5100_1}}}&start=start">Gara</a>:
+                        <a href="?m=Gara_{m_Bounty+5-15_0_0_y_{d_Stage+2_1_0_6_{i_Chassis_7.5200_1_1}}_{d_Stage+3_1_0_3_{i_Chassis_30.5600_1_1}}}_{m_Bounty+10-20_0_0_y_{d_Stage+2_1_0_6_{i_Systems_9.5200_1_1}}_{d_Stage+3_1_0_3_{i_Systems_21.8200_1_1}}}_{m_Bounty+20-30_0_0_y_{d_Stage+3_1_0_9_{i_Helmet_8.4200_1_1}}_{d_Stage+4_1_0_3_{i_Helmet_20.5100_1_1}}}&start=start">Gara</a>:
                     </td>
                     <td>
                         This is an example where the same Item can drop from multiple Drop Events, since each Gara part
@@ -5119,17 +5333,25 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Octavia_{m_ODS_0_0_y_{Rotation+C_1_0_20_{Helmet_22.5600_1}}}_{m_Lua+Crossfire+With+Caches,+Music+Room_0_5_y_{Music+Room+(guessing+at+spawn+rate)_1_1_0_{Chassis_25.0000_1}}_{Cache+A_1_0_5_{Systems_22.5600_1}}}&start=start">Octavia</a>:
+                        <a href="?m=Octavia_{m_ODS_0_0_y_{d_Rotation+C_1_0_20_{i_Helmet_22.5600_1_1}}}_{m_Lua+Crossfire+With+Caches,+Music+Room_0_5_y_{d_Music+Room+(guessing+at+spawn+rate)_1_1_0_{i_Chassis_25.0000_1_1}}_{d_Cache+A_1_0_5_{i_Systems_22.5600_1_1}}}&start=start">Octavia</a>:
                     </td>
                     <td>
-                        Getting the Neuroptics from ODS is pretty straightforward. For the other two parts I combined
-                        the Lua cache hunt with the Music Room hunt, as you'll probably find the latter by accident
-                        while looking for caches. I took a wild guess that the Music Room spawn rate is about 25%.
+                        <p>
+                            Getting the Neuroptics from ODS is pretty straightforward. For the other two parts I
+                            combined
+                            the Lua cache hunt with the Music Room hunt, as you'll probably find the latter by accident
+                            while looking for caches. I took a wild guess that the Music Room spawn rate is about 25%.
+                        </p>
+                        <p>
+                            The scenario splits up the second mission into five minutes finding the caches and five
+                            minutes just doing the mission. So if the Systems drops from the caches first then it bails
+                            early and only spends five minutes running the mission and looking for the music room.
+                        </p>
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Revenant_{m_Bounty+20-40_0_3_y_{Stage+2_1_0_3_{Systems_8.8700_1}}_{Stage+3_1_0_3_{Systems_8.6833_1}}_{Stage+4_1_0_3_{Systems_20.1700_1}}}_{m_Bounty+30-50_0_3_y_{Stage+2,3_2_0_3_{Chassis_8.4500_1}}_{Stage+4_1_0_3_{Chassis_8.2733_1}}_{Stage+5_1_0_3_{Chassis_19.3667_1}}}_{m_Bounty+40-60_0_9_y_{Stage+4_1_0_3_{Helmet_6.7600_1}}_{Stage+5_1_0_3_{Helmet_10.0200_1}}}&start=start">Revenant</a>:
+                        <a href="?m=Revenant_{m_Bounty+20-40_0_3_y_{d_Stage+2_1_0_3_{i_Systems_8.8700_1_1}}_{d_Stage+3_1_0_3_{i_Systems_8.6833_1_1}}_{d_Stage+4_1_0_3_{i_Systems_20.1700_1_1}}}_{m_Bounty+30-50_0_3_y_{d_Stage+2,3_2_0_3_{i_Chassis_8.4500_1_1}}_{d_Stage+4_1_0_3_{i_Chassis_8.2733_1_1}}_{d_Stage+5_1_0_3_{i_Chassis_19.3667_1_1}}}_{m_Bounty+40-60_0_9_y_{d_Stage+4_1_0_3_{i_Helmet_6.7600_1_1}}_{d_Stage+5_1_0_3_{i_Helmet_10.0200_1_1}}}&start=start">Revenant</a>:
                     </td>
                     <td>
                         Like Gara, Revanant's parts drop from multiple bounty stages with different drop rates in each
@@ -5139,7 +5361,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Revenant+(no+bail+early)_{m_Bounty+20-40_0_3_n_{Stage+2_1_0_3_{Systems_8.8700_1}}_{Stage+3_1_0_3_{Systems_8.6833_1}}_{Stage+4_1_0_3_{Systems_20.1700_1}}}_{m_Bounty+30-50_0_3_n_{Stage+2,3_2_0_3_{Chassis_8.4500_1}}_{Stage+4_1_0_3_{Chassis_8.2733_1}}_{Stage+5_1_0_3_{Chassis_19.3667_1}}}_{m_Bounty+40-60_0_9_n_{Stage+4_1_0_3_{Helmet_6.7600_1}}_{Stage+5_1_0_3_{Helmet_10.0200_1}}}&start=start">Revenant
+                        <a href="?m=Revenant+(no+bail+early)_{m_Bounty+20-40_0_3_n_{d_Stage+2_1_0_3_{i_Systems_8.8700_1_1}}_{d_Stage+3_1_0_3_{i_Systems_8.6833_1_1}}_{d_Stage+4_1_0_3_{i_Systems_20.1700_1_1}}}_{m_Bounty+30-50_0_3_n_{d_Stage+2,3_2_0_3_{i_Chassis_8.4500_1_1}}_{d_Stage+4_1_0_3_{i_Chassis_8.2733_1_1}}_{d_Stage+5_1_0_3_{i_Chassis_19.3667_1_1}}}_{m_Bounty+40-60_0_9_n_{d_Stage+4_1_0_3_{i_Helmet_6.7600_1_1}}_{d_Stage+5_1_0_3_{i_Helmet_10.0200_1_1}}}&start=start">Revenant
                             (no bail early)</a>:
                     </td>
                     <td>
@@ -5152,7 +5374,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Equinox_{m_Uranus+Assassinate_0_10_y_{Kill+Tyl_1_0_0_{Night+Aspect_11.2800_1}_{Night+Chassis_12.9100_1}_{Night+Systems_12.9100_1}_{Night+Helmet_12.9100_1}_{Day+Aspect_11.2800_1}_{Day+Chassis_12.9100_1}_{Day+Systems_12.9100_1}_{Day+Helmet_12.9100_1}}}&start=start">Equinox</a>:
+                        <a href="?m=Equinox_{m_Uranus+Assassinate_0_10_y_{d_Kill+Tyl_1_0_0_{i_Night+Aspect_11.2800_1_1}_{i_Night+Chassis_12.9100_1_1}_{i_Night+Systems_12.9100_1_1}_{i_Night+Helmet_12.9100_1_1}_{i_Day+Aspect_11.2800_1_1}_{i_Day+Chassis_12.9100_1_1}_{i_Day+Systems_12.9100_1_1}_{i_Day+Helmet_12.9100_1_1}}}&start=start">Equinox</a>:
                     </td>
                     <td>
                         Everyone's favorite example of a heavy grind is at most the fourth worst.
@@ -5160,7 +5382,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Nidus_{m_Infested+Salvage_0_0_y_{Rotation+C_1_0_20_{Systems_14.2900_1}_{Helmet_14.2900_1}_{Chassis_14.2900_1}}}&start=start">Nidus</a>:
+                        <a href="?m=Nidus_{m_Infested+Salvage_0_0_y_{d_Rotation+C_1_0_20_{i_Systems_14.2900_1_1}_{i_Helmet_14.2900_1_1}_{i_Chassis_14.2900_1_1}}}&start=start">Nidus</a>:
                     </td>
                     <td>
                         It varies how long it actually takes to hit rotation C on infested Salvage, depending on
@@ -5169,7 +5391,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Ivara_{m_Tier+1+Spy_0_10_y_{Rotation+C_1_0_0_{Systems_9.0900_1}}}_{m_Tier+2+Spy_0_10_y_{Rotation+C_1_0_0_{Chassis_5.6400_1}}}_{m_Tier+3+Spy_0_10_y_{Rotation+C_1_0_0_{Helmet_7.5200_1}_{BP_7.5200_1}}}&start=start">Ivara</a>:
+                        <a href="?m=Ivara_{m_Tier+1+Spy_0_10_y_{d_Rotation+C_1_0_0_{i_Systems_9.0900_1_1}}}_{m_Tier+2+Spy_0_10_y_{d_Rotation+C_1_0_0_{i_Chassis_5.6400_1_1}}}_{m_Tier+3+Spy_0_10_y_{d_Rotation+C_1_0_0_{i_Helmet_7.5200_1_1}_{i_BP_7.5200_1_1}}}&start=start">Ivara</a>:
                     </td>
                     <td>
                         I'm estimating 10 minutes for a Spy mission but if you're good at Spy, or have a friend who's
@@ -5179,7 +5401,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Khora_{m_Onslaught_0_0_y_{Rotation+A_2_0_5_{Chassis_8.3300_1}}_{Rotation+B_1_0_5_{Helmet_7.6900_1}}_{Rotation+C_1_0_5_{Systems_5.6400_1}_{BP_5.6400_1}}}&start=start">Khora</a>:
+                        <a href="?m=Khora_{m_Onslaught_0_0_y_{d_Rotation+A_2_0_5_{i_Chassis_8.3300_1_1}}_{d_Rotation+B_1_0_5_{i_Helmet_7.6900_1_1}}_{d_Rotation+C_1_0_5_{i_Systems_5.6400_1_1}_{i_BP_5.6400_1_1}}}&start=start">Khora</a>:
                     </td>
                     <td>
                         20 minutes to get to Rotation C is somewhat of an underestimate, but good enough. Disabling
@@ -5189,10 +5411,23 @@
                 </tr>
             </table>
             <h2 id="Mods">Mods</h2>
+            <p>
+                There are a ton of very low drop rate mods. A lot of them drop from common enemies you'll run into
+                thousands of times just through normal play, which somewhat lessens the impact of the low drop rate.
+                Most of the others are Melee Stance mods.
+            </p>
+            <p>
+                The nice thing about mods is that trading is always available as a check on bad luck. On a long enough
+                time line your luck will even out, and if you're unlucky with one mod then you might have already gotten
+                lucky with a different rare mod and have an extra copy to trade. This is especially true with mod
+                sets that all drop from the same place, like Corrupted Mods, Kela de Thaym's mods, Razorback, etc.
+                By the time you hit the expected average number of runs you'll probably have enough to trade for
+                what you're missing.
+            </p>
             <table class="notes">
                 <tr>
                     <td>
-                        <a href="?m=Argon+Scope_{e_Torment_0_0_y_{Kill_1_0_0_{Argon+Scope_4.0400_1}}}&start=start">Argon
+                        <a href="?m=Argon+Scope_{e_Torment_0_0_y_{d_Kill_1_0_0_{i_Argon+Scope_4.0400_1_1}}}&start=start">Argon
                             Scope</a>:
                     </td>
                     <td>
@@ -5201,7 +5436,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Four+Riders_{e_Grineer+Manic_0_0_y_{Kill_1_0_0_{Four+Riders_0.3350_1}}}&start=start">Four
+                        <a href="?m=Four+Riders_{e_Grineer+Manic_0_0_y_{d_Kill_1_0_0_{i_Four+Riders_0.3350_1_1}}}&start=start">Four
                             Riders</a>:
                     </td>
                     <td>
@@ -5210,7 +5445,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Vengeful+Revenant_{e_Conculyst_0_0_y_{Kill_1_0_0_{Vengeful+Revenant_0.4170_1}}}&start=start">Vengeful
+                        <a href="?m=Vengeful+Revenant_{e_Conculyst_0_0_y_{d_Kill_1_0_0_{i_Vengeful+Revenant_0.4170_1_1}}}&start=start">Vengeful
                             Revenant</a>:
                     </td>
                     <td>
@@ -5219,16 +5454,34 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Condition+Overload_{e_Drekar+Butcher_0_0_y_{Kill_1_0_0_{Condition+Overload_0.0201_1}}}&start=start">Condition
-                            Overload</a>:
+                        <a href="?m=Tempo+Royale+(Bursa)_{e_Isolator+Bursa_0_0_y_{d_Kill_1_0_0_{i_Tempo+Royale_0.0603_1_1}}}&start=start">
+                            Tempo Royale (Bursa)</a>:
                     </td>
                     <td>
-                        The simulation lags a bit when you start getting into the really rare drops like this.
+                        Is it faster to wait for Baro to bring this?
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Guardian+Derision_{e_Prod+Crewman_0_0_y_{Kill_1_0_0_{Guardian+Derision_0.0150_1}}}&start=start">Guardian
+                        <a href="?m=Tempo+Royale+(Incursion)_{m_Plains+Incursion_0_5_y_{d_Rotation+A_1_0_0_{i_Tempo+Royale_1.0100_1_1}}}&start=start">
+                            Tempo Royale (Incursion)</a>:
+                    </td>
+                    <td>
+                        ...Yes.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Condition+Overload_{e_Drekar+Butcher_0_0_y_{d_Kill_1_0_0_{i_Condition+Overload_0.0201_1_1}}}&start=start">Condition
+                            Overload</a>:
+                    </td>
+                    <td>
+                        The simulation gets pretty slow when you start getting into the really rare drops like this.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Guardian+Derision_{e_Prod+Crewman_0_0_y_{d_Kill_1_0_0_{i_Guardian+Derision_0.0150_1_1}}}&start=start">Guardian
                             Derision</a>:
                     </td>
                     <td>
@@ -5237,7 +5490,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Full+Hunter+Set_{m_Level+15-25+Ghoul+Bounty_0_0_y_{Stage+1_1_0_3_{Adrenaline_33.3300_1}}_{Stage+2,+3_2_0_3_{Adrenaline_11.7400_1}_{Munitions_9.3900_1}}_{Stage+4_1_0_3_{Munitions_11.9000_1}_{Track_11.9000_1}}}_{m_Level+40-50+Ghoul+Bounty_0_0_y_{Stage+1_1_0_3_{Recovery_33.3300_1}}_{Stage+2,+3_2_0_3_{Recovery_11.7400_1}_{Synergy_9.3900_1}}_{Stage+4_1_0_3_{Recovery_10.2900_1}_{Synergy_8.2300_1}_{Command_8.2300_1}}_{Stage+5_1_0_3_{Synergy_11.9000_1}_{Command_11.9000_1}}}&start=start">Full
+                        <a href="?m=Full+Hunter+Set_{m_Level+15-25+Ghoul+Bounty_0_0_y_{d_Stage+1_1_0_3_{i_Adrenaline_33.3300_1_1}}_{d_Stage+2,+3_2_0_3_{i_Adrenaline_11.7400_1_1}_{i_Munitions_9.3900_1_1}}_{d_Stage+4_1_0_3_{i_Munitions_11.9000_1_1}_{i_Track_11.9000_1_1}}}_{m_Level+40-50+Ghoul+Bounty_0_0_y_{d_Stage+1_1_0_3_{i_Recovery_33.3300_1_1}}_{d_Stage+2,+3_2_0_3_{i_Recovery_11.7400_1_1}_{i_Synergy_9.3900_1_1}}_{d_Stage+4_1_0_3_{i_Recovery_10.2900_1_1}_{i_Synergy_8.2300_1_1}_{i_Command_8.2300_1_1}}_{d_Stage+5_1_0_3_{i_Synergy_11.9000_1_1}_{i_Command_11.9000_1_1}}}&start=start">Full
                             Hunter Set (Ghouls)</a>:
                     </td>
                     <td>
@@ -5246,7 +5499,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Full+Hunter+Set+(Plague+Star)_{m_Plague+Star_0_15_y_{Kill+Hemocyte_4_0_0_{Hunter+Command_10.5300_1}_{Hunter+Recovery_28.9500_1}_{Hunter+Synergy_10.5300_1}_{Hunter+Munitions_10.5300_1}_{Hunter+Track_10.5300_1}_{Hunter+Adrenaline_28.9500_1}}}&start=start">Full
+                        <a href="?m=Full+Hunter+Set+(Plague+Star)_{m_Plague+Star_0_15_y_{d_Kill+Hemocyte_4_0_0_{i_Hunter+Command_10.5300_1_1}_{i_Hunter+Recovery_28.9500_1_1}_{i_Hunter+Synergy_10.5300_1_1}_{i_Hunter+Munitions_10.5300_1_1}_{i_Hunter+Track_10.5300_1_1}_{i_Hunter+Adrenaline_28.9500_1_1}}}&start=start">Full
                             Hunter Set (Plague Star)</a>:
                     </td>
                     <td>
@@ -5256,7 +5509,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=All+Corrupted+Mods_{m_Derelict+Exterminate_0_5_y_{Vault_1_0_0_{Spoiled+Strike_4.1700_1}_{Corrupt+Charge_4.1700_1}_{Hollow+Point_4.1700_1}_{Magnum+Force_4.1700_1}_{Tainted+Clip_4.1700_1}_{Critical+Delay_4.1700_1}_{Heavy+Caliber_4.1700_1}_{Tainted+Mag_4.1700_1}_{Vile+Precision_4.1700_1}_{Narrow+Minded_4.1700_1}_{Fleeting+Expertise_4.1700_1}_{Blind+Rage_4.1700_1}_{Overextended_4.1700_1}_{Tainted+Shell_4.1700_1}_{Vicious+Spread_4.1700_1}_{Burdened+Magazine_4.1700_1}_{Anemic+Agility_4.1700_1}_{Vile+Acceleration_4.1700_1}_{Frail+Momentum_4.1700_1}_{Critical+Deceleration_4.1700_1}_{Creeping+Bullseye_4.1700_1}_{Transient+Fortitude_4.1700_1}_{Depleted+Reload_4.1700_1}}}&start=start">All
+                        <a href="?m=All+Corrupted+Mods_{m_Derelict+Exterminate_0_5_y_{d_Vault_1_0_0_{i_Spoiled+Strike_4.1700_1_1}_{i_Corrupt+Charge_4.1700_1_1}_{i_Hollow+Point_4.1700_1_1}_{i_Magnum+Force_4.1700_1_1}_{i_Tainted+Clip_4.1700_1_1}_{i_Critical+Delay_4.1700_1_1}_{i_Heavy+Caliber_4.1700_1_1}_{i_Tainted+Mag_4.1700_1_1}_{i_Vile+Precision_4.1700_1_1}_{i_Narrow+Minded_4.1700_1_1}_{i_Fleeting+Expertise_4.1700_1_1}_{i_Blind+Rage_4.1700_1_1}_{i_Overextended_4.1700_1_1}_{i_Tainted+Shell_4.1700_1_1}_{i_Vicious+Spread_4.1700_1_1}_{i_Burdened+Magazine_4.1700_1_1}_{i_Anemic+Agility_4.1700_1_1}_{i_Vile+Acceleration_4.1700_1_1}_{i_Frail+Momentum_4.1700_1_1}_{i_Critical+Deceleration_4.1700_1_1}_{i_Creeping+Bullseye_4.1700_1_1}_{i_Transient+Fortitude_4.1700_1_1}_{i_Depleted+Reload_4.1700_1_1}}}&start=start">All
                             Corrupted Mods</a>:
                     </td>
                     <td>
@@ -5265,19 +5518,33 @@
                 </tr>
             </table>
             <h2 id="Relics">Relics</h2>
+            <p>
+                The transition from the old Void Key system to Relics was always less about reducing grind and more
+                about increasing gameplay variety. Personally, I don't miss spending twelve straight hours in T3
+                Survival, like, at all.
+            </p>
+            <p>
+                Giving newly released Relics a dedicated mission with high drop rates is great and I wish they did that
+                with more Relics. It's way better than <s>Void Fatigue</s> Xini Fatigue.
+            </p>
+            <p>
+                That being said, Relic supply is still usually the bottleneck.  You can stockpile Void Traces but you
+                can't stockpile newly released Relics.So refining Relics to Radiant for the uncommon reward, which
+                almost doubles the chances, is still worth it.
+            </p>
             <table class="notes">
                 <tr>
                     <td>
-                        <a href="?m=Radshare_{m_Fissure_0_0_y_{Crack+Relic_4_0_0_{Rare_10.0000_1}}}&start=start">Radshare</a>:
+                        <a href="?m=Radshare_{m_Fissure_0_0_y_{d_Crack+Relic_4_0_0_{i_Rare_10.0000_1_1}}}&start=start">Radshare</a>:
                     </td>
                     <td>
-                        Radiant shares aren't bad on average.  However, I've personally seen it take 20 radshares to get
+                        Radiant shares aren't bad on average. However, I've personally seen it take 20 radshares to get
                         the rare, which put that particular run in the 99.98th percentile.
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Solo+Radiant_{m_Fissure_0_0_y_{Crack+Relic_1_0_0_{Rare_10.0000_1}}}&start=start">Solo
+                        <a href="?m=Solo+Radiant_{m_Fissure_0_0_y_{d_Crack+Relic_1_0_0_{i_Rare_10.0000_1_1}}}&start=start">Solo
                             Radiant</a>:
                     </td>
                     <td>
@@ -5286,7 +5553,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Uncommon+Intact+Share_{m_Fissure_0_0_y_{Crack+Relic_4_0_0_{Uncommon_11.0000_1}}}&start=start">Uncommon Intact Share</a>:
+                        <a href="?m=Uncommon+Intact+Share_{m_Fissure_0_0_y_{d_Crack+Relic_4_0_0_{i_Uncommon_11.0000_1_1}}}&start=start">Uncommon
+                            Intact Share</a>:
                     </td>
                     <td>
                         If you just want an uncommon reward, is it still worth it to refine the relic to Radiant?
@@ -5294,7 +5562,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Uncommon+Radshare_{m_Fissure_0_0_y_{Crack+Relic_4_0_0_{Uncommon_20.0000_1}}}&start=start">Uncommon Radshare</a>:
+                        <a href="?m=Uncommon+Radshare_{m_Fissure_0_0_y_{d_Crack+Relic_4_0_0_{i_Uncommon_20.0000_1_1}}}&start=start">Uncommon
+                            Radshare</a>:
                     </td>
                     <td>
                         ...Probably.
@@ -5302,8 +5571,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Three+Axi+S3+Relics_{m_Mot_0_0_y_{Rotation+C_1_0_20_{Axi+S3_11.1100_3}}}&start=start">Three
-                            Axi S3 Relics</a>:
+                        <a href="?m=Three+Axi+S3+Relics+Mot_{m_Mot_0_0_y_{d_Rotation+C_1_0_20_{i_Axi+S3_11.1100_1_3}}}&start=start">Three
+                            Axi S3 Relics (Mot)</a>:
                     </td>
                     <td>
                         The vaulted relics drop only in the Void, so your options for efficient farming are limited.
@@ -5312,8 +5581,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Three+Axi+C3/G1_{m_Bounty+40-60_0_3_y_{Stage+2,3_2_0_3_{Axi+C3/G1_33.0400_3}}_{Stage+4_1_0_3_{Axi+C3/G1_25.6800_1}}_{Stage+5_1_0_3_{Axi+C3/G1_38.7800_1}}}&start=start">Three
-                            Axi C3/G1 Relics</a>:
+                        <a href="?m=Three+Axi+C3/G1+Relics+(Bounties)_{m_Bounty+40-60_0_3_y_{d_Stage+2,3_2_0_3_{i_Axi+C3/G1_33.0400_1_3}}_{d_Stage+4_1_0_3_{i_Axi+C3/G1_25.6800_1_1}}_{d_Stage+5_1_0_3_{i_Axi+C3/G1_38.7800_1_1}}}&start=start">Three
+                            Axi C3/G1 Relics (Bounties)</a>:
                     </td>
                     <td>
                         The new Axi relics have a very nice drop rate in the Cetus bounties, assuming you can catch the
@@ -5322,19 +5591,50 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Three+Neo+G1+Relics_{m_Bounty+30-50_0_3_y_{Stage+2,3_2_0_3_{Axi+C3/G1_15.9600_3}}_{Stage+4_1_0_3_{Axi+C3/G1_15.6300_1}}_{Stage+5_1_0_3_{Axi+C3/G1_35.7100_1}}}&start=start">Three
-                            Neo G1 Relics</a>:
+                        <a href="?m=Three+Neo+G1+Relics+(Bounties)_{m_Bounty+30-50_0_3_y_{d_Stage+2,3_2_0_3_{i_Axi+C3/G1_15.9600_1_3}}_{d_Stage+4_1_0_3_{i_Axi+C3/G1_15.6300_1_1}}_{d_Stage+5_1_0_3_{i_Axi+C3/G1_35.7100_1_1}}}&start=start">Three
+                            Neo G1 Relics (Bounties)</a>:
                     </td>
                     <td>
                         Some of the new Neo relics are also relatively easy to get in Cetus bounties.
                     </td>
                 </tr>
+                <tr>
+                    <td>
+                        <a href="?m=100+Void+Traces_{m_Quick+Fissure_0_5_y_{d_Crack+Relic_1_0_0_{i_Void+Trace_100.0000_6-30_100}}}&s=1000000&start=start">100
+                            Void Traces</a>:
+                    </td>
+                    <td>
+                        How long does it take to get 100 Void Traces?
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=1000+Void+Traces+w/+Booster_{m_Quick+Fissure_0_5_y_{d_Crack+Relic_1_0_0_{i_Void+Trace_100.0000_12-60,2_1000}}}&s=1000000&start=start">1000
+                            Void Traces with a Booster</a>:
+                    </td>
+                    <td>
+                        How about 1000 Void Traces with a 2x Resource Booster?
+                    </td>
+                </tr>
             </table>
             <h2 id="Rivens">Rivens</h2>
+            <p>
+                Before you get too worked up over the outrageous averages on some of the Riven examples, bear in mind
+                this fact:
+            </p>
+            <p>
+                Rolling one Riven 50 times has the same odds as rolling 5 similar Rivens 10 times each.
+            </p>
+            <p>
+                Given the results in some of the Riven Roll examples here, I highly recommend going the latter route:
+                Just putting up to 10 rolls into Rivens as you get them and moving on, saving more than 50% of your
+                Kuva. You're bound to get some "acceptable" Rivens you can use while waiting for that big roll.
+            </p>
             <table class="notes">
                 <tr>
                     <td>
-                        <a href="?m=90+Rivens_{m_Sortie_0_0_y_{Complete_1_0_0_{Riven_26.0800_90}}}&start=start">90 Rivens</a>:
+                        <a href="?m=90+Rivens_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_Riven_26.0800_1_90}}}&start=start">90
+                            Rivens</a>:
                     </td>
                     <td>
                         How many Sorties does it take to fill your Riven collection to capacity? This one's interesting,
@@ -5343,7 +5643,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Riven+for+a+Specific+Rifle_{m_Sortie_0_0_y_{Complete_1_0_0_{One+of+62+possible+Rifle+Rivens_0.1095_1}}}&start=start">Riven for a Specific Rifle</a>:
+                        <a href="?m=Riven+for+a+Specific+Rifle_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_One+of+62+possible+Rifle+Rivens_0.1095_1_1}}}&start=start">Riven
+                            for a Specific Rifle</a>:
                     </td>
                     <td>
                         How many Sorties does it take to get a Riven for your favorite non-shotgun primary, out of 62
@@ -5352,7 +5653,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Basic+Damage+Gun+Riven_{r_Riven+Roll_g_{Damage_-1_-1_n-ddd--p-p-pppp-pndnpppd-dddnnn}}&start=start">Basic Damage Gun Riven</a>:
+                        <a href="?m=Basic+Damage+Gun+Riven_{r_Riven+Roll_g_{c_Damage_-1_-1_n-ddd--p-p-pppp-pndnpppd-dddnnn}}&start=start">Basic
+                            Damage Gun Riven</a>:
                     </td>
                     <td>
                         Just a basic damage Riven for a gun isn't too hard to roll.
@@ -5360,7 +5662,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Decent+Melee+Riven_{r_Riven+Roll_m_{Decent_-1_-1_-pdddnnpppdppppn--d--p-dp-dpd--}}&start=start">Decent Melee Riven</a>:
+                        <a href="?m=Decent+Melee+Riven_{r_Riven+Roll_m_{c_Decent_-1_-1_-pdddnnpppdppppn--d--p-dp-dpd--}}&start=start">Decent
+                            Melee Riven</a>:
                     </td>
                     <td>
                         A decent Melee Riven is also not hard to roll if you're not picky.
@@ -5368,7 +5671,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Crit+or+Status+Melee+Riven_{r_Riven+Roll_m_{Crit_-1_-1_-pdddnnppPdppppn--d--p-dp-ddn--}_{Status_-1_-1_-pdddnnpdnndpppn--d--p-dp-pPp--}}&start=start">Crit or Status Melee Riven</a>:
+                        <a href="?m=Crit+or+Status+Melee+Riven_{r_Riven+Roll_m_{c_Crit_-1_-1_-pdddnnppPdppppn--d--p-dp-ddn--}_{c_Status_-1_-1_-pdddnnpdnndpppn--d--p-dp-pPp--}}&start=start">Crit
+                            or Status Melee Riven</a>:
                     </td>
                     <td>
                         When rolling a Zaw Riven, I get the best results by rolling until I get either good crit stats
@@ -5377,7 +5681,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Status+Gun_Riven_{r_Riven+Roll_g_{Status_-1_-1_n-ddd--p-d-dppp-pnnnpppn-npPpnn}}&start=start">Status Gun Riven</a>:
+                        <a href="?m=Status+Gun_Riven_{r_Riven+Roll_g_{c_Status_-1_-1_n-ddd--p-d-dppp-pnnnpppn-npPpnn}}&start=start">Status
+                            Gun Riven</a>:
                     </td>
                     <td>
                         If you're picky about your status Riven then it may take a few rolls.
@@ -5385,7 +5690,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Crit+Gun+Riven_{r_Riven+Roll_g_{Crit_-1_-1_n-ddd--p-P-pppp-dndnpppd-nddnnn}}&start=start">Crit Gun Riven</a>:
+                        <a href="?m=Crit+Gun+Riven_{r_Riven+Roll_g_{c_Crit_-1_-1_n-ddd--p-P-pppp-dndnpppd-nddnnn}}&start=start">Crit
+                            Gun Riven</a>:
                     </td>
                     <td>
                         Even more if you're you're picky about your crit Riven.
@@ -5393,7 +5699,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Godlike+Lanka+Riven_{r_Riven+Roll_g_{Hallelujah_-1_-1_n-nnn--d-p-ppdd-ddndpddn-dnnnnn}}&start=start">Godlike Lanka Riven</a>:
+                        <a href="?m=Godlike+Lanka+Riven_{r_Riven+Roll_g_{c_Hallelujah_-1_-1_n-nnn--d-p-ppdd-ddndpddn-dnnnnn}}&start=start">Godlike
+                            Lanka Riven</a>:
                     </td>
                     <td>
                         This is why players pay a very high price for these.
@@ -5401,7 +5708,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Godlike+Vectis+Riven_{r_Riven+Roll_g_{Damage,+-Mag+Cap_-1_1_d-ddd--p-p-pppp-pddnppdd-pddddd}}&start=start">Godlike Vectis Riven</a>:
+                        <a href="?m=Godlike+Vectis+Riven_{r_Riven+Roll_g_{c_Damage,+-Mag+Cap_-1_1_d-ddd--p-p-pppp-pddnppdd-pddddd}}&start=start">Godlike
+                            Vectis Riven</a>:
                     </td>
                     <td>
                         If you absolutely have to have negative magazine capacity.
@@ -5409,7 +5717,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Perfect+Rubico+Riven_{r_Riven+Roll_g_{Crits+for+days_2_-1_n-ddd--d-P-Pppp-dnddpddd-dnnnnn}}&start=start">Perfect Rubico Riven</a>:
+                        <a href="?m=Perfect+Rubico+Riven_{r_Riven+Roll_g_{c_Crits+for+days_-1_-1_n-ddd--d-P-Pppp-dnddpddd-dnnnnn}}&start=start">Perfect
+                            Rubico Riven</a>:
                     </td>
                     <td>
                         Getting super ridiculous now.
@@ -5417,7 +5726,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Riven+with+Exact+Stats_{r_Riven+Roll_g_{IT+HAS+TO+BE+THESE_3_1_d-ddd--d-P-Pddd-ddddPddd-dddddn}}&start=start">Riven with Exact Stats</a>:
+                        <a href="?m=Riven+with+Exact+Stats_{r_Riven+Roll_g_{c_IT+HAS+TO+BE+THESE_3_1_d-ddd--d-P-Pddd-ddddPddd-dddddn}}&start=start">Riven
+                            with Exact Stats</a>:
                     </td>
                     <td>
                         <p>
@@ -5426,18 +5736,21 @@
                             specific negative stat, then you will be rolling it for an astonomically long time.
                         </p>
                         <p>
-                            Honestly, this is mostly here as a joke.  It's just past the point where the simulation
-                            really starts bogging down on my laptop.  Still, it's interesting to watch each data point
+                            Honestly, this is mostly here as a joke. It's just past the point where the simulation
+                            really starts bogging down on my laptop. Still, it's interesting to watch each data point
                             appear one-by-one in slow motion after hundreds of thousands of rolls.
                         </p>
                     </td>
                 </tr>
             </table>
             <h2 id="Misc">Misc</h2>
+            <p>
+
+            </p>
             <table class="notes">
                 <tr>
                     <td>
-                        <a href="?m=Miter_{m_Ceres+Ass_0_10_y_{Kill+Krill_1_0_0_{Barrel_16.6700_1}_{Blade_16.6700_1}_{Handle_16.6700_1}_{Chassis_16.6700_1}_{Blueprint_16.6700_1}}}&start=start">Miter</a>:
+                        <a href="?m=Miter_{m_Ceres+Ass_0_10_y_{d_Kill+Krill_1_0_0_{i_Barrel_16.6700_1_1}_{i_Blade_16.6700_1_1}_{i_Handle_16.6700_1_1}_{i_Chassis_16.6700_1_1}_{i_Blueprint_16.6700_1_1}}}&start=start">Miter</a>:
                     </td>
                     <td>
                         I bet you forgot about farming all five pieces of this thing.
@@ -5445,7 +5758,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Arcane+Energize+Set_{m_Tridolon+Hunt_0_0_y_{Hydrolyst+Capture_1_0_0_{Arcane+Energize_5.0000_10}}}&start=start">Arcane
+                        <a href="?m=Arcane+Energize+Set_{m_Tridolon+Hunt_0_0_y_{d_Hydrolyst+Capture_1_0_0_{i_Arcane+Energize_5.0000_1_10}}}&start=start">Arcane
                             Energize Set</a>:
                     </td>
                     <td>
@@ -5454,7 +5767,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Imperator+Vandal_{m_Fomorian_0_0_y_{Complete_1_0_0_{Barrel_11.2800_1}_{Receiver_11.2800_1}_{Blueprint_38.7200_1}}}&start=start">Imperator Vandal</a>:
+                        <a href="?m=Imperator+Vandal_{m_Fomorian_0_0_y_{d_Complete_1_0_0_{i_Barrel_11.2800_1_1}_{i_Receiver_11.2800_1_1}_{i_Blueprint_38.7200_1_1}}}&start=start">Imperator
+                            Vandal</a>:
                     </td>
                     <td>
                         Not that bad on average.
@@ -5462,7 +5776,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=All+Razorback+Drops_{e_Razorback_0_0_y_{Kill_1_0_0_{Gorgon+Wraith+Blueprint_18.9700_1}_{Gorgon+Wraith+Barrel_18.9700_1}_{Gorgon+Wraith+Receiver_18.9700_1}_{Gorgon+Wraith+Stock_18.9700_1}_{Bore_5.5300_1}_{Piercing+Caliber_5.5300_1}_{Breach+Loader_5.5300_1}_{Augur+Strike_5.5300_1}_{Magma+Chamber_1.0100_1}_{Searing+Steel_1.0100_1}}}&start=start">All Razorback Drops</a>:
+                        <a href="?m=All+Razorback+Drops_{e_Razorback_0_0_y_{d_Kill_1_0_0_{i_Gorgon+Wraith+Blueprint_18.9700_1_1}_{i_Gorgon+Wraith+Barrel_18.9700_1_1}_{i_Gorgon+Wraith+Receiver_18.9700_1_1}_{i_Gorgon+Wraith+Stock_18.9700_1_1}_{i_Bore_5.5300_1_1}_{i_Piercing+Caliber_5.5300_1_1}_{i_Breach+Loader_5.5300_1_1}_{i_Augur+Strike_5.5300_1_1}_{i_Magma+Chamber_1.0100_1_1}_{i_Searing+Steel_1.0100_1_1}}}&start=start">All
+                            Razorback Drops</a>:
                     </td>
                     <td>
                         The two ultra-rare mods that you can only obtain from the Razorback are what make this painful.
@@ -5470,7 +5785,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=All+Shadow+Stalker+Drops_{e_I+AM+YOUR+RECKONING_0_0_y_{Kill_1_0_0_{Scimitar+Engines+BP_1.0050_1}_{Broken+War+BP_2.7650_1}_{Dread+BP_37.9400_1}_{Despair+BP_2.7650_1}_{Hate+BP_2.7650_1}_{War+BP_2.7650_1}}}&start=start">All
+                        <a href="?m=All+Shadow+Stalker+Drops_{e_I+AM+YOUR+RECKONING_0_0_y_{d_Kill_1_0_0_{i_Scimitar+Engines+BP_1.0050_1_1}_{i_Broken+War+BP_2.7650_1_1}_{i_Dread+BP_37.9400_1_1}_{i_Despair+BP_2.7650_1_1}_{i_Hate+BP_2.7650_1_1}_{i_War+BP_2.7650_1_1}}}&start=start">All
                             Shadow Stalker Drops</a>:
                     </td>
                     <td>
@@ -5481,7 +5796,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=War+Parts_{e_Conculyst_0_0_y_{Kill_1_0_0_{War+Hilt+BP_0.5000_2}_{War+Blade+BP_0.5000_1}}}&start=start">War
+                        <a href="?m=War+Parts_{e_Conculyst_0_0_y_{d_Kill_1_0_0_{i_War+Hilt+BP_0.5000_1_2}_{i_War+Blade+BP_0.5000_1_1}}}&start=start">War
                             Parts</a>:
                     </td>
                     <td>
@@ -5490,7 +5805,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Braton+and+Lato+Vandal_{m_Elite+Onslaught_0_0_y_{Rotation+A_2_0_5_{Lato+Receiver_2.0100_1}}_{Rotation+B_1_0_5_{Braton+Barrel_4.4200_1}_{Braton+Receiver_4.4200_1}_{Lato+BP_2.0100_1}}_{Rotation+C_1_0_5_{Braton+Stock_2.2100_1}_{Braton+BP_2.0100_1}_{Lato+Barrel_2.2100_1}}}&start=start">Braton
+                        <a href="?m=Braton+and+Lato+Vandal_{m_Elite+Onslaught_0_0_y_{d_Rotation+A_2_0_5_{i_Lato+Receiver_2.0100_1_1}}_{d_Rotation+B_1_0_5_{i_Braton+Barrel_4.4200_1_1}_{i_Braton+Receiver_4.4200_1_1}_{i_Lato+BP_2.0100_1_1}}_{d_Rotation+C_1_0_5_{i_Braton+Stock_2.2100_1_1}_{i_Braton+BP_2.0100_1_1}_{i_Lato+Barrel_2.2100_1_1}}}&start=start">Braton
                             and Lato Vandal</a>:
                     </td>
                     <td>
@@ -5499,7 +5814,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Legendary+Core_{m_Sortie_0_0_y_{Complete_1_0_0_{Legendary+Core_0.1800_1}}}&start=start">Legendary
+                        <a href="?m=Legendary+Core_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_Legendary+Core_0.1800_1_1}}}&start=start">Legendary
                             Core</a>:
                     </td>
                     <td>
@@ -5508,24 +5823,60 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Xiphos_{m_Tier+1+Sabotage_0_10_y_{Rotation+C_1_0_0_{Fuselage_0.5000_1}}}_{m_Tier+2+Sabotage_0_10_y_{Rotation+C_1_0_0_{Engines_0.5000_1}}}_{m_Tier+3+Sabotage_0_10_y_{Rotation+C_1_0_0_{Avionics_0.5000_1}}}&start=start">Xiphos</a>:
+                        <a href="?m=Xiphos_{m_Tier+1+Sabotage_0_10_y_{d_Rotation+C_1_0_0_{i_Fuselage_0.5000_1_1}}}_{m_Tier+2+Sabotage_0_10_y_{d_Rotation+C_1_0_0_{i_Engines_0.5000_1_1}}}_{m_Tier+3+Sabotage_0_10_y_{d_Rotation+C_1_0_0_{i_Avionics_0.5000_1_1}}}&start=start">Xiphos</a>:
                     </td>
                     <td>
                         Possibly the most ludicrous grind in the game.
                     </td>
                 </tr>
             </table>
+
+            <h1 id="ToDo">To Do</h1>
+            <ul>
+                <li>
+                    I'd like to be able to make some kind of scenario that combines Relic Farming, Void Trace Farming,
+                    and Fissures into one grand total, but the process of <i>consuming</i> items and going backwards in the
+                    mission sequence when you run out of something makes things more complicated. A scenario that
+                    combines Kuva Farming and Riven Rolling is tough for the same reason.
+                </li>
+                <li>
+                    When you switch Riven types I wish it would keep any selections under the stat list that are common
+                    between the two types rather than just wiping it all out and starting fresh.
+                </li>
+                <li>
+                    A whole bunch of performance optimizations, probably.
+                </li>
+                <li>
+                    Find some way to automatically give a meaningful file name when you go to save a chart as an image.
+                </li>
+                <li>
+                    I'm not sure the Items Required and Drop Events Required fields need to be here.  I'm pretty
+                    sure they're always set to <strong>0</strong> on every example, meaning all Items and Drop Events
+                    are required.
+                </li>
+                <li>
+                    The chart is a little wonky when the result data only has a few discrete values, or has a lot of
+                    empty space on the left.
+                </li>
+            </ul>
+
+
             <h1 id="KnownIssues">Known Issues</h1>
             <ul>
                 <li>
-                    The charts don't work in Microsoft Edge.  Don't use Edge.
+                    The charts don't work in Microsoft Edge. Don't use Edge.
+                </li>
+                <li>
+                    Sometimes the Generate Link pop-up doesn't disappear correctly on Chrome if you switch tabs at the
+                    wrong time.  Shrug Emoji.
                 </li>
                 <li>
                     A Riven scenario runs somewhere between a hundred and a thousand times slower than a mission or
-                    enemy scenario with a similar average.  It's Javascript, there's only so much optimization you can do.
+                    enemy scenario with a similar average. It's Javascript, there's only so much optimization you can
+                    do.
                 </li>
                 <li>
-                    Running a lot of simulations on a mobile device will really tear your battery a new one.  That's
+                    Running a lot of simulations on a mobile device will really tear your battery a new one. That's
                     just the way it is.
                 </li>
             </ul>
