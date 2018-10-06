@@ -231,7 +231,7 @@
     }
 
     /* Fields */
-    .inputName, .inputTime, .inputRequired, .inputCount, .inputRate, .inputRange, .inputStopAfter {
+    .inputName, .inputTime, .inputRequired, .inputCount, .inputRate, .inputRange, .inputStopAfter, .inputResult, .inputPercentile {
         background-color: #101010;
         border: none;
         color: #B0B0B0;
@@ -262,7 +262,7 @@
         color: #B0B0B0;
         cursor: not-allowed;
     }
-    .inputName:disabled, .inputTime:disabled, .inputRequired:disabled, .inputCount:disabled, .inputRate:disabled, .inputRange:disabled, .inputStopAfter:disabled {
+    .inputName:disabled, .inputTime:disabled, .inputRequired:disabled, .inputCount:disabled, .inputRate:disabled, .inputRange:disabled, .inputStopAfter:disabled, .inputResult:disabled, .inputPercentile:disabled {
         background-color: #202020;
         color: #B0B0B0;
         cursor: not-allowed;
@@ -2392,8 +2392,8 @@
     //==============================================================
 
     function getParent(node, parentClass) {
-        // walk up the DOM until we find a parent with the given class name
-        while (parentClass != (node.className)) {
+        // walk up the DOM until we find a parent with the given class name or run out of parents
+        while (node != null && parentClass != (node.className)) {
             node = node.parentNode;
         }
         return node;
@@ -3525,16 +3525,16 @@
         }
 
         // make sure the result container is initialized
-        addResultContainer(resultElement, title, unitName);
+        addResultContainer(resultElement, title, unitName, trialData, dataScale, time);
 
         // update the statistics
-        updateResultStatistics(resultElement, title, unitName, trialData, dataScale, customResults);
+        updateResultStatistics(resultElement, customResults);
 
         // (re)draw the histogram
-        updateHistogram(resultElement, title, unitName, trialData, dataScale);
+        updateHistogram(resultElement, );
     }
 
-    function addResultContainer(resultElement, title, unitName) {
+    function addResultContainer(resultElement, title, unitName, trialData, dataScale, time) {
         if (resultElement.children.length == 0) {
             // Building the base container HTML
             var html = `
@@ -3558,6 +3558,31 @@
                             </div>
                         </div>
                         <div class="histogramContainer">
+                        </div>`;
+        /* todo
+        // too much guesswork and estimates with Time to make queries useful
+        if (!time) {
+            html += `
+                        <div class="histogramSettings">
+                            <table>
+                                <tr>
+                                    <td/>
+                                    <td class="statName">Result</td>
+                                    <td class="statName">Percentile</td>
+                                </tr>
+                                <tr>
+                                    <td>Query:</td>
+                                    <td>
+                                        <input class="inputResult" type="number" value="" step="0.01" onchange="calcPercentile(this)"/>
+                                    </td>
+                                    <td>
+                                        <input class="inputPercentile" type="number" value="" step="0.01"/>%
+                                    </td>
+                                </tr>
+                            </table>`;
+        }
+        */
+        html += `
                         </div>
                     </td>
                     <!-- go ahead and set the width here to be similar to the canvas -->
@@ -3571,8 +3596,21 @@
 
             // add the HTML
             resultElement.innerHTML = html;
+
+            // save the relevant data to the DOM element so we can re-display the results without refreshing everything
+            resultElement.title = title;
+            resultElement.unitName = unitName;
+            resultElement.trialData = trialData;
+            resultElement.dataScale = dataScale;
         }
     }
+
+/* todo
+
+    function calcPercentile(input) {
+        var result = input.value;
+    }
+*/
 
     function switchToDensity(buttonElement) {
         // find the button group containing the button
@@ -3589,9 +3627,8 @@
         // "deselect" the other button
         otherButtonElement.className = "button cumulative";
 
-        // ugh, don't see any other way to get at all the data we need to redraw the histogram outside of the usual
-        // run loop, so just update everything
-        updateAllResults(scenarioRunner);
+        // refresh the chart
+        redrawHistogram(buttonElement);
     }
 
     function switchToCumulative(buttonElement) {
@@ -3609,12 +3646,26 @@
         // "deselect" the other button
         otherButtonElement.className = "button density";
 
-        // ugh, don't see any other way to get at all the data we need to redraw the histogram outside of the usual
-        // run loop, so just update everything
-        updateAllResults(scenarioRunner);
+        // refresh the chart
+        redrawHistogram(buttonElement);
     }
 
-    function updateResultStatistics(resultElement, title, unitName, trialData, dataScale, customResults) {
+    function redrawHistogram(element) {
+        // find the parent result element and redraw the histrogram
+        var parent = getParent(element, "trialResult");
+        if (!parent) {
+            parent = getParent(element, "timeResult");
+        }
+        updateHistogram(parent);
+    }
+
+    function updateResultStatistics(resultElement, customResults) {
+        // pull data out of the DOM element
+        var title = resultElement.title;
+        var unitName = resultElement.unitName;
+        var trialData = resultElement.trialData;
+        var dataScale = resultElement.dataScale;
+
         // find and update the statistics element
         var statisticsElement = getFirstChild(resultElement, "statistics");
         var html = `
@@ -3781,7 +3832,13 @@
         statisticsElement.innerHTML = html;
     }
 
-    function updateHistogram(resultElement, title, unitName, trialData, dataScale) {
+    function updateHistogram(resultElement) {
+        // pull data out of the DOM element
+        var title = resultElement.title;
+        var unitName = resultElement.unitName;
+        var trialData = resultElement.trialData;
+        var dataScale = resultElement.dataScale;
+
         // find the canvas element
         var canvas = getFirstChild(resultElement, "histogram");
         if (!canvas) {
@@ -3981,14 +4038,14 @@
         context.miterLimit = 2;
 
         // draw all the outlines first
-    	histogramText(context, textX, fontSize * 2, trialData, titles, unitName, fontSize, dataScale, true);
+    	histogramText(context, textX, fontSize * 2, canvas.width, trialData, titles, unitName, fontSize, dataScale, true);
 
         // draw the text on top
-    	histogramText(context, textX, fontSize * 2, trialData, titles, unitName, fontSize, dataScale, false);
+    	histogramText(context, textX, fontSize * 2, canvas.width, trialData, titles, unitName, fontSize, dataScale, false);
 
 	}
 
-	function histogramText(context, textX, textY, trialData, titles, unitName, fontSize, dataScale, outline) {
+	function histogramText(context, textX, textY, canvasWidth, trialData, titles, unitName, fontSize, dataScale, outline) {
 	    // just easier
         textY -= fontSize;
 
@@ -4000,8 +4057,9 @@
         for (var i = 0; i < titles.length; i++) {
             // increment the Y coord
             textY += fontSize;
+            var s = fitCenteredText(context, titles[i], textX, canvasWidth)
             // draw the title
-            doText(context, titles[i], textX, textY, outline);
+            doText(context, s, textX, textY, outline);
         }
 
         // increment the Y coord for a blank space
@@ -4063,6 +4121,23 @@
         } else {
             context.fillText(text, x, y);
         }
+	}
+
+	function fitCenteredText(context, text, textX, canvasWidth) {
+	    // shorten the text if necessary so it all fits on the canvas
+	    var t = text;
+	    for (;;) {
+	        // use the canvas context to measure how wide the text is with the current font
+	        // divide by two because we're centering it at textX
+	        var w = context.measureText(t).width / 2;
+	        // check to see if it goes beyond the left or right side on the canvas
+	        if (w <= textX && w + textX <= canvasWidth) {
+	            // we're good
+	            return t;
+	        }
+	        // todo: something more efficient than just conting down one character at a time?
+	        t = t.substring(0, t.length - 4) + "...";
+	    }
 	}
 
     function convertToPng(canvas) {
@@ -4148,15 +4223,15 @@
                 // update the number of trials results
                 updateResult(
                     getFirstChild(missionRunner.mission.resultElement, "trialResult"),
-                    scenarioRunner.scenario.name,
-                    missionRunner.mission.name + " Missions",
+                    shorten(scenarioRunner.scenario.name) + " Count",
+                    shorten(missionRunner.mission.name) + " Missions",
                     missionRunner.totalResults, false);
 
                 // update the time results, or clear it if there is no time results
                 updateResult(
                     getFirstChild(missionRunner.mission.resultElement, "timeResult"),
-                    scenarioRunner.scenario.name,
-                    missionRunner.mission.name + " Time",
+                    shorten(scenarioRunner.scenario.name),
+                    shorten(missionRunner.mission.name) + " Time",
                     missionRunner.totalTimeResults, true);
             }
         }
@@ -4171,16 +4246,27 @@
         // update the total number of trials results
 		updateResult(
 		    getFirstChild(scenarioRunner.scenario.resultElement, "trialResult"),
-		    scenarioRunner.scenario.name,
-		    scenarioRunner.missionRunners.length == 1 ? scenarioRunner.missionRunners[0].mission.name : "Total Missions",
+		    shorten(scenarioRunner.scenario.name),
+		    scenarioRunner.missionRunners.length == 1 ? (shorten(scenarioRunner.missionRunners[0].mission.name) + " Count") : "Total Missions",
 		    scenarioRunner.totalResults, false, scenarioRunner.customResults());
 
         // update the total time results, or clear it if there is no time results
         updateResult(
             getFirstChild(scenarioRunner.scenario.resultElement, "timeResult"),
-		    scenarioRunner.scenario.name,
-		    scenarioRunner.missionRunners.length == 1 ? (scenarioRunner.missionRunners[0].mission.name + " Time") : "Total Mission Time",
+		    shorten(scenarioRunner.scenario.name),
+		    scenarioRunner.missionRunners.length == 1 ? (shorten(scenarioRunner.missionRunners[0].mission.name) + " Time") : "Total Mission Time",
             scenarioRunner.totalTimeResults, true);
+    }
+
+    var max_name_size = 40;
+
+    function shorten(s) {
+        // This is just to keep the HTML layout from getting wonky
+        // There is another length checking step inside the chart builder
+        if (s.length <= max_name_size) {
+            return s;
+        }
+        return s.substring(0, max_name_size - 3) + "...";
     }
 
     function clearResults() {
@@ -5874,6 +5960,9 @@
                     are required.
                 </li>
                 <li>
+                    Make the statistics section update in place rather than rebuilding the entire section every time.
+                </li>
+                <li>
                     Enhance the chart so it doesn't have to start at zero on the left.  Right now, distributions with
                     a high average and small standard deviation end up as indistinguishable spikes all the way to the
                     right.
@@ -5919,7 +6008,7 @@
             <a href="https://github.com/buff0000n/rngsim/issues/1">Feedback</a>
         </div>
         <div>
-            v1.3: 2018-10-02
+            v1.3.1: 2018-10-06
         </div>
     </div>
 </div>
