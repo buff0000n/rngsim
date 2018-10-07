@@ -3130,21 +3130,34 @@
     // Model-View control
     //==============================================================
 
+    var showHelpUrlString = "&h=yes";
+    var autoStartUrlString = "&start=start";
+
     function initModel() {
         // javascript is working
         clearErrors();
 
-        if (getQueryParam("h")) {
+        var url = window.location.href;
+
+        if (getQueryParam(url, "h")) {
             about();
         }
 
+        // initialize the example selector
+        var select = document.getElementById("samplesSelect");
+        select.value = select.options.item(0).value;
+
+        reinitModel(url);
+    }
+
+    function reinitModel(url) {
         // on page load, see if there's a "m=..." query string
-        var modelString = getQueryParam("m");
+        var modelString = getQueryParam(url, "m");
         // if there is, then initialize our config
         setModelString(modelString);
 
         // see if the stop number was also specified
-        var stopAfterString = getQueryParam("s");
+        var stopAfterString = getQueryParam(url, "s");
         if (stopAfterString) {
             // parse and sanitize the stop number
             var stopAfter = readInt(stopAfterString);
@@ -3154,12 +3167,8 @@
             }
         }
 
-        // initialize the example selector
-        var select = document.getElementById("samplesSelect");
-        select.value = select.options.item(0).value;
-
         // see if the start param was specified in the URL
-        var startString = getQueryParam("start");
+        var startString = getQueryParam(url, "start");
         if (startString) {
             // update the UI to match
             document.getElementById("copyUrlAutoStart").checked = true;
@@ -3225,7 +3234,7 @@
         url += "?m=" + paramValue;
         url += "&s=" + stopAfter;
         if (autoStart) {
-            url += "&start=start";
+            url += autoStartUrlString;
         }
         return url;
     }
@@ -3471,10 +3480,9 @@
         return scenarioModel;
     }
 
-    function getQueryParam(name) {
+    function getQueryParam(url, name) {
         // from https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
         // weird that there's no built in function for this
-        var url = window.location.href;
         name = name.replace(/[\[\]]/g, '\\$&');
         var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
         var results = regex.exec(url);
@@ -4148,8 +4156,11 @@
         // todo: this doesn't work
         var fileName = canvas.saveName + ".png";
         // replace the canvas with an image
+        // Ugh, the only way to give it a file name is to wrap it in a link element, and duplicate the entire src contents.
         canvas.parentElement.innerHTML = `
-            <image download="${fileName}" src="${src}"></image>
+            <a download="${fileName}" href="${src}">
+                <image src="${src}"></image>
+            </a>
         `;
     }
 
@@ -4512,7 +4523,6 @@
 
     function about() {
         var container = document.getElementById("lotsOfWordsContainer")
-        var urlString = "&h=yes";
 
         if (container.style.display === "none") {
             container.style.display = "block";
@@ -4520,20 +4530,26 @@
             // perform some history shenanigans to make sure that if you display Help, click a link, and then go back,
             // then Help is still displayed and you don't lose your place.
             var href = window.location.href;
-            if (href.indexOf(urlString) < 0) {
+
+            // make sure the back button doesn't restart the simulation
+            if (href.indexOf(autoStartUrlString) > 0) {
+                href = href.replace(autoStartUrlString, "");
+            }
+
+            if (href.indexOf(showHelpUrlString) < 0) {
                 if (href.indexOf("?") < 0) {
                     href += "?";
                 }
-                href += urlString;
+                href += showHelpUrlString;
                 history.replaceState( {} , document.title, href );
             }
 
         } else {
             container.style.display = "none";
             var href = window.location.href;
-            var index = href.indexOf(urlString)
+            var index = href.indexOf(showHelpUrlString)
             if (index >= 0) {
-                href = href.substring(0, index) + href.substring(index + urlString.length);
+                href = href.substring(0, index) + href.substring(index + showHelpUrlString.length);
                 history.replaceState( {} , document.title, href );
             }
         }
@@ -4552,70 +4568,70 @@
             <div class="util examplesDiv">
                 Examples:
                 <span class="tooltip">
-                    <select id="samplesSelect" onchange="setModelString(this.value)">
+                    <select id="samplesSelect" onchange="reinitModel(this.value)">
                         <option value="" disabled selected>Select one...</option>
                         <option value="" disabled>---Frames---</option>
                         <!-- These frame samples are in rough order from least to most average time -->
-                        <option value="Standard+Boss+Frame_{m_Assassinate_0_10_y_{d_Complete_1_0_0_{i_Helmet_38.7200_1_1}_{i_Chassis_38.7200_1_1}_{i_Systems_22.5600_1_1}}}">Standard Boss Frame</option>
-                        <option value="Ash_{e_Grineer+Manic_0_0_y_{d_Kill_1_0_0_{i_Chassis_12.7776_1_1}_{i_Helmet_12.7776_1_1}_{i_Systems_7.4480_1_1}}}">Ash</option>
-                        <option value="Gara_{m_Bounty+5-15_0_0_y_{d_Stage+2_1_0_6_{i_Chassis_7.5200_1_1}}_{d_Stage+3_1_0_3_{i_Chassis_30.5600_1_1}}}_{m_Bounty+10-20_0_0_y_{d_Stage+2_1_0_6_{i_Systems_9.5200_1_1}}_{d_Stage+3_1_0_3_{i_Systems_21.8200_1_1}}}_{m_Bounty+20-30_0_0_y_{d_Stage+3_1_0_9_{i_Helmet_8.4200_1_1}}_{d_Stage+4_1_0_3_{i_Helmet_20.5100_1_1}}}">Gara</option>
-                        <option value="Octavia_{m_ODS_0_0_y_{d_Rotation+C_1_0_20_{i_Helmet_22.5600_1_1}}}_{m_Lua+Crossfire+With+Caches,+Music+Room_0_5_y_{d_Music+Room+(guessing+at+spawn+rate)_1_1_0_{i_Chassis_25.0000_1_1}}_{d_Cache+A_1_0_5_{i_Systems_22.5600_1_1}}}">Octavia</option>
-                        <option value="Revenant_{m_Bounty+20-40_0_3_y_{d_Stage+2_1_0_3_{i_Systems_8.8700_1_1}}_{d_Stage+3_1_0_3_{i_Systems_8.6833_1_1}}_{d_Stage+4_1_0_3_{i_Systems_20.1700_1_1}}}_{m_Bounty+30-50_0_3_y_{d_Stage+2,3_2_0_3_{i_Chassis_8.4500_1_1}}_{d_Stage+4_1_0_3_{i_Chassis_8.2733_1_1}}_{d_Stage+5_1_0_3_{i_Chassis_19.3667_1_1}}}_{m_Bounty+40-60_0_9_y_{d_Stage+4_1_0_3_{i_Helmet_6.7600_1_1}}_{d_Stage+5_1_0_3_{i_Helmet_10.0200_1_1}}}">Revenant</option>
-                        <option value="Revenant+(no+bail+early)_{m_Bounty+20-40_0_3_n_{d_Stage+2_1_0_3_{i_Systems_8.8700_1_1}}_{d_Stage+3_1_0_3_{i_Systems_8.6833_1_1}}_{d_Stage+4_1_0_3_{i_Systems_20.1700_1_1}}}_{m_Bounty+30-50_0_3_n_{d_Stage+2,3_2_0_3_{i_Chassis_8.4500_1_1}}_{d_Stage+4_1_0_3_{i_Chassis_8.2733_1_1}}_{d_Stage+5_1_0_3_{i_Chassis_19.3667_1_1}}}_{m_Bounty+40-60_0_9_n_{d_Stage+4_1_0_3_{i_Helmet_6.7600_1_1}}_{d_Stage+5_1_0_3_{i_Helmet_10.0200_1_1}}}">Revenant (no bail early)</option>
-                        <option value="Equinox_{m_Uranus+Assassinate_0_10_y_{d_Kill+Tyl_1_0_0_{i_Night+Aspect_11.2800_1_1}_{i_Night+Chassis_12.9100_1_1}_{i_Night+Systems_12.9100_1_1}_{i_Night+Helmet_12.9100_1_1}_{i_Day+Aspect_11.2800_1_1}_{i_Day+Chassis_12.9100_1_1}_{i_Day+Systems_12.9100_1_1}_{i_Day+Helmet_12.9100_1_1}}}">Equinox</option>
-                        <option value="Nidus_{m_Infested+Salvage_0_0_y_{d_Rotation+C_1_0_20_{i_Systems_14.2900_1_1}_{i_Helmet_14.2900_1_1}_{i_Chassis_14.2900_1_1}}}">Nidus</option>
-                        <option value="Ivara_{m_Tier+1+Spy_0_10_y_{d_Rotation+C_1_0_0_{i_Systems_9.0900_1_1}}}_{m_Tier+2+Spy_0_10_y_{d_Rotation+C_1_0_0_{i_Chassis_5.6400_1_1}}}_{m_Tier+3+Spy_0_10_y_{d_Rotation+C_1_0_0_{i_Helmet_7.5200_1_1}_{i_BP_7.5200_1_1}}}">Ivara</option>
-                        <option value="Khora_{m_Onslaught_0_0_y_{d_Rotation+A_2_0_5_{i_Chassis_8.3300_1_1}}_{d_Rotation+B_1_0_5_{i_Helmet_7.6900_1_1}}_{d_Rotation+C_1_0_5_{i_Systems_5.6400_1_1}_{i_BP_5.6400_1_1}}}">Khora</option>
+                        <option value="?m=Standard+Boss+Frame_{m_Assassinate_0_10_y_{d_Complete_1_0_0_{i_Helmet_38.7200_1_1}_{i_Chassis_38.7200_1_1}_{i_Systems_22.5600_1_1}}}&s=1000000">Standard Boss Frame</option>
+                        <option value="?m=Ash_{e_Grineer+Manic_0_0_y_{d_Kill_1_0_0_{i_Chassis_12.7776_1_1}_{i_Helmet_12.7776_1_1}_{i_Systems_7.4480_1_1}}}&s=1000000">Ash</option>
+                        <option value="?m=Gara_{m_Bounty+5-15_0_0_y_{d_Stage+2_1_0_6_{i_Chassis_7.5200_1_1}}_{d_Stage+3_1_0_3_{i_Chassis_30.5600_1_1}}}_{m_Bounty+10-20_0_0_y_{d_Stage+2_1_0_6_{i_Systems_9.5200_1_1}}_{d_Stage+3_1_0_3_{i_Systems_21.8200_1_1}}}_{m_Bounty+20-30_0_0_y_{d_Stage+3_1_0_9_{i_Helmet_8.4200_1_1}}_{d_Stage+4_1_0_3_{i_Helmet_20.5100_1_1}}}&s=1000000">Gara</option>
+                        <option value="?m=Octavia_{m_ODS_0_0_y_{d_Rotation+C_1_0_20_{i_Helmet_22.5600_1_1}}}_{m_Lua+Crossfire+With+Caches,+Music+Room_0_5_y_{d_Music+Room+(guessing+at+spawn+rate)_1_1_0_{i_Chassis_25.0000_1_1}}_{d_Cache+A_1_0_5_{i_Systems_22.5600_1_1}}}&s=1000000">Octavia</option>
+                        <option value="?m=Revenant_{m_Bounty+20-40_0_3_y_{d_Stage+2_1_0_3_{i_Systems_8.8700_1_1}}_{d_Stage+3_1_0_3_{i_Systems_8.6833_1_1}}_{d_Stage+4_1_0_3_{i_Systems_20.1700_1_1}}}_{m_Bounty+30-50_0_3_y_{d_Stage+2,3_2_0_3_{i_Chassis_8.4500_1_1}}_{d_Stage+4_1_0_3_{i_Chassis_8.2733_1_1}}_{d_Stage+5_1_0_3_{i_Chassis_19.3667_1_1}}}_{m_Bounty+40-60_0_9_y_{d_Stage+4_1_0_3_{i_Helmet_6.7600_1_1}}_{d_Stage+5_1_0_3_{i_Helmet_10.0200_1_1}}}&s=1000000">Revenant</option>
+                        <option value="?m=Revenant+(no+bail+early)_{m_Bounty+20-40_0_3_n_{d_Stage+2_1_0_3_{i_Systems_8.8700_1_1}}_{d_Stage+3_1_0_3_{i_Systems_8.6833_1_1}}_{d_Stage+4_1_0_3_{i_Systems_20.1700_1_1}}}_{m_Bounty+30-50_0_3_n_{d_Stage+2,3_2_0_3_{i_Chassis_8.4500_1_1}}_{d_Stage+4_1_0_3_{i_Chassis_8.2733_1_1}}_{d_Stage+5_1_0_3_{i_Chassis_19.3667_1_1}}}_{m_Bounty+40-60_0_9_n_{d_Stage+4_1_0_3_{i_Helmet_6.7600_1_1}}_{d_Stage+5_1_0_3_{i_Helmet_10.0200_1_1}}}&s=1000000">Revenant (no bail early)</option>
+                        <option value="?m=Equinox_{m_Uranus+Assassinate_0_10_y_{d_Kill+Tyl_1_0_0_{i_Night+Aspect_11.2800_1_1}_{i_Night+Chassis_12.9100_1_1}_{i_Night+Systems_12.9100_1_1}_{i_Night+Helmet_12.9100_1_1}_{i_Day+Aspect_11.2800_1_1}_{i_Day+Chassis_12.9100_1_1}_{i_Day+Systems_12.9100_1_1}_{i_Day+Helmet_12.9100_1_1}}}&s=1000000">Equinox</option>
+                        <option value="?m=Nidus_{m_Infested+Salvage_0_0_y_{d_Rotation+C_1_0_20_{i_Systems_14.2900_1_1}_{i_Helmet_14.2900_1_1}_{i_Chassis_14.2900_1_1}}}&s=1000000">Nidus</option>
+                        <option value="?m=Ivara_{m_Tier+1+Spy_0_10_y_{d_Rotation+C_1_0_0_{i_Systems_9.0900_1_1}}}_{m_Tier+2+Spy_0_10_y_{d_Rotation+C_1_0_0_{i_Chassis_5.6400_1_1}}}_{m_Tier+3+Spy_0_10_y_{d_Rotation+C_1_0_0_{i_Helmet_7.5200_1_1}_{i_BP_7.5200_1_1}}}&s=1000000">Ivara</option>
+                        <option value="?m=Khora_{m_Onslaught_0_0_y_{d_Rotation+A_2_0_5_{i_Chassis_8.3300_1_1}}_{d_Rotation+B_1_0_5_{i_Helmet_7.6900_1_1}}_{d_Rotation+C_1_0_5_{i_Systems_5.6400_1_1}_{i_BP_5.6400_1_1}}}&s=1000000">Khora</option>
                         <!-- The simulation isn't really built for these, but they do work -->
-                        <option value="" disabled>---Mods---</option>
-                        <option value="Argon+Scope_{e_Torment_0_0_y_{d_Kill_1_0_0_{i_Argon+Scope_4.0400_1_1}}}">Argon Scope</option>
-                        <option value="Four+Riders_{e_Grineer+Manic_0_0_y_{d_Kill_1_0_0_{i_Four+Riders_0.3350_1_1}}}">Four Riders</option>
-                        <option value="Vengeful+Revenant_{e_Conculyst_0_0_y_{d_Kill_1_0_0_{i_Vengeful+Revenant_0.4170_1_1}}}">Vengeful Revenant</option>
-                        <option value="Tempo+Royale+(Bursa)_{e_Isolator+Bursa_0_0_y_{d_Kill_1_0_0_{i_Tempo+Royale_0.0603_1_1}}}">Tempo Royale (Bursa)</option>
-                        <option value="Tempo+Royale+(Incursion)_{m_Plains+Incursion_0_5_y_{d_Rotation+A_1_0_0_{i_Tempo+Royale_1.0100_1_1}}}">Tempo Royale (Incursion)</option>
-                        <option value="Condition+Overload_{e_Drekar+Butcher_0_0_y_{d_Kill_1_0_0_{i_Condition+Overload_0.0201_1_1}}}">Condition Overload</option>
-                        <option value="Guardian+Derision_{e_Prod+Crewman_0_0_y_{d_Kill_1_0_0_{i_Guardian+Derision_0.0150_1_1}}}">Guardian Derision</option>
-                        <option value="Full+Hunter+Set+(Ghouls)_{m_Level+15-25+Ghoul+Bounty_0_0_y_{d_Stage+1_1_0_3_{i_Adrenaline_33.3300_1_1}}_{d_Stage+2,+3_2_0_3_{i_Adrenaline_11.7400_1_1}_{i_Munitions_9.3900_1_1}}_{d_Stage+4_1_0_3_{i_Munitions_11.9000_1_1}_{i_Track_11.9000_1_1}}}_{m_Level+40-50+Ghoul+Bounty_0_0_y_{d_Stage+1_1_0_3_{i_Recovery_33.3300_1_1}}_{d_Stage+2,+3_2_0_3_{i_Recovery_11.7400_1_1}_{i_Synergy_9.3900_1_1}}_{d_Stage+4_1_0_3_{i_Recovery_10.2900_1_1}_{i_Synergy_8.2300_1_1}_{i_Command_8.2300_1_1}}_{d_Stage+5_1_0_3_{i_Synergy_11.9000_1_1}_{i_Command_11.9000_1_1}}}">Full Hunter Set (Ghouls)</option>
-                        <option value="Full+Hunter+Set+(Plague+Star)_{m_Plague+Star_0_15_y_{d_Kill+Hemocyte_4_0_0_{i_Hunter+Command_10.5300_1_1}_{i_Hunter+Recovery_28.9500_1_1}_{i_Hunter+Synergy_10.5300_1_1}_{i_Hunter+Munitions_10.5300_1_1}_{i_Hunter+Track_10.5300_1_1}_{i_Hunter+Adrenaline_28.9500_1_1}}}">Full Hunter Set (Plague Star)</option>
-                        <option value="All+Corrupted+Mods_{m_Derelict+Exterminate_0_5_y_{d_Vault_1_0_0_{i_Spoiled+Strike_4.1700_1_1}_{i_Corrupt+Charge_4.1700_1_1}_{i_Hollow+Point_4.1700_1_1}_{i_Magnum+Force_4.1700_1_1}_{i_Tainted+Clip_4.1700_1_1}_{i_Critical+Delay_4.1700_1_1}_{i_Heavy+Caliber_4.1700_1_1}_{i_Tainted+Mag_4.1700_1_1}_{i_Vile+Precision_4.1700_1_1}_{i_Narrow+Minded_4.1700_1_1}_{i_Fleeting+Expertise_4.1700_1_1}_{i_Blind+Rage_4.1700_1_1}_{i_Overextended_4.1700_1_1}_{i_Tainted+Shell_4.1700_1_1}_{i_Vicious+Spread_4.1700_1_1}_{i_Burdened+Magazine_4.1700_1_1}_{i_Anemic+Agility_4.1700_1_1}_{i_Vile+Acceleration_4.1700_1_1}_{i_Frail+Momentum_4.1700_1_1}_{i_Critical+Deceleration_4.1700_1_1}_{i_Creeping+Bullseye_4.1700_1_1}_{i_Transient+Fortitude_4.1700_1_1}_{i_Depleted+Reload_4.1700_1_1}}}">All Corrupted Mods</option>
+                        <option value="?m=" disabled>---Mods---</option>
+                        <option value="?m=Argon+Scope_{e_Torment_0_0_y_{d_Kill_1_0_0_{i_Argon+Scope_4.0400_1_1}}}&s=1000000">Argon Scope</option>
+                        <option value="?m=Four+Riders_{e_Grineer+Manic_0_0_y_{d_Kill_1_0_0_{i_Four+Riders_0.3350_1_1}}}&s=1000000">Four Riders</option>
+                        <option value="?m=Vengeful+Revenant_{e_Conculyst_0_0_y_{d_Kill_1_0_0_{i_Vengeful+Revenant_0.4170_1_1}}}&s=1000000">Vengeful Revenant</option>
+                        <option value="?m=Tempo+Royale+(Bursa)_{e_Isolator+Bursa_0_0_y_{d_Kill_1_0_0_{i_Tempo+Royale_0.0603_1_1}}}&s=1000000">Tempo Royale (Bursa)</option>
+                        <option value="?m=Tempo+Royale+(Incursion)_{m_Plains+Incursion_0_5_y_{d_Rotation+A_1_0_0_{i_Tempo+Royale_1.0100_1_1}}}&s=1000000">Tempo Royale (Incursion)</option>
+                        <option value="?m=Condition+Overload_{e_Drekar+Butcher_0_0_y_{d_Kill_1_0_0_{i_Condition+Overload_0.0201_1_1}}}&s=1000000">Condition Overload</option>
+                        <option value="?m=Guardian+Derision_{e_Prod+Crewman_0_0_y_{d_Kill_1_0_0_{i_Guardian+Derision_0.0150_1_1}}}&s=1000000">Guardian Derision</option>
+                        <option value="?m=Full+Hunter+Set+(Ghouls)_{m_Level+15-25+Ghoul+Bounty_0_0_y_{d_Stage+1_1_0_3_{i_Adrenaline_33.3300_1_1}}_{d_Stage+2,+3_2_0_3_{i_Adrenaline_11.7400_1_1}_{i_Munitions_9.3900_1_1}}_{d_Stage+4_1_0_3_{i_Munitions_11.9000_1_1}_{i_Track_11.9000_1_1}}}_{m_Level+40-50+Ghoul+Bounty_0_0_y_{d_Stage+1_1_0_3_{i_Recovery_33.3300_1_1}}_{d_Stage+2,+3_2_0_3_{i_Recovery_11.7400_1_1}_{i_Synergy_9.3900_1_1}}_{d_Stage+4_1_0_3_{i_Recovery_10.2900_1_1}_{i_Synergy_8.2300_1_1}_{i_Command_8.2300_1_1}}_{d_Stage+5_1_0_3_{i_Synergy_11.9000_1_1}_{i_Command_11.9000_1_1}}}&s=1000000">Full Hunter Set (Ghouls)</option>
+                        <option value="?m=Full+Hunter+Set+(Plague+Star)_{m_Plague+Star_0_15_y_{d_Kill+Hemocyte_4_0_0_{i_Hunter+Command_10.5300_1_1}_{i_Hunter+Recovery_28.9500_1_1}_{i_Hunter+Synergy_10.5300_1_1}_{i_Hunter+Munitions_10.5300_1_1}_{i_Hunter+Track_10.5300_1_1}_{i_Hunter+Adrenaline_28.9500_1_1}}}&s=1000000">Full Hunter Set (Plague Star)</option>
+                        <option value="?m=All+Corrupted+Mods_{m_Derelict+Exterminate_0_5_y_{d_Vault_1_0_0_{i_Spoiled+Strike_4.1700_1_1}_{i_Corrupt+Charge_4.1700_1_1}_{i_Hollow+Point_4.1700_1_1}_{i_Magnum+Force_4.1700_1_1}_{i_Tainted+Clip_4.1700_1_1}_{i_Critical+Delay_4.1700_1_1}_{i_Heavy+Caliber_4.1700_1_1}_{i_Tainted+Mag_4.1700_1_1}_{i_Vile+Precision_4.1700_1_1}_{i_Narrow+Minded_4.1700_1_1}_{i_Fleeting+Expertise_4.1700_1_1}_{i_Blind+Rage_4.1700_1_1}_{i_Overextended_4.1700_1_1}_{i_Tainted+Shell_4.1700_1_1}_{i_Vicious+Spread_4.1700_1_1}_{i_Burdened+Magazine_4.1700_1_1}_{i_Anemic+Agility_4.1700_1_1}_{i_Vile+Acceleration_4.1700_1_1}_{i_Frail+Momentum_4.1700_1_1}_{i_Critical+Deceleration_4.1700_1_1}_{i_Creeping+Bullseye_4.1700_1_1}_{i_Transient+Fortitude_4.1700_1_1}_{i_Depleted+Reload_4.1700_1_1}}}&s=1000000">All Corrupted Mods</option>
                         <!-- Relic-related scenarios -->
-                        <option value="" disabled>---Relics---</option>
-                        <option value="Radshare_{m_Fissure_0_0_y_{d_Crack+Relic_4_0_0_{i_Rare_10.0000_1_1}}}">Radshare</option>
-                        <option value="Solo+Radiant_{m_Fissure_0_0_y_{d_Crack+Relic_1_0_0_{i_Rare_10.0000_1_1}}}">Solo Radiant</option>
-                        <option value="Uncommon+Intact+Share_{m_Fissure_0_0_y_{d_Crack+Relic_4_0_0_{i_Uncommon_11.0000_1_1}}}">Uncommon Intact Share</option>
-                        <option value="Uncommon+Radshare_{m_Fissure_0_0_y_{d_Crack+Relic_4_0_0_{i_Uncommon_20.0000_1_1}}}">Uncommon Radshare</option>
+                        <option value="?m=" disabled>---Relics---</option>
+                        <option value="?m=Radshare_{m_Fissure_0_0_y_{d_Crack+Relic_4_0_0_{i_Rare_10.0000_1_1}}}&s=1000000">Radshare</option>
+                        <option value="?m=Solo+Radiant_{m_Fissure_0_0_y_{d_Crack+Relic_1_0_0_{i_Rare_10.0000_1_1}}}&s=1000000">Solo Radiant</option>
+                        <option value="?m=Uncommon+Intact+Share_{m_Fissure_0_0_y_{d_Crack+Relic_4_0_0_{i_Uncommon_11.0000_1_1}}}&s=1000000">Uncommon Intact Share</option>
+                        <option value="?m=Uncommon+Radshare_{m_Fissure_0_0_y_{d_Crack+Relic_4_0_0_{i_Uncommon_20.0000_1_1}}}&s=1000000">Uncommon Radshare</option>
                         <!-- no current vaulted relics
-                        <option value="Three+Axi+S3+Relics+(Mot)_{m_Mot_0_0_y_{d_Rotation+C_1_0_20_{i_Axi+S3_11.1100_1_3}}}">Three Axi S3 Relics (Mot)</option>-->
-                        <option value="Three+Axi+C3/G1+Relics+(Bounties)_{m_Bounty+40-60_0_3_y_{d_Stage+2,3_2_0_3_{i_Axi+C3/G1_33.0400_1_3}}_{d_Stage+4_1_0_3_{i_Axi+C3/G1_25.6800_1_1}}_{d_Stage+5_1_0_3_{i_Axi+C3/G1_38.7800_1_1}}}">Three Axi C3/G1 Relics (Bounties)</option>
-                        <option value="Three+Neo+G1+Relics+(Bounties)_{m_Bounty+30-50_0_3_y_{d_Stage+2,3_2_0_3_{i_Axi+C3/G1_15.9600_1_3}}_{d_Stage+4_1_0_3_{i_Axi+C3/G1_15.6300_1_1}}_{d_Stage+5_1_0_3_{i_Axi+C3/G1_35.7100_1_1}}}">Three Neo G1 Relics (Bounties)</option>
-                        <option value="Meso+R1+Relic+(IO+Defense)_{m_Io+Defense_0_0_y_{d_Rotation+A_2_0_5_{i_Meso+R1_12.5000_1_1}}}">Meso R1 Relic (Io Defense)</option>
-                        <option value="100+Void+Traces_{m_Quick+Fissure_0_5_y_{d_Crack+Relic_1_0_0_{i_Void+Trace_100.0000_6-30_100}}}">100 Void Traces</option>
-                        <option value="1000+Void+Traces+w/+Booster_{m_Quick+Fissure_0_5_y_{d_Crack+Relic_1_0_0_{i_Void+Trace_100.0000_12-60,2_1000}}}">1000 Void Traces with Booster</option>
+                        <option value="?m=Three+Axi+S3+Relics+(Mot)_{m_Mot_0_0_y_{d_Rotation+C_1_0_20_{i_Axi+S3_11.1100_1_3}}}&s=1000000">Three Axi S3 Relics (Mot)</option>-->
+                        <option value="?m=Three+Axi+C3/G1+Relics+(Bounties)_{m_Bounty+40-60_0_3_y_{d_Stage+2,3_2_0_3_{i_Axi+C3/G1_33.0400_1_3}}_{d_Stage+4_1_0_3_{i_Axi+C3/G1_25.6800_1_1}}_{d_Stage+5_1_0_3_{i_Axi+C3/G1_38.7800_1_1}}}&s=1000000">Three Axi C3/G1 Relics (Bounties)</option>
+                        <option value="?m=Three+Neo+G1+Relics+(Bounties)_{m_Bounty+30-50_0_3_y_{d_Stage+2,3_2_0_3_{i_Axi+C3/G1_15.9600_1_3}}_{d_Stage+4_1_0_3_{i_Axi+C3/G1_15.6300_1_1}}_{d_Stage+5_1_0_3_{i_Axi+C3/G1_35.7100_1_1}}}&s=1000000">Three Neo G1 Relics (Bounties)</option>
+                        <option value="?m=Meso+R1+Relic+(IO+Defense)_{m_Io+Defense_0_0_y_{d_Rotation+A_2_0_5_{i_Meso+R1_12.5000_1_1}}}&s=1000000">Meso R1 Relic (Io Defense)</option>
+                        <option value="?m=100+Void+Traces_{m_Quick+Fissure_0_5_y_{d_Crack+Relic_1_0_0_{i_Void+Trace_100.0000_6-30_100}}}&s=1000000">100 Void Traces</option>
+                        <option value="?m=1000+Void+Traces+w/+Booster_{m_Quick+Fissure_0_5_y_{d_Crack+Relic_1_0_0_{i_Void+Trace_100.0000_12-60,2_1000}}}&s=1000000">1000 Void Traces with Booster</option>
                         <!-- Riven-related scenarios -->
-                        <option value="" disabled>---Rivens---</option>
-                        <option value="90+Rivens_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_Riven_26.0800_1_90}}}">90 Rivens</option>
-                        <option value="Riven+for+a+Specific+Rifle_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_One+of+62+possible+Rifle+Rivens_0.1095_1_1}}}">Riven for a Specific Rifle</option>
-                        <option value="Decent+Melee+Riven_{r_Riven+Roll_m_{c_Decent_-1_-1_-pdddnnpppdppppn--d--p-dp-dpd--}}">Decent Melee Riven</option>
-                        <option value="Basic+Damage+Gun+Riven_{r_Riven+Roll_g_{c_Damage_-1_-1_n-ddd--p-p-pppp-pndnpppd-dddnnn}}">Basic Damage Gun Riven</option>
-                        <option value="Crit+or+Status+Melee+Riven_{r_Riven+Roll_m_{c_Crit_-1_-1_-pdddnnppPdppppn--d--p-dp-ddn--}_{c_Status_-1_-1_-pdddnnpdnndpppn--d--p-dp-pPp--}}">Crit or Status Melee Riven</option>
-                        <option value="Status+Gun+Riven_{r_Riven+Roll_g_{c_Status_-1_-1_n-ddd--p-d-dppp-pnnnpppn-npPpnn}}">Status Gun Riven</option>
-                        <option value="Crit+Gun+Riven_{r_Riven+Roll_g_{c_Crit_-1_-1_n-ddd--p-P-pppp-dndnpppd-nddnnn}}">Crit Gun Riven</option>
-                        <option value="Godlike+Lanka+Riven_{r_Riven+Roll_g_{c_Hallelujah_-1_-1_n-nnn--d-p-ppdd-ddndpddn-dnnnnn}}">Godlike Lanka Riven</option>
-                        <option value="Godlike+Vectis+Riven_{r_Riven+Roll_g_{c_Damage,+-Mag+Cap_-1_1_d-ddd--p-p-pppp-pddnppdd-pddddd}}">Godlike Vectis Riven</option>
-                        <option value="Perfect+Rubico+Riven_{r_Riven+Roll_g_{c_Crits+for+days_-1_-1_n-ddd--d-P-Pppp-dnddpddd-dnnnnn}}">Perfect Rubico Riven</option>
-                        <option value="Riven+with+Exact+Stats_{r_Riven+Roll_g_{c_IT+HAS+TO+BE+THESE_3_1_d-ddd--d-P-Pddd-ddddPddd-dddddn}}">Riven with Exact Stats</option>
+                        <option value="?m=" disabled>---Rivens---</option>
+                        <option value="?m=90+Rivens_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_Riven_26.0800_1_90}}}&s=1000000">90 Rivens</option>
+                        <option value="?m=Riven+for+a+Specific+Rifle_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_One+of+62+possible+Rifle+Rivens_0.1095_1_1}}}&s=1000000">Riven for a Specific Rifle</option>
+                        <option value="?m=Decent+Melee+Riven_{r_Riven+Roll_m_{c_Decent_-1_-1_-pdddnnpppdppppn--d--p-dp-dpd--}}&s=100000">Decent Melee Riven</option>
+                        <option value="?m=Basic+Damage+Gun+Riven_{r_Riven+Roll_g_{c_Damage_-1_-1_n-ddd--p-p-pppp-pndnpppd-dddnnn}}&s=100000">Basic Damage Gun Riven</option>
+                        <option value="?m=Crit+or+Status+Melee+Riven_{r_Riven+Roll_m_{c_Crit_-1_-1_-pdddnnppPdppppn--d--p-dp-ddn--}_{c_Status_-1_-1_-pdddnnpdnndpppn--d--p-dp-pPp--}}&s=100000">Crit or Status Melee Riven</option>
+                        <option value="?m=Status+Gun+Riven_{r_Riven+Roll_g_{c_Status_-1_-1_n-ddd--p-d-dppp-pnnnpppn-npPpnn}}&s=100000">Status Gun Riven</option>
+                        <option value="?m=Crit+Gun+Riven_{r_Riven+Roll_g_{c_Crit_-1_-1_n-ddd--p-P-pppp-dndnpppd-nddnnn}}&s=100000">Crit Gun Riven</option>
+                        <option value="?m=Godlike+Lanka+Riven_{r_Riven+Roll_g_{c_Hallelujah_-1_-1_n-nnn--d-p-ppdd-ddndpddn-dnnnnn}}&s=50000">Godlike Lanka Riven</option>
+                        <option value="?m=Godlike+Vectis+Riven_{r_Riven+Roll_g_{c_Damage,+-Mag+Cap_-1_1_d-ddd--p-p-pppp-pddnppdd-pddddd}}&s=50000">Godlike Vectis Riven</option>
+                        <option value="?m=Perfect+Rubico+Riven_{r_Riven+Roll_g_{c_Crits+for+days_-1_-1_n-ddd--d-P-Pppp-dnddpddd-dnnnnn}}&s=50000">Perfect Rubico Riven</option>
+                        <option value="?m=Riven+with+Exact+Stats_{r_Riven+Roll_g_{c_IT+HAS+TO+BE+THESE_3_1_d-ddd--d-P-Pddd-ddddPddd-dddddn}}&s=1000">Riven with Exact Stats</option>
                         <!-- Just some miscellaneous rough grinds -->
-                        <option value="" disabled>---Misc---</option>
-                        <option value="Miter_{m_Ceres+Ass_0_10_y_{d_Kill+Krill_1_0_0_{i_Barrel_16.6700_1_1}_{i_Blade_16.6700_1_1}_{i_Handle_16.6700_1_1}_{i_Chassis_16.6700_1_1}_{i_Blueprint_16.6700_1_1}}}">Miter</option>
-                        <option value="Imperator+Vandal_{m_Fomorian_0_0_y_{d_Complete_1_0_0_{i_Barrel_11.2800_1_1}_{i_Receiver_11.2800_1_1}_{i_Blueprint_38.7200_1_1}}}">Imperator Vandal</option>
+                        <option value="?m=" disabled>---Misc---</option>
+                        <option value="?m=Miter_{m_Ceres+Ass_0_10_y_{d_Kill+Krill_1_0_0_{i_Barrel_16.6700_1_1}_{i_Blade_16.6700_1_1}_{i_Handle_16.6700_1_1}_{i_Chassis_16.6700_1_1}_{i_Blueprint_16.6700_1_1}}}&s=1000000">Miter</option>
+                        <option value="?m=Imperator+Vandal_{m_Fomorian_0_0_y_{d_Complete_1_0_0_{i_Barrel_11.2800_1_1}_{i_Receiver_11.2800_1_1}_{i_Blueprint_38.7200_1_1}}}&s=1000000">Imperator Vandal</option>
                         <!-- get ready to cry -->
-                        <option value="All+Razorback+Drops_{e_Razorback_0_0_y_{d_Kill_1_0_0_{i_Gorgon+Wraith+Blueprint_18.9700_1_1}_{i_Gorgon+Wraith+Barrel_18.9700_1_1}_{i_Gorgon+Wraith+Receiver_18.9700_1_1}_{i_Gorgon+Wraith+Stock_18.9700_1_1}_{i_Bore_5.5300_1_1}_{i_Piercing+Caliber_5.5300_1_1}_{i_Breach+Loader_5.5300_1_1}_{i_Augur+Strike_5.5300_1_1}_{i_Magma+Chamber_1.0100_1_1}_{i_Searing+Steel_1.0100_1_1}}}">All Razorback Drops</option>
-                        <option value="Arcane+Energize+Set_{m_Tridolon+Hunt_0_0_y_{d_Hydrolyst+Capture_1_0_0_{i_Arcane+Energize_5.0000_1_10}}}">Arcane Energize Set</option>
-                        <option value="All+Shadow+Stalker+Drops_{e_I+AM+YOUR+RECKONING_0_0_y_{d_Kill_1_0_0_{i_Scimitar+Engines+BP_1.0050_1_1}_{i_Broken+War+BP_2.7650_1_1}_{i_Dread+BP_37.9400_1_1}_{i_Despair+BP_2.7650_1_1}_{i_Hate+BP_2.7650_1_1}_{i_War+BP_2.7650_1_1}}}">All Shadow Stalker Drops</option>
-                        <option value="Broken+War+Parts_{e_Conculyst_0_0_y_{d_Kill_1_0_0_{i_War+Hilt+BP_0.5000_1_2}_{i_War+Blade+BP_0.5000_1_1}}}">Broken War Parts</option>
-                        <option value="Braton+and+Lato+Vandal_{m_Elite+Onslaught_0_0_y_{d_Rotation+A_2_0_5_{i_Lato+Receiver_2.0100_1_1}}_{d_Rotation+B_1_0_5_{i_Braton+Barrel_4.4200_1_1}_{i_Braton+Receiver_4.4200_1_1}_{i_Lato+BP_2.0100_1_1}}_{d_Rotation+C_1_0_5_{i_Braton+Stock_2.2100_1_1}_{i_Braton+BP_2.0100_1_1}_{i_Lato+Barrel_2.2100_1_1}}}">Braton and Lato Vandal</option>
-                        <option value="Legendary+Core_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_Legendary+Core_0.1800_1_1}}}">Legendary Core</option>
-                        <option value="Xiphos_{m_Tier+1+Sabotage_0_10_y_{d_Rotation+C_1_0_0_{i_Fuselage_0.5000_1_1}}}_{m_Tier+2+Sabotage_0_10_y_{d_Rotation+C_1_0_0_{i_Engines_0.5000_1_1}}}_{m_Tier+3+Sabotage_0_10_y_{d_Rotation+C_1_0_0_{i_Avionics_0.5000_1_1}}}">Xiphos</option>
+                        <option value="?m=All+Razorback+Drops_{e_Razorback_0_0_y_{d_Kill_1_0_0_{i_Gorgon+Wraith+Blueprint_18.9700_1_1}_{i_Gorgon+Wraith+Barrel_18.9700_1_1}_{i_Gorgon+Wraith+Receiver_18.9700_1_1}_{i_Gorgon+Wraith+Stock_18.9700_1_1}_{i_Bore_5.5300_1_1}_{i_Piercing+Caliber_5.5300_1_1}_{i_Breach+Loader_5.5300_1_1}_{i_Augur+Strike_5.5300_1_1}_{i_Magma+Chamber_1.0100_1_1}_{i_Searing+Steel_1.0100_1_1}}}&s=1000000">All Razorback Drops</option>
+                        <option value="?m=Arcane+Energize+Set_{m_Tridolon+Hunt_0_0_y_{d_Hydrolyst+Capture_1_0_0_{i_Arcane+Energize_5.0000_1_10}}}&s=1000000">Arcane Energize Set</option>
+                        <option value="?m=All+Shadow+Stalker+Drops_{e_I+AM+YOUR+RECKONING_0_0_y_{d_Kill_1_0_0_{i_Scimitar+Engines+BP_1.0050_1_1}_{i_Broken+War+BP_2.7650_1_1}_{i_Dread+BP_37.9400_1_1}_{i_Despair+BP_2.7650_1_1}_{i_Hate+BP_2.7650_1_1}_{i_War+BP_2.7650_1_1}}}&s=1000000">All Shadow Stalker Drops</option>
+                        <option value="?m=Broken+War+Parts_{e_Conculyst_0_0_y_{d_Kill_1_0_0_{i_War+Hilt+BP_0.5000_1_2}_{i_War+Blade+BP_0.5000_1_1}}}&s=1000000">Broken War Parts</option>
+                        <option value="?m=Braton+and+Lato+Vandal_{m_Elite+Onslaught_0_0_y_{d_Rotation+A_2_0_5_{i_Lato+Receiver_2.0100_1_1}}_{d_Rotation+B_1_0_5_{i_Braton+Barrel_4.4200_1_1}_{i_Braton+Receiver_4.4200_1_1}_{i_Lato+BP_2.0100_1_1}}_{d_Rotation+C_1_0_5_{i_Braton+Stock_2.2100_1_1}_{i_Braton+BP_2.0100_1_1}_{i_Lato+Barrel_2.2100_1_1}}}&s=1000000">Braton and Lato Vandal</option>
+                        <option value="?m=Legendary+Core_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_Legendary+Core_0.1800_1_1}}}&s=1000000">Legendary Core</option>
+                        <option value="?m=Xiphos_{m_Tier+1+Sabotage_0_10_y_{d_Rotation+C_1_0_0_{i_Fuselage_0.5000_1_1}}}_{m_Tier+2+Sabotage_0_10_y_{d_Rotation+C_1_0_0_{i_Engines_0.5000_1_1}}}_{m_Tier+3+Sabotage_0_10_y_{d_Rotation+C_1_0_0_{i_Avionics_0.5000_1_1}}}&s=1000000">Xiphos</option>
                     </select>
                     <span class="tooltiptext">Pre-fill the scenario with one of these examples.</span>
                 </span>
@@ -5757,7 +5773,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Basic+Damage+Gun+Riven_{r_Riven+Roll_g_{c_Damage_-1_-1_n-ddd--p-p-pppp-pndnpppd-dddnnn}}&start=start">
+                        <a href="?m=Basic+Damage+Gun+Riven_{r_Riven+Roll_g_{c_Damage_-1_-1_n-ddd--p-p-pppp-pndnpppd-dddnnn}}&s=100000&start=start">
                             Basic Damage Gun Riven</a>:
                     </td>
                     <td>
@@ -5766,7 +5782,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Decent+Melee+Riven_{r_Riven+Roll_m_{c_Decent_-1_-1_-pdddnnpppdppppn--d--p-dp-dpd--}}&start=start">
+                        <a href="?m=Decent+Melee+Riven_{r_Riven+Roll_m_{c_Decent_-1_-1_-pdddnnpppdppppn--d--p-dp-dpd--}}&s=100000&start=start">
                             Decent Melee Riven</a>:
                     </td>
                     <td>
@@ -5775,7 +5791,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Crit+or+Status+Melee+Riven_{r_Riven+Roll_m_{c_Crit_-1_-1_-pdddnnppPdppppn--d--p-dp-ddn--}_{c_Status_-1_-1_-pdddnnpdnndpppn--d--p-dp-pPp--}}&start=start">
+                        <a href="?m=Crit+or+Status+Melee+Riven_{r_Riven+Roll_m_{c_Crit_-1_-1_-pdddnnppPdppppn--d--p-dp-ddn--}_{c_Status_-1_-1_-pdddnnpdnndpppn--d--p-dp-pPp--}}&s=100000&start=start">
                             Crit or Status Melee Riven</a>:
                     </td>
                     <td>
@@ -5785,7 +5801,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Status+Gun_Riven_{r_Riven+Roll_g_{c_Status_-1_-1_n-ddd--p-d-dppp-pnnnpppn-npPpnn}}&start=start">
+                        <a href="?m=Status+Gun_Riven_{r_Riven+Roll_g_{c_Status_-1_-1_n-ddd--p-d-dppp-pnnnpppn-npPpnn}}&s=100000&start=start">
                             Status Gun Riven</a>:
                     </td>
                     <td>
@@ -5794,7 +5810,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Crit+Gun+Riven_{r_Riven+Roll_g_{c_Crit_-1_-1_n-ddd--p-P-pppp-dndnpppd-nddnnn}}&start=start">
+                        <a href="?m=Crit+Gun+Riven_{r_Riven+Roll_g_{c_Crit_-1_-1_n-ddd--p-P-pppp-dndnpppd-nddnnn}}&s=100000&start=start">
                             Crit Gun Riven</a>:
                     </td>
                     <td>
@@ -5803,7 +5819,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Godlike+Lanka+Riven_{r_Riven+Roll_g_{c_Hallelujah_-1_-1_n-nnn--d-p-ppdd-ddndpddn-dnnnnn}}&start=start">
+                        <a href="?m=Godlike+Lanka+Riven_{r_Riven+Roll_g_{c_Hallelujah_-1_-1_n-nnn--d-p-ppdd-ddndpddn-dnnnnn}}&s=50000&start=start">
                             Godlike Lanka Riven</a>:
                     </td>
                     <td>
@@ -5812,7 +5828,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Godlike+Vectis+Riven_{r_Riven+Roll_g_{c_Damage,+-Mag+Cap_-1_1_d-ddd--p-p-pppp-pddnppdd-pddddd}}&start=start">
+                        <a href="?m=Godlike+Vectis+Riven_{r_Riven+Roll_g_{c_Damage,+-Mag+Cap_-1_1_d-ddd--p-p-pppp-pddnppdd-pddddd}}&s=50000&start=start">
                             Godlike Vectis Riven</a>:
                     </td>
                     <td>
@@ -5821,7 +5837,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Perfect+Rubico+Riven_{r_Riven+Roll_g_{c_Crits+for+days_-1_-1_n-ddd--d-P-Pppp-dnddpddd-dnnnnn}}&start=start">
+                        <a href="?m=Perfect+Rubico+Riven_{r_Riven+Roll_g_{c_Crits+for+days_-1_-1_n-ddd--d-P-Pppp-dnddpddd-dnnnnn}}&s=50000&start=start">
                             Perfect Rubico Riven</a>:
                     </td>
                     <td>
@@ -5830,7 +5846,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Riven+with+Exact+Stats_{r_Riven+Roll_g_{c_IT+HAS+TO+BE+THESE_3_1_d-ddd--d-P-Pddd-ddddPddd-dddddn}}&start=start">
+                        <a href="?m=Riven+with+Exact+Stats_{r_Riven+Roll_g_{c_IT+HAS+TO+BE+THESE_3_1_d-ddd--d-P-Pddd-ddddPddd-dddddn}}&s=1000&start=start">
                             Riven with Exact Stats</a>:
                     </td>
                     <td>
@@ -5952,9 +5968,6 @@
                     A whole bunch of performance optimizations, probably.
                 </li>
                 <li>
-                    Find some way to automatically give a meaningful file name when you go to save a chart as an image.
-                </li>
-                <li>
                     I'm not sure the Items Required and Drop Events Required fields need to be here.  I'm pretty
                     sure they're always set to <strong>0</strong> on every example, meaning all Items and Drop Events
                     are required.
@@ -5992,6 +6005,10 @@
                     Running a lot of simulations on a mobile device will really tear your battery a new one. That's
                     just the way it is.
                 </li>
+                <li>
+                    The simulation pauses if the browser tab doesn't have focus.  I'm not using WebWorker because I
+                    want everything to be in one file.
+                </li>
             </ul>
         </div>
     </div>
@@ -6008,7 +6025,7 @@
             <a href="https://github.com/buff0000n/rngsim/issues/1">Feedback</a>
         </div>
         <div>
-            v1.3.1: 2018-10-06
+            v1.3.2: 2018-10-07
         </div>
     </div>
 </div>
