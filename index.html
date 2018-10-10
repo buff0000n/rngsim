@@ -1155,16 +1155,24 @@
 
 	function writeName(name) {
 	    // filter out any of our special format characters and extra whitespace
-	    var re = new RegExp("[" + FIELD_SEP + GROUP_START + GROUP_END + "\\s+]", "g");
-	    var name2 = name.replace(re, " ");
+	    var re = new RegExp("[" + FIELD_SEP + GROUP_START + GROUP_END + "\\s]", "g");
+	    name = name.replace(re, " ");
+	    // urlencode some things
+	    name = name.replace(/%/g, "%25");
+	    name = name.replace(/&/g, "%26");
+	    name = name.replace(/\?/g, "%3F");
 	    // replace whitespace with '+'
 
-	    return name2.replace(/ /g, "+");
+	    return name.replace(/ /g, "+");
 	}
 
 	function readName(name) {
 	    // un-replace '+' with a space
 	    name = name.replace(/\+/g, " ");
+	    // urldecode some things
+	    name = name.replace(/%25/g, "%");
+	    name = name.replace(/%26/g, "&");
+	    name = name.replace(/%3[Ff]/g, "?");
 	    // no funny business
 	    name = name.replace(/[<>\"]/g, "");
 	    return name;
