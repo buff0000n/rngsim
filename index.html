@@ -313,12 +313,14 @@
         t: text color
         to: text outline color
         b: bar color
+        b90: bar color for >90%
+        b99: bar color for >99%
         bh: bar highlight color
         bhbg: bar highlight background color
         fs: font size
     */
     .histogram {
-        content: "bg=#202020;l=#B0B0B0;t=#B0B0B0;to=#202020;b=#80A0D0;bh=#A0C0FF;bhbg=#204050;fs=15";
+        content: "bg=#202020;l=#B0B0B0;t=#B0B0B0;to=#202020;b=#80A0D0;b90=#FFFFA0;b99=#FFC0A0;bh=#C0D0FF;bhbg=#204050;fs=15";
     }
 
 
@@ -3886,6 +3888,8 @@
 		// find the 99.9% percentile.  We will cut the data off there, otherwise the data may get very, very wide
 		// with the extreme 0.1% outliers.
 		var max = Math.ceil(trialData.percentileToResult(0.999));
+		//var min90 = Math.floor(trialData.percentileToResult(0.90));
+		//var min99 = Math.floor(trialData.percentileToResult(0.99));
 
         // find the maximum value of the distribution
         if (cumulative) {
@@ -3935,6 +3939,14 @@
         context.fillStyle = style['b'];
         // draw the bars
         for (var t = 0; t < max/trialData.scale; t++) {
+            /* Meh, not on board with this yet
+            if (t == min90) {
+                context.fillStyle = style['b90'];
+            } else
+            if (t == min99) {
+                context.fillStyle = style['b99'];
+            }
+            */
             // calculate the x position of the left side of the bar
             var x1 = Math.floor(graphXStart + (t * (graphWidth - margin)) / ((max/trialData.scale) + 1));
             // calculate the height of the bar
@@ -4615,6 +4627,12 @@
                         <option value="?m=Meso+R1+Relic+(IO+Defense)_{m_Io+Defense_0_0_y_{d_Rotation+A_2_0_5_{i_Meso+R1_12.5000_1_1}}}&s=1000000">Meso R1 Relic (Io Defense)</option>
                         <option value="?m=100+Void+Traces_{m_Quick+Fissure_0_5_y_{d_Crack+Relic_1_0_0_{i_Void+Trace_100.0000_6-30_100}}}&s=1000000">100 Void Traces</option>
                         <option value="?m=1000+Void+Traces+w/+Booster_{m_Quick+Fissure_0_5_y_{d_Crack+Relic_1_0_0_{i_Void+Trace_100.0000_12-60,2_1000}}}&s=1000000">1000 Void Traces with Booster</option>
+                        <!-- Arbitration scenarios -->
+                        <option value="?m=" disabled>---Arbitrations---</option>
+                        <option value="?m=Arbitration+Mods+(Survival+30m)_{m_Survival_0_0_y_{d_Rotation+A_1_0_10_{i_Sharpshooter_2.0000_1_1}_{i_Vigorous+Swap_2.0000_1_1}_{i_Rolling+Guard_2.0000_1_1}_{i_Adaptation_2.0000_1_1}}_{d_Rotation+B_1_0_10_{i_Sharpshooter_2.5000_1_1}_{i_Vigorous+Swap_2.5000_1_1}_{i_Rolling+Guard_2.5000_1_1}_{i_Adaptation_2.5000_1_1}}_{d_Rotation+C_1_0_10_{i_Sharpshooter_3.5000_1_1}_{i_Vigorous+Swap_3.5000_1_1}_{i_Rolling+Guard_3.5000_1_1}_{i_Adaptation_3.5000_1_1}}}">Arbitration Mods (Survival 30 mins)</option>
+                        <option value="?m=Arbitration+Mods+(Survival+1h)_{m_Survival_0_0_y_{d_Rotation+A_1_0_10_{i_Sharpshooter_2.0000_1_1}_{i_Vigorous+Swap_2.0000_1_1}_{i_Rolling+Guard_2.0000_1_1}_{i_Adaptation_2.0000_1_1}}_{d_Rotation+B_1_0_10_{i_Sharpshooter_2.5000_1_1}_{i_Vigorous+Swap_2.5000_1_1}_{i_Rolling+Guard_2.5000_1_1}_{i_Adaptation_2.5000_1_1}}_{d_Rotation+C_4_0_10_{i_Sharpshooter_3.5000_1_1}_{i_Vigorous+Swap_3.5000_1_1}_{i_Rolling+Guard_3.5000_1_1}_{i_Adaptation_3.5000_1_1}}}">Arbitration Mods (Survival 1 hour)</option>
+                        <option value="?m=Arbitration+Mods+(Survival+2h)_{m_Survival_0_0_y_{d_Rotation+A_1_0_10_{i_Sharpshooter_2.0000_1_1}_{i_Vigorous+Swap_2.0000_1_1}_{i_Rolling+Guard_2.0000_1_1}_{i_Adaptation_2.0000_1_1}}_{d_Rotation+B_1_0_10_{i_Sharpshooter_2.5000_1_1}_{i_Vigorous+Swap_2.5000_1_1}_{i_Rolling+Guard_2.5000_1_1}_{i_Adaptation_2.5000_1_1}}_{d_Rotation+C_10_0_10_{i_Sharpshooter_3.5000_1_1}_{i_Vigorous+Swap_3.5000_1_1}_{i_Rolling+Guard_3.5000_1_1}_{i_Adaptation_3.5000_1_1}}}">Arbitration Mods (Survival 2 hours)</option>
+                        <option value="?m=Arbitration+Mods+(Interception+1h)_{m_Interception_0_0_y_{d_Rotation+A_1_0_8_{i_Sharpshooter_2.0000_1_1}_{i_Vigorous+Swap_2.0000_1_1}_{i_Rolling+Guard_2.0000_1_1}_{i_Adaptation_2.0000_1_1}}_{d_Rotation+B_1_0_8_{i_Sharpshooter_2.5000_1_1}_{i_Vigorous+Swap_2.5000_1_1}_{i_Rolling+Guard_2.5000_1_1}_{i_Adaptation_2.5000_1_1}}_{d_Rotation+C_5_0_8_{i_Sharpshooter_3.5000_1_1}_{i_Vigorous+Swap_3.5000_1_1}_{i_Rolling+Guard_3.5000_1_1}_{i_Adaptation_3.5000_1_1}}}">Arbitration Mods (Interception 1 hour)</option>
                         <!-- Riven-related scenarios -->
                         <option value="?m=" disabled>---Rivens---</option>
                         <option value="?m=90+Rivens_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_Riven_26.0800_1_90}}}&s=1000000">90 Rivens</option>
@@ -4868,6 +4886,7 @@
                         <li><a href="#Frames">Frames</a></li>
                         <li><a href="#Mods">Mods</a></li>
                         <li><a href="#Relics">Relics</a></li>
+                        <li><a href="#Arbitrations">Arbitrations</a></li>
                         <li><a href="#Rivens">Rivens</a></li>
                         <li><a href="#Misc">Misc</a></li>
                     </ul>
@@ -5745,6 +5764,58 @@
                     </td>
                 </tr>
             </table>
+            <h2 id="Arbitrations">Arbitrations</h2>
+            <p>
+                The drop table and rotation pattern is the same for all Arbitration missions regardless of mission type.
+                However, time estimates will vary based on which mission you're doing and how long you go for.
+            </p>
+            <p>
+                The endless C rotation means your time efficiency goes up the longer you run each mission, but you're
+                going to have to pick some cutoff for the simulation to work with.
+            </p>
+            <p>
+                So far I've only tried survival and interception.  Most of the other game modes seem to be bugged in
+                some way that makes them take much longer to get the same number of rotations.
+            </p>
+            <table class="notes">
+                <tr>
+                    <td>
+                        <a href="?m=Arbitration+Mods+(Survival+30m)_{m_Survival_0_0_y_{d_Rotation+A_1_0_10_{i_Sharpshooter_2.0000_1_1}_{i_Vigorous+Swap_2.0000_1_1}_{i_Rolling+Guard_2.0000_1_1}_{i_Adaptation_2.0000_1_1}}_{d_Rotation+B_1_0_10_{i_Sharpshooter_2.5000_1_1}_{i_Vigorous+Swap_2.5000_1_1}_{i_Rolling+Guard_2.5000_1_1}_{i_Adaptation_2.5000_1_1}}_{d_Rotation+C_1_0_10_{i_Sharpshooter_3.5000_1_1}_{i_Vigorous+Swap_3.5000_1_1}_{i_Rolling+Guard_3.5000_1_1}_{i_Adaptation_3.5000_1_1}}}&start=start">
+                            Arbitration Mods (Survival 30 minutes)</a>:
+                    </td>
+                    <td>
+                        Doing a Survival for 30 minutes gives you one A, one B, and one C rotation.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Arbitration+Mods+(Survival+1h)_{m_Survival_0_0_y_{d_Rotation+A_1_0_10_{i_Sharpshooter_2.0000_1_1}_{i_Vigorous+Swap_2.0000_1_1}_{i_Rolling+Guard_2.0000_1_1}_{i_Adaptation_2.0000_1_1}}_{d_Rotation+B_1_0_10_{i_Sharpshooter_2.5000_1_1}_{i_Vigorous+Swap_2.5000_1_1}_{i_Rolling+Guard_2.5000_1_1}_{i_Adaptation_2.5000_1_1}}_{d_Rotation+C_4_0_10_{i_Sharpshooter_3.5000_1_1}_{i_Vigorous+Swap_3.5000_1_1}_{i_Rolling+Guard_3.5000_1_1}_{i_Adaptation_3.5000_1_1}}}&start=start">
+                            Arbitration Mods (Survival 1 hour)</a>:
+                    </td>
+                    <td>
+                        Doing a Survival for an hour gives you one A, one B, and four C rotations.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Arbitration+Mods+(Survival+2h)_{m_Survival_0_0_y_{d_Rotation+A_1_0_10_{i_Sharpshooter_2.0000_1_1}_{i_Vigorous+Swap_2.0000_1_1}_{i_Rolling+Guard_2.0000_1_1}_{i_Adaptation_2.0000_1_1}}_{d_Rotation+B_1_0_10_{i_Sharpshooter_2.5000_1_1}_{i_Vigorous+Swap_2.5000_1_1}_{i_Rolling+Guard_2.5000_1_1}_{i_Adaptation_2.5000_1_1}}_{d_Rotation+C_10_0_10_{i_Sharpshooter_3.5000_1_1}_{i_Vigorous+Swap_3.5000_1_1}_{i_Rolling+Guard_3.5000_1_1}_{i_Adaptation_3.5000_1_1}}}&start=start">
+                            Arbitration Mods (Survival 2 hours)</a>:
+                    </td>
+                    <td>
+                        Doing a Survival for two hours gives you one A, one B, and ten C rotations.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Arbitration+Mods+(Interception+1h)_{m_Interception_0_0_y_{d_Rotation+A_1_0_8_{i_Sharpshooter_2.0000_1_1}_{i_Vigorous+Swap_2.0000_1_1}_{i_Rolling+Guard_2.0000_1_1}_{i_Adaptation_2.0000_1_1}}_{d_Rotation+B_1_0_8_{i_Sharpshooter_2.5000_1_1}_{i_Vigorous+Swap_2.5000_1_1}_{i_Rolling+Guard_2.5000_1_1}_{i_Adaptation_2.5000_1_1}}_{d_Rotation+C_5_0_8_{i_Sharpshooter_3.5000_1_1}_{i_Vigorous+Swap_3.5000_1_1}_{i_Rolling+Guard_3.5000_1_1}_{i_Adaptation_3.5000_1_1}}}&start=start">
+                            Arbitration Mods (Interception 1h)</a>:
+                    </td>
+                    <td>
+                        With a good team you can get about 14 rounds of Interception done in an hour, which gives you
+                        one A, one B, and five C rotations.
+                    </td>
+                </tr>
+            </table>
             <h2 id="Rivens">Rivens</h2>
             <p>
                 Before you get too worked up over the outrageous averages on some of the Riven examples, bear in mind
@@ -6033,7 +6104,7 @@
             <a href="https://github.com/buff0000n/rngsim/issues/1">Feedback</a>
         </div>
         <div>
-            v1.3.2: 2018-10-07
+            v1.3.4: 2018-10-13
         </div>
     </div>
 </div>
