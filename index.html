@@ -478,6 +478,9 @@
     }
 
     /* When the radio button is checked, add a colored background */
+    .container input:checked ~ .checkmark.positiveLock, .positiveLockHelp {
+        background-color: #2020F0;
+    }
     .container input:checked ~ .checkmark.positiveReq, .positiveReqHelp {
         background-color: #20F020;
     }
@@ -490,8 +493,11 @@
     .container input:checked ~ .checkmark.negative, .negativeHelp {
         background-color: #802020;
     }
-    .container input:checked ~ .checkmark.negativeReq {
+    .container input:checked ~ .checkmark.negativeReq, .negativeReqHelp {
         background-color: #F02020;
+    }
+    .container input:checked ~ .checkmark.negativeLock, .negativeLockHelp {
+        background-color: #808020;
     }
 
     /* When the radio button is checked and disabled, add a lighter gray background */
@@ -802,6 +808,10 @@
         /* 30 */ ["Zoom", "gpn"],
     );
 
+    // For now, the locked options are only enabled if you open a scenario link where they are alread present.  It was
+    // the laziest way to enable and disable these.
+    var lockedEnabled = false;
+
     // Anecdotally, there seems to be a basic 50-50 chance of either 2 or 3 positives.
     // Define it this way so we can use the exact same RNG code to determine the number of positive stats
     var rivenPositiveNumProbs = [0, 0, 50, 100];
@@ -846,6 +856,8 @@
     //   N: required negative
     //   n: wanted negative
     //   d: don't want
+    //   L: locked positive
+    //   l: locked negative
     //   -: not applicable (rifle only with melee riven or vice versa)
 
 	class RivenCriterion {
@@ -859,6 +871,7 @@
     		for (var i = 0; i < rivenStatList.length; i++) {
     		    this.statPriority[i] = "-";
     		}
+    		this.repeats = 1;
     	}
 
         hasTime() {
@@ -883,8 +896,10 @@
             if (!this.requiredPositives) {
                 this.requiredPositives = this.getStats("P");
                 this.wantedPositives = this.getStats("p");
+                this.lockedPositives = this.getStats("L");
                 this.requiredNegatives = this.getStats("N");
                 this.wantedNegatives = this.getStats("n");
+                this.lockedNegatives = this.getStats("l");
                 // total number of applicable stats is the total number of all stats minus the N/A ones
                 this.numStats = this.statPriority.length - this.getStats("-").length;
 
@@ -941,23 +956,23 @@
 
             // sanity check on the contents of the stat priorities list
             for (var i = 0; i < this.statPriority.length; i++) {
-                if ("PpdnN-".indexOf(this.statPriority[i]) < 0) {
+                if ("PpdnN-Ll".indexOf(this.statPriority[i]) < 0) {
                     errors.push("invalid priority: " + this.statPriority[i]);
                 }
             }
 
             // verification of the positive and negative sides are identical
-            errors = this.verifySide(errors, "positive", this.requiredNumPositives, this.requiredPositives, rivenPositiveNumProbs);
-            errors = this.verifySide(errors, "negative", this.requiredNumNegatives, this.requiredNegatives, rivenNegativeNumProbs);
+            errors = this.verifySide(errors, "positive", this.requiredNumPositives, this.requiredPositives, this.lockedPositives, rivenPositiveNumProbs);
+            errors = this.verifySide(errors, "negative", this.requiredNumNegatives, this.requiredNegatives, this.lockedNegatives, rivenNegativeNumProbs);
 
             return errors;
         }
 
 
-       verifySide(errors, name, requiredNum, required, numProbs) {
+       verifySide(errors, name, requiredNum, required, locked, numProbs) {
             // check the number of required stats
             if (requiredNum > numProbs.length - 1) {
-                errors.push("Required " + name + "s is too high");
+                errors.push("Too many required " + name + "s");
 
             // check the required num is too negative
             } else if (requiredNum < -1) {
@@ -972,10 +987,16 @@
                 errors.push("Required " + name + "s is invalid");
             }
 
-            // make sure the number of required stats isn't more than the possible number of stats
-            if (required.length > numProbs.length - 1 ||
-                (requiredNum >= 0 && required.length > requiredNum)) {
-                errors.push("too many required " + name + " stats");
+            // make sure the number of locked stats isn't more than the possible number of stats
+            if (locked.length > numProbs.length - 1 ||
+                (requiredNum >= 0 && locked.length > requiredNum)) {
+                errors.push("too many locked " + name + " stats");
+            } else {
+                // make sure the number of required stats isn't more than the possible number of stats minus the locked stats
+                if (required.length > numProbs.length - 1 - locked.length ||
+                    (requiredNum >= 0 && required.length - locked.length > requiredNum)) {
+                    errors.push("too many required " + name + " stats");
+                }
             }
             return errors;
        }
@@ -1007,6 +1028,8 @@
 
             // pull out the leftover Riven positive stats after removing the required ones
             var leftoverPositives = difference(positiveList, this.requiredPositives);
+            // also pull out the locked ones
+            leftoverPositives = difference(leftoverPositives, this.lockedPositives);
 
             // intersect the leftover Riven positive stats with out wanted positive stats
             var positiveInt = intersection(leftoverPositives, this.wantedPositives);
@@ -1028,6 +1051,8 @@
             }
             // pull out the leftover Riven negative stats after removing the required ones
             var leftoverNegatives = difference(negativeList, this.requiredNegatives);
+            // also pull out the locked ones
+            leftoverNegatives = difference(leftoverNegatives, this.lockedNegatives);
 
             // intersect the leftover Riven negative stats with out wanted negative stats
             var negativeInt = intersection(leftoverNegatives, this.wantedNegatives);
@@ -1054,13 +1079,16 @@
 			for (var i = 0; i < this.statPriority.length; i++) {
 			    s += this.statPriority[i];
 			}
+			if (this.repeats != 1) {
+			    s += FIELD_SEP + this.repeats
+			}
 			return s;
 		}
 
 		fromString(s) {
 		    // deserialize from a string
 			var fields = split(s);
-			if (fields.length != 4) {
+			if (fields.length != 4 && fields.length != 5) {
     			return null;
 			}
 			this.name = readName(fields[0]);
@@ -1069,7 +1097,16 @@
 			// read the stat priority list as a character sequence
 			for (var i = 0; i < this.statPriority.length; i++) {
 			    this.statPriority[i] = fields[3][i];
+
+			    // If we parse a criterion containing any locked stats then enable locked stats in the UI
+			    if ("L" == this.statPriority[i] || "l" == this.statPriority[i]) {
+			        lockedEnabled = true;
+			    }
 			}
+
+            if (fields[4]) {
+                this.repeats = readIntWithDefault(fields[4], 1);
+            }
 
 			return this;
 		}
@@ -2147,6 +2184,11 @@
         constructor(criterion) {
             this.criterion = criterion;
             this.clearResults();
+            this.clearRun();
+        }
+
+        clearRun() {
+            this.matchCount = 0;
         }
 
         clearResults() {
@@ -2168,6 +2210,11 @@
 
         accept(positiveStats, negativeStats) {
             if (this.criterion.accept(positiveStats, negativeStats)) {
+                this.matchCount++;
+                if (this.matchCount < this.criterion.repeats) {
+                    return false;
+                }
+
                 this.acceptCount++;
                 /* Currently not that useful outside of debugging Riven rolls
                 for (var i = 0; i < positiveStats.length; i++) {
@@ -2196,6 +2243,10 @@
             for (var c = 0; c < this.rivenRoll.criteria.length; c++) {
                 this.criterionRunners.push(new CriterionRunner(this.rivenRoll.criteria[c]));
             }
+            // assume all Criteria have the same locked stats
+            this.rivenRoll.criteria[0].updatePriorities();
+            this.lockedPositives = this.rivenRoll.criteria[0].lockedPositives;
+            this.lockedNegatives = this.rivenRoll.criteria[0].lockedNegatives;
 
             // track total number of missions and total mission time
             this.totalMissions = 0;
@@ -2224,6 +2275,22 @@
 		            errors.push(this.criterionRunners[c].criterion.name + " -> " + criterionErrors[error]);
 		        }
 		    }
+		    if (this.criterionRunners.length > 1) {
+		        var locked = this.criterionRunners[0].criterion.lockedPositives;
+    		    for (var c = 1; c < this.criterionRunners.length; c++) {
+    		        var locked2 = this.criterionRunners[c].criterion.lockedPositives;
+    		        if (intersection(locked, locked2).length != locked.length) {
+    		            errors.push(this.criterionRunners[c].criterion.name + " -> locked positive stats do not match");
+    		        }
+		        }
+		        var locked = this.criterionRunners[0].criterion.lockedNegatives;
+    		    for (var c = 1; c < this.criterionRunners.length; c++) {
+    		        var locked2 = this.criterionRunners[c].criterion.lockedNegatives;
+    		        if (intersection(locked, locked2).length != locked.length) {
+    		            errors.push(this.criterionRunners[c].criterion.name + " -> locked negative stats do not match");
+    		        }
+		        }
+		    }
 		    return errors;
 		}
 
@@ -2234,7 +2301,7 @@
 			// leave criteriaRunner results alone; they're cumulative over the whole run
 		}
 
-        generateStats(numStatProbs, usedStats, pn) {
+        generateStats(numStatProbs, stats, usedStats, pn, locked) {
             // generate a random percentage between 0 and 100.
             var d = Math.random() * 100.0;
             // search the cumulative probability list for how many stats are generated
@@ -2244,7 +2311,6 @@
                 num = -(num + 1);
             }
 
-            var stats = Array();
             // use the first criterion in the list to determine things like which stats are applicable.
             var criterion = this.rivenRoll.criteria[0];
             // get the total number of applicable stats with the given "p" or "n" flag.
@@ -2254,7 +2320,7 @@
                     total --;
                 }
             }
-            for (var i = 0; i < num; i++) {
+            for (var i = stats.length; i < num; i++) {
                 // the actual number of stats we have to choose from is the total minus what's already been chosen
                 // generate a random integer between zero inclusive and the number of available stats exclusive.
                 var n = Math.floor(Math.random() * (total - i));
@@ -2273,11 +2339,33 @@
             // loop until we get a roll that passes one of the criteria
             var success = false;
 
+            for (var c = 0; c < this.criterionRunners.length; c++) {
+                var criterionRunner = this.criterionRunners[c];
+                criterionRunner.clearRun();
+            }
+
 			for (; !success; this.totalMissions++) {
                 var usedStats = new Array();
                 // save the generated stats on the object for later used by toString()
-                this.positiveStats = this.generateStats(rivenPositiveNumProbs, usedStats, "p");
-                this.negativeStats = this.generateStats(rivenNegativeNumProbs, usedStats, "n");
+                this.positiveStats = Array();
+                this.negativeStats = Array();
+
+                if (this.lockedPositives.length > 0) {
+                    for (var i = 0; i < this.lockedPositives.length; i++) {
+                        this.positiveStats.push(this.lockedPositives[i]);
+                        usedStats.push(this.lockedPositives[i]);
+                    }
+                }
+
+                if (this.lockedNegatives.length > 0) {
+                    for (var i = 0; i < this.lockedNegatives.length; i++) {
+                        this.negativeStats.push(this.lockedNegatives[i]);
+                        usedStats.push(this.lockedNegatives[i]);
+                    }
+                }
+
+                this.generateStats(rivenPositiveNumProbs, this.positiveStats, usedStats, "p", this.lockedPositives);
+                this.generateStats(rivenNegativeNumProbs, this.negativeStats, usedStats, "n", this.lockedNegatives);
 
                 // loop over the criteria
                 for (var c = 0; c < this.criterionRunners.length; c++) {
@@ -2307,6 +2395,11 @@
             // conforming to MissionRunner interface
 		    // ignore
 		}
+
+        collectItems(itemSet) {
+            // conforming to MissionRunner interface
+		    // ignore
+        }
 
 		customResults() {
             var results = Array();
@@ -2486,7 +2579,9 @@
         // "Add Enemy" is disabled if anything has been added
         document.getElementById("addEnemy").disabled = (numMissions > 0) || (numEnemies > 0) || (numRivenRolls > 0);
         // "Add Riven Roll" is disabled if anything has been added
-        document.getElementById("addRivenRoll").disabled = (numMissions > 0) || (numEnemies > 0) || (numRivenRolls > 0);
+        // Oh, let's enable multiple Riven Rolls if locked stats are enabled, because it's the only way to actually
+        // simulate a full locked stats progression
+        document.getElementById("addRivenRoll").disabled = (numMissions > 0) || (numEnemies > 0) || (!lockedEnabled && numRivenRolls > 0);
     }
 
     function getScenario() {
@@ -2957,21 +3052,42 @@
                             <tr>
                                 <td class="tooltip">
                                     Required positives:
-                                    <span class="tooltiptextbottom">The required number of positive stats, or -1 if either 2 or 3 is fine.</span>
+                                    <span class="tooltiptextbottom">The required number of positive stats.</span>
                                 </td>
                                 <td>
-                                    <input class="inputRequired" type="number" value="-1"/>
+                                    <select class="inputRequired">
+                                        <option value="-1">2 or 3</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                    </select>
                                 </td>
                             </tr>
                             <tr>
                                 <td class="tooltip">
                                     Required negatives:
-                                    <span class="tooltiptextbottom">The required number of negative stats, or -1 if either 0 or 1 is fine.</span>
+                                    <span class="tooltiptextbottom">The required number of negative stats.</span>
                                 </td>
                                 <td>
-                                    <input class="inputRequired" type="number" value="-1"/>
+                                    <select class="inputRequired">
+                                        <option value="-1">0 or 1</option>
+                                        <option value="0">0</option>
+                                        <option value="1">1</option>
+                                    </select>
                                 </td>
-                            </tr>
+                            </tr>`;
+        if (lockedEnabled) {
+            html += `
+                            <tr>
+                                <td class="tooltip">
+                                    Repeats:
+                                    <span class="tooltiptextbottom">The number of times this criteria must be met.</span>
+                                </td>
+                                <td>
+                                    <input class="inputCount" type="number" value="1"/>
+                                </td>
+                            </tr>`;
+        }
+        html += `
                             <tr>
                                 <td class="tooltip">
                                     Stat priorities:
@@ -3062,6 +3178,14 @@
                             <div class="statPriorityGroup">`;
             // if the stat is allowed for positive stats then show those checkboxes
             if (statHasFlag(index, "p")) {
+                if (lockedEnabled) {
+                    // hide this unless you open a scenario link containing locked stats
+                    html += `
+                                <label class="container">
+                                    <input class="radio" type="radio" ${priority == "L" ? ' checked="checked"' : ""} name="radio${radioId}" onchange="setPriority(getParent(this, 'rivenCriterionNode'), 'L')">
+                                    <span class="checkmark positiveLock">L</span>
+                                </label>`;
+                }
                 html += `
                                 <label class="container">
                                     <input class="radio" type="radio" ${priority == "P" ? ' checked="checked"' : ""} name="radio${radioId}" onchange="setPriority(getParent(this, 'rivenCriterionNode'), 'P')">
@@ -3090,7 +3214,15 @@
                                     <input class="radio" type="radio" ${priority == "N" ? ' checked="checked"' : ""} name="radio${radioId}" onchange="setPriority(getParent(this, 'rivenCriterionNode'), 'N')">
                                     <span class="checkmark negativeReq">--</span>
                                 </label>
-                                -->`;
+                                -->`
+                if (lockedEnabled) {
+                    // hide this unless you open a scenario link containing locked stats
+                    html += `
+                                <label class="container">
+                                    <input class="radio" type="radio" ${priority == "l" ? ' checked="checked"' : ""} name="radio${radioId}" onchange="setPriority(getParent(this, 'rivenCriterionNode'), 'l')">
+                                    <span class="checkmark negativeLock">L</span>
+                                </label>`;
+                }
             }
 
             html += `
@@ -3341,6 +3473,9 @@
                     getFirstChild(criterion, "inputName").value = criterionModel.name;
                     getFirstChild(criterion, "inputRequired").value = criterionModel.requiredNumPositives;
                     getLastChild(criterion, "inputRequired").value = criterionModel.requiredNumNegatives;
+                    if (lockedEnabled) {
+                        getLastChild(criterion, "inputCount").value = criterionModel.repeats;
+                    }
                 }
             }
         }
@@ -3470,6 +3605,9 @@
                             criterionModel.name = getFirstChild(criterion, "inputName").value;
                             criterionModel.requiredNumPositives = readIntWithDefault(getFirstChild(criterion, "inputRequired").value, -1);
                             criterionModel.requiredNumNegatives = readIntWithDefault(getLastChild(criterion, "inputRequired").value, -1);
+                            if (lockedEnabled) {
+                                criterionModel.repeats = readIntWithDefault(getLastChild(criterion, "inputCount").value, 1);
+                            }
 
                             // add an extra property that stores the result element for the criterion
                             criterionModel.resultElement = getFirstChild(criterion, "trialResult");
@@ -4259,11 +4397,14 @@
                     missionRunner.totalResults, false);
 
                 // update the time results, or clear it if there is no time results
-                updateResult(
-                    getFirstChild(missionRunner.mission.resultElement, "timeResult"),
-                    shorten(scenarioRunner.scenario.name),
-                    shorten(missionRunner.mission.name) + " Time",
-                    missionRunner.totalTimeResults, true);
+                var timeResult = getFirstChild(missionRunner.mission.resultElement, "timeResult");
+                if (timeResult) {
+                    updateResult(
+                        timeResult,
+                        shorten(scenarioRunner.scenario.name),
+                        shorten(missionRunner.mission.name) + " Time",
+                        missionRunner.totalTimeResults, true);
+                }
             }
         }
 
@@ -4595,6 +4736,7 @@
                         <option value="?m=Standard+Boss+Frame_{m_Assassinate_0_10_y_{d_Complete_1_0_0_{i_Helmet_38.7200_1_1}_{i_Chassis_38.7200_1_1}_{i_Systems_22.5600_1_1}}}&s=1000000">Standard Boss Frame</option>
                         <option value="?m=Ash_{e_Grineer+Manic_0_0_y_{d_Kill_1_0_0_{i_Chassis_12.7776_1_1}_{i_Helmet_12.7776_1_1}_{i_Systems_7.4480_1_1}}}&s=1000000">Ash</option>
                         <option value="?m=Gara_{m_Bounty+5-15_0_0_y_{d_Stage+2_1_0_6_{i_Chassis_7.5200_1_1}}_{d_Stage+3_1_0_3_{i_Chassis_30.5600_1_1}}}_{m_Bounty+10-20_0_0_y_{d_Stage+2_1_0_6_{i_Systems_9.5200_1_1}}_{d_Stage+3_1_0_3_{i_Systems_21.8200_1_1}}}_{m_Bounty+20-30_0_0_y_{d_Stage+3_1_0_9_{i_Helmet_8.4200_1_1}}_{d_Stage+4_1_0_3_{i_Helmet_20.5100_1_1}}}&s=1000000">Gara</option>
+                        <option value="?m=Garuda_{m_Bounty+5-15_0_0_y_{d_Stage+2_1_0_6_{i_Chassis_7.5200_1_1}}_{d_Stage+3_1_0_3_{i_Chassis_30.5600_1_1}}}_{m_Bounty+10-20_0_0_y_{d_Stage+2_1_0_6_{i_Systems_7.4100_1_1}}_{d_Stage+3_1_0_3_{i_Systems_22.2200_1_1}}}_{m_Bounty+20-30_0_0_y_{d_Stage+3_1_0_9_{i_Helmet_12.5000_1_1}}_{d_Stage+4_1_0_3_{i_Helmet_25.0000_1_1}}}&s=1000000">Garuda</option>
                         <option value="?m=Octavia_{m_ODS_0_0_y_{d_Rotation+C_1_0_20_{i_Helmet_22.5600_1_1}}}_{m_Lua+Crossfire+With+Caches,+Music+Room_0_5_y_{d_Music+Room+(guessing+at+spawn+rate)_1_1_0_{i_Chassis_25.0000_1_1}}_{d_Cache+A_1_0_5_{i_Systems_22.5600_1_1}}}&s=1000000">Octavia</option>
                         <option value="?m=Revenant_{m_Bounty+20-40_0_3_y_{d_Stage+2_1_0_3_{i_Systems_8.8700_1_1}}_{d_Stage+3_1_0_3_{i_Systems_8.6833_1_1}}_{d_Stage+4_1_0_3_{i_Systems_20.1700_1_1}}}_{m_Bounty+30-50_0_3_y_{d_Stage+2,3_2_0_3_{i_Chassis_8.4500_1_1}}_{d_Stage+4_1_0_3_{i_Chassis_8.2733_1_1}}_{d_Stage+5_1_0_3_{i_Chassis_19.3667_1_1}}}_{m_Bounty+40-60_0_9_y_{d_Stage+4_1_0_3_{i_Helmet_6.7600_1_1}}_{d_Stage+5_1_0_3_{i_Helmet_10.0200_1_1}}}&s=1000000">Revenant</option>
                         <option value="?m=Revenant+(no+bail+early)_{m_Bounty+20-40_0_3_n_{d_Stage+2_1_0_3_{i_Systems_8.8700_1_1}}_{d_Stage+3_1_0_3_{i_Systems_8.6833_1_1}}_{d_Stage+4_1_0_3_{i_Systems_20.1700_1_1}}}_{m_Bounty+30-50_0_3_n_{d_Stage+2,3_2_0_3_{i_Chassis_8.4500_1_1}}_{d_Stage+4_1_0_3_{i_Chassis_8.2733_1_1}}_{d_Stage+5_1_0_3_{i_Chassis_19.3667_1_1}}}_{m_Bounty+40-60_0_9_n_{d_Stage+4_1_0_3_{i_Helmet_6.7600_1_1}}_{d_Stage+5_1_0_3_{i_Helmet_10.0200_1_1}}}&s=1000000">Revenant (no bail early)</option>
@@ -4605,14 +4747,16 @@
                         <!-- The simulation isn't really built for these, but they do work -->
                         <option value="?m=" disabled>---Mods---</option>
                         <option value="?m=Argon+Scope_{e_Torment_0_0_y_{d_Kill_1_0_0_{i_Argon+Scope_4.0400_1_1}}}&s=1000000">Argon Scope</option>
+                        <option value="?m=Fetch_{e_Orb+Vallis+Hyena_0_0_y_{d_Kill_1_0_0_{i_Fetch_1.3790_1_1}}}&s=1000000">Fetch</option>
                         <option value="?m=Four+Riders_{e_Grineer+Manic_0_0_y_{d_Kill_1_0_0_{i_Four+Riders_0.3350_1_1}}}&s=1000000">Four Riders</option>
                         <option value="?m=Vengeful+Revenant_{e_Conculyst_0_0_y_{d_Kill_1_0_0_{i_Vengeful+Revenant_0.4170_1_1}}}&s=1000000">Vengeful Revenant</option>
                         <option value="?m=Tempo+Royale+(Bursa)_{e_Isolator+Bursa_0_0_y_{d_Kill_1_0_0_{i_Tempo+Royale_0.0603_1_1}}}&s=1000000">Tempo Royale (Bursa)</option>
                         <option value="?m=Tempo+Royale+(Incursion)_{m_Plains+Incursion_0_5_y_{d_Rotation+A_1_0_0_{i_Tempo+Royale_1.0100_1_1}}}&s=1000000">Tempo Royale (Incursion)</option>
-                        <option value="?m=Condition+Overload_{e_Drekar+Butcher_0_0_y_{d_Kill_1_0_0_{i_Condition+Overload_0.0201_1_1}}}&s=1000000">Condition Overload</option>
+                        <option value="?m=Condition+Overload_{e_Drekar+Butcher_0_0_y_{d_Kill_1_0_0_{i_Condition+Overload_0.0201_1_1}}}&s=100000">Condition Overload</option>
                         <option value="?m=Guardian+Derision_{e_Prod+Crewman_0_0_y_{d_Kill_1_0_0_{i_Guardian+Derision_0.0150_1_1}}}&s=1000000">Guardian Derision</option>
                         <option value="?m=Full+Hunter+Set+(Ghouls)_{m_Level+15-25+Ghoul+Bounty_0_0_y_{d_Stage+1_1_0_3_{i_Adrenaline_33.3300_1_1}}_{d_Stage+2,+3_2_0_3_{i_Adrenaline_11.7400_1_1}_{i_Munitions_9.3900_1_1}}_{d_Stage+4_1_0_3_{i_Munitions_11.9000_1_1}_{i_Track_11.9000_1_1}}}_{m_Level+40-50+Ghoul+Bounty_0_0_y_{d_Stage+1_1_0_3_{i_Recovery_33.3300_1_1}}_{d_Stage+2,+3_2_0_3_{i_Recovery_11.7400_1_1}_{i_Synergy_9.3900_1_1}}_{d_Stage+4_1_0_3_{i_Recovery_10.2900_1_1}_{i_Synergy_8.2300_1_1}_{i_Command_8.2300_1_1}}_{d_Stage+5_1_0_3_{i_Synergy_11.9000_1_1}_{i_Command_11.9000_1_1}}}&s=1000000">Full Hunter Set (Ghouls)</option>
                         <option value="?m=Full+Hunter+Set+(Plague+Star)_{m_Plague+Star_0_15_y_{d_Kill+Hemocyte_4_0_0_{i_Hunter+Command_10.5300_1_1}_{i_Hunter+Recovery_28.9500_1_1}_{i_Hunter+Synergy_10.5300_1_1}_{i_Hunter+Munitions_10.5300_1_1}_{i_Hunter+Track_10.5300_1_1}_{i_Hunter+Adrenaline_28.9500_1_1}}}&s=1000000">Full Hunter Set (Plague Star)</option>
+                        <option value="?m=Full+Synth/Mecha/Tek+Set_{m_Bounty+10-30_0_0_y_{d_Stage+3_1_0_3_{i_Synth+Charge_22.2200_1_1}}}_{m_Bounty+20-40_0_0_y_{d_Stage+4_1_0_3_{i_Synth+Deconstruct_25.0000_1_1}}}_{m_Bounty+30-50_0_15_y_{d_Stage+4_1_0_3_{i_Synth+Fiber_10.9900_1_1}}_{d_Stage+5_1_0_0_{i_Synth+Fiber_34.4800_1_1}}}_{m_Bounty+40-60_0_15_y_{d_Stage+4_1_0_0_{i_Synth+Reflex_14.2900_1_1}}_{d_Stage+5_1_0_0_{i_Synth+Reflex_33.3300_1_1}}}&s=1000000">Full Synth/Mecha/Tek Set</option>
                         <option value="?m=All+Corrupted+Mods_{m_Derelict+Exterminate_0_5_y_{d_Vault_1_0_0_{i_Spoiled+Strike_4.1700_1_1}_{i_Corrupt+Charge_4.1700_1_1}_{i_Hollow+Point_4.1700_1_1}_{i_Magnum+Force_4.1700_1_1}_{i_Tainted+Clip_4.1700_1_1}_{i_Critical+Delay_4.1700_1_1}_{i_Heavy+Caliber_4.1700_1_1}_{i_Tainted+Mag_4.1700_1_1}_{i_Vile+Precision_4.1700_1_1}_{i_Narrow+Minded_4.1700_1_1}_{i_Fleeting+Expertise_4.1700_1_1}_{i_Blind+Rage_4.1700_1_1}_{i_Overextended_4.1700_1_1}_{i_Tainted+Shell_4.1700_1_1}_{i_Vicious+Spread_4.1700_1_1}_{i_Burdened+Magazine_4.1700_1_1}_{i_Anemic+Agility_4.1700_1_1}_{i_Vile+Acceleration_4.1700_1_1}_{i_Frail+Momentum_4.1700_1_1}_{i_Critical+Deceleration_4.1700_1_1}_{i_Creeping+Bullseye_4.1700_1_1}_{i_Transient+Fortitude_4.1700_1_1}_{i_Depleted+Reload_4.1700_1_1}}}&s=1000000">All Corrupted Mods</option>
                         <!-- Relic-related scenarios -->
                         <option value="?m=" disabled>---Relics---</option>
@@ -4635,8 +4779,8 @@
                         <option value="?m=Arbitration+Mods+(Interception+1h)_{m_Interception_0_0_y_{d_Rotation+A_1_0_8_{i_Sharpshooter_2.0000_1_1}_{i_Vigorous+Swap_2.0000_1_1}_{i_Rolling+Guard_2.0000_1_1}_{i_Adaptation_2.0000_1_1}}_{d_Rotation+B_1_0_8_{i_Sharpshooter_2.5000_1_1}_{i_Vigorous+Swap_2.5000_1_1}_{i_Rolling+Guard_2.5000_1_1}_{i_Adaptation_2.5000_1_1}}_{d_Rotation+C_5_0_8_{i_Sharpshooter_3.5000_1_1}_{i_Vigorous+Swap_3.5000_1_1}_{i_Rolling+Guard_3.5000_1_1}_{i_Adaptation_3.5000_1_1}}}">Arbitration Mods (Interception 1 hour)</option>
                         <!-- Riven-related scenarios -->
                         <option value="?m=" disabled>---Rivens---</option>
-                        <option value="?m=90+Rivens_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_Riven_26.0800_1_90}}}&s=1000000">90 Rivens</option>
-                        <option value="?m=Riven+for+a+Specific+Rifle_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_One+of+62+possible+Rifle+Rivens_0.1095_1_1}}}&s=1000000">Riven for a Specific Rifle</option>
+                        <option value="?m=90+Rivens_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_Riven_27.900_1_90}}}&s=1000000">90 Rivens</option>
+                        <option value="?m=Riven+for+a+Specific+Rifle_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_One+of+64+possible+Rifle+Rivens_0.1061_1_1}}}&start=start">Riven for a Specific Rifle</option>
                         <option value="?m=Decent+Melee+Riven_{r_Riven+Roll_m_{c_Decent_-1_-1_-pdddnnpppdppppn--d--p-dp-dpd--}}&s=100000">Decent Melee Riven</option>
                         <option value="?m=Basic+Damage+Gun+Riven_{r_Riven+Roll_g_{c_Damage_-1_-1_n-ddd--p-p-pppp-pndnpppd-dddnnn}}&s=100000">Basic Damage Gun Riven</option>
                         <option value="?m=Crit+or+Status+Melee+Riven_{r_Riven+Roll_m_{c_Crit_-1_-1_-pdddnnppPdppppn--d--p-dp-ddn--}_{c_Status_-1_-1_-pdddnnpdnndpppn--d--p-dp-pPp--}}&s=100000">Crit or Status Melee Riven</option>
@@ -4645,12 +4789,18 @@
                         <option value="?m=Godlike+Lanka+Riven_{r_Riven+Roll_g_{c_Hallelujah_-1_-1_n-nnn--d-p-ppdd-ddndpddn-dnnnnn}}&s=50000">Godlike Lanka Riven</option>
                         <option value="?m=Godlike+Vectis+Riven_{r_Riven+Roll_g_{c_Damage,+-Mag+Cap_-1_1_d-ddd--p-p-pppp-pddnppdd-pddddd}}&s=50000">Godlike Vectis Riven</option>
                         <option value="?m=Perfect+Rubico+Riven_{r_Riven+Roll_g_{c_Crits+for+days_-1_-1_n-ddd--d-P-Pppp-dnddpddd-dnnnnn}}&s=50000">Perfect Rubico Riven</option>
+                        <option value="?m=God's+God's+Lanka+Riven_{r_Riven+Roll_g_{c_PICKY+AF_3_1_d-ddd--d-p-Pdpp-ddddPddd-dddddn}}&s=500&start=start">God's God's Lanka Riven</option>
                         <option value="?m=Riven+with+Exact+Stats_{r_Riven+Roll_g_{c_IT+HAS+TO+BE+THESE_3_1_d-ddd--d-P-Pddd-ddddPddd-dddddn}}&s=1000">Riven with Exact Stats</option>
+                        <!--
+                        <option value="?m=Exact+Stats+with+Locking_{r_Riven+Roll_g_{c_CC_-1_-1_d-ddd--d-P-dddd-dddddddd-dddddd}_{c_CD_-1_-1_d-ddd--d-d-Pddd-dddddddd-dddddd}_{c_MS_-1_-1_d-ddd--d-d-dddd-ddddPddd-dddddd}}_{r_Riven+Roll_g_{c_CC_-1_-1_d-ddd--d-P-dddd-dddddddd-dddddd_9}}_{r_Riven+Roll_g_{c_CD_-1_-1_d-ddd--d-L-Pddd-dddddddd-dddddd}_{c_MS_-1_-1_d-ddd--d-L-dddd-ddddPddd-dddddd}}_{r_Riven+Roll_g_{c_CD_-1_-1_d-ddd--d-L-Pddd-dddddddd-dddddd_9}}_{r_Riven+Roll_g_{c_MS_-1_-1_d-ddd--d-L-Lddd-ddddPddd-dddddd_10}}_{r_Riven+Roll_g_{c_Z_-1_-1_d-ddd--d-L-Lddd-ddddLddd-dddddn}}&s=50000">Exact Stats with Locking</option>
+                        -->
                         <!-- Just some miscellaneous rough grinds -->
                         <option value="?m=" disabled>---Misc---</option>
                         <option value="?m=Miter_{m_Ceres+Ass_0_10_y_{d_Kill+Krill_1_0_0_{i_Barrel_16.6700_1_1}_{i_Blade_16.6700_1_1}_{i_Handle_16.6700_1_1}_{i_Chassis_16.6700_1_1}_{i_Blueprint_16.6700_1_1}}}&s=1000000">Miter</option>
                         <option value="?m=Imperator+Vandal_{m_Fomorian_0_0_y_{d_Complete_1_0_0_{i_Barrel_11.2800_1_1}_{i_Receiver_11.2800_1_1}_{i_Blueprint_38.7200_1_1}}}&s=1000000">Imperator Vandal</option>
                         <!-- get ready to cry -->
+                        <option value="?m=35X+Medical+Debt-Bonds_{m_20-40+Bounty_0_3_y_{d_Stage+1_1_0_3_{i_2X+Medical+Debt-Bond_20.0000_2_35}}_{d_Stage+2_1_0_3_{i_2X+Medical+Debt-Bond_12.5000_2_35}}_{d_Stage+3_1_0_3_{i_2X+Medical+Debt-Bond_11.1100_2_35}}}&s=1000000">35X Medical Debt-Bonds</option>
+                        <option value="?m=25X+Advances+Debt-Bond_{m_30-50+Bounty_0_3_y_{d_Stage+1_1_0_3_{i_Advances+Debt-Bond_19.3500_2_25}}_{d_Stage+2,+3_1_0_3_{i_Advances+Debt-Bond_14.8100_2_25}}_{d_Stage+3_1_0_3_{i_Advances+Debt-Bond_13.1900_2_25}}}&s=1000000">25X Advances Debt-Bonds</option>
                         <option value="?m=All+Razorback+Drops_{e_Razorback_0_0_y_{d_Kill_1_0_0_{i_Gorgon+Wraith+Blueprint_18.9700_1_1}_{i_Gorgon+Wraith+Barrel_18.9700_1_1}_{i_Gorgon+Wraith+Receiver_18.9700_1_1}_{i_Gorgon+Wraith+Stock_18.9700_1_1}_{i_Bore_5.5300_1_1}_{i_Piercing+Caliber_5.5300_1_1}_{i_Breach+Loader_5.5300_1_1}_{i_Augur+Strike_5.5300_1_1}_{i_Magma+Chamber_1.0100_1_1}_{i_Searing+Steel_1.0100_1_1}}}&s=1000000">All Razorback Drops</option>
                         <option value="?m=Arcane+Energize+Set_{m_Tridolon+Hunt_0_0_y_{d_Hydrolyst+Capture_1_0_0_{i_Arcane+Energize_5.0000_1_10}}}&s=1000000">Arcane Energize Set</option>
                         <option value="?m=All+Shadow+Stalker+Drops_{e_I+AM+YOUR+RECKONING_0_0_y_{d_Kill_1_0_0_{i_Scimitar+Engines+BP_1.0050_1_1}_{i_Broken+War+BP_2.7650_1_1}_{i_Dread+BP_37.9400_1_1}_{i_Despair+BP_2.7650_1_1}_{i_Hate+BP_2.7650_1_1}_{i_War+BP_2.7650_1_1}}}&s=1000000">All Shadow Stalker Drops</option>
@@ -5301,15 +5451,24 @@
             </p>
             <p>
                 <strong>Required Positives</strong> and <strong>Required Negatives</strong> can be used if you want a
-                specific number of positive or negative stats. Valid values are <strong>2</strong> or <strong>3</strong>
-                for Required Positives, <strong>0</strong> or <strong>1</strong> for Required Negatives, or
-                <strong>-1</strong> for either of them if the exact number of positive or negative stats doesn't matter.
+                specific number of positive or negative stats.  For the positive stats, you can require 2, 3, or accept
+                both 2 or 3.  For the positive stats, you can require 0, 1, or accept both 0 or 1.
             </p>
             <p>
                 For the stats themselves, they are listed in alphabetical order. For each one, one of four options is
                 available:
             </p>
             <ul>
+                <!--
+                <li>
+                    <p>
+                        <strong class="checkmarkHelp positiveLockHelp">L</strong>: <strong>Locked Positive</strong>
+                    </p>
+                    <p>
+                        (Experimental)
+                    </p>
+                </li>
+                -->
                 <li>
                     <p>
                         <strong class="checkmarkHelp positiveReqHelp">++</strong>: <strong>Required Positive</strong>
@@ -5356,6 +5515,16 @@
                         must be that stat.
                     </p>
                 </li>
+                <!--
+                <li>
+                    <p>
+                        <strong class="checkmarkHelp negativeLockHelp">L</strong>: <strong>Locked Negative</strong>.
+                    </p>
+                    <p>
+                        (Experimental)
+                    </p>
+                </li>
+                -->
                 <li>
                     <p>
                         <strong class="checkmarkHelp dontwantHelp">?</strong>: <strong>Don't Want</strong>
@@ -5468,6 +5637,15 @@
                 </tr>
                 <tr>
                     <td>
+                        <a href="?m=Garuda_{m_Bounty+5-15_0_0_y_{d_Stage+2_1_0_6_{i_Chassis_7.5200_1_1}}_{d_Stage+3_1_0_3_{i_Chassis_30.5600_1_1}}}_{m_Bounty+10-20_0_0_y_{d_Stage+2_1_0_6_{i_Systems_7.4100_1_1}}_{d_Stage+3_1_0_3_{i_Systems_22.2200_1_1}}}_{m_Bounty+20-30_0_0_y_{d_Stage+3_1_0_9_{i_Helmet_12.5000_1_1}}_{d_Stage+4_1_0_3_{i_Helmet_25.0000_1_1}}}&s=1000000&start=start">Garuda</a>:
+                    </td>
+                    <td>
+                        Garuda's grind is comparabe to Gara, at least for getting the blueprints.  Getting the materials
+                        is another matter entirely.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
                         <a href="?m=Octavia_{m_ODS_0_0_y_{d_Rotation+C_1_0_20_{i_Helmet_22.5600_1_1}}}_{m_Lua+Crossfire+With+Caches,+Music+Room_0_5_y_{d_Music+Room+(guessing+at+spawn+rate)_1_1_0_{i_Chassis_25.0000_1_1}}_{d_Cache+A_1_0_5_{i_Systems_22.5600_1_1}}}&start=start">Octavia</a>:
                     </td>
                     <td>
@@ -5571,6 +5749,15 @@
                 </tr>
                 <tr>
                     <td>
+                        <a href="?m=Fetch_{e_Orb+Vallis+Hyena_0_0_y_{d_Kill_1_0_0_{i_Fetch_1.3790_1_1}}}&start=start">
+                            Fetch</a>:
+                    </td>
+                    <td>
+                        Fetch seems pretty benign, but no idea what the spawn rate of Orb Vallis Hyenas is.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
                         <a href="?m=Four+Riders_{e_Grineer+Manic_0_0_y_{d_Kill_1_0_0_{i_Four+Riders_0.3350_1_1}}}&start=start">
                             Four Riders</a>:
                     </td>
@@ -5607,7 +5794,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Condition+Overload_{e_Drekar+Butcher_0_0_y_{d_Kill_1_0_0_{i_Condition+Overload_0.0201_1_1}}}&start=start">
+                        <a href="?m=Condition+Overload_{e_Drekar+Butcher_0_0_y_{d_Kill_1_0_0_{i_Condition+Overload_0.0201_1_1}}}&s=100000&start=start">
                             Condition Overload</a>:
                     </td>
                     <td>
@@ -5640,6 +5827,16 @@
                     <td>
                         It's much if you can manage to catch a Plague Star event, assuming you can kill four Hemocytes
                         pretty quickly.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Full+Synth/Mecha/Tek+Set_{m_Bounty+10-30_0_0_y_{d_Stage+3_1_0_3_{i_Synth+Charge_22.2200_1_1}}}_{m_Bounty+20-40_0_0_y_{d_Stage+4_1_0_3_{i_Synth+Deconstruct_25.0000_1_1}}}_{m_Bounty+30-50_0_15_y_{d_Stage+4_1_0_3_{i_Synth+Fiber_10.9900_1_1}}_{d_Stage+5_1_0_0_{i_Synth+Fiber_34.4800_1_1}}}_{m_Bounty+40-60_0_15_y_{d_Stage+4_1_0_0_{i_Synth+Reflex_14.2900_1_1}}_{d_Stage+5_1_0_0_{i_Synth+Reflex_33.3300_1_1}}}&s=1000000&start=start">
+                            Full Synth/Mecha/Tek Set</a>:
+                    </td>
+                    <td>
+                        The Synth, Mecha, and Tek sets all have the same drop rates on different bounty rotations.
+                        You'll probably get a full set of each just running Orb Vallis bounties for other stuff.
                     </td>
                 </tr>
                 <tr>
@@ -5832,7 +6029,7 @@
             <table class="notes">
                 <tr>
                     <td>
-                        <a href="?m=90+Rivens_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_Riven_26.0800_1_90}}}&start=start">
+                        <a href="?m=90+Rivens_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_Riven_27.9000_1_90}}}&start=start">
                             90 Rivens</a>:
                     </td>
                     <td>
@@ -5842,12 +6039,12 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Riven+for+a+Specific+Rifle_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_One+of+62+possible+Rifle+Rivens_0.1095_1_1}}}&start=start">
+                        <a href="?m=Riven+for+a+Specific+Rifle_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_One+of+64+possible+Rifle+Rivens_0.1061_1_1}}}&start=start">
                             Riven for a Specific Rifle</a>:
                     </td>
                     <td>
-                        How many Sorties does it take to get a Riven for your favorite non-shotgun primary, out of 62
-                        possibilities as of September 2018?
+                        How many Sorties does it take to get a Riven for your favorite non-shotgun primary, out of 64
+                        possibilities as of November 2018?
                     </td>
                 </tr>
                 <tr>
@@ -5925,6 +6122,15 @@
                 </tr>
                 <tr>
                     <td>
+                        <a href="?m=God's+God's+Lanka+Riven_{r_Riven+Roll_g_{c_PICKY+AF_3_1_d-ddd--d-p-Pdpp-ddddPddd-dddddn}}&s=500&start=start">
+                            God's God's Lanka Riven</a>:
+                    </td>
+                    <td>
+                        Someone told me this is the Lanka Riven to shoot for.  They are crazy.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
                         <a href="?m=Riven+with+Exact+Stats_{r_Riven+Roll_g_{c_IT+HAS+TO+BE+THESE_3_1_d-ddd--d-P-Pddd-ddddPddd-dddddn}}&s=1000&start=start">
                             Riven with Exact Stats</a>:
                     </td>
@@ -5938,6 +6144,30 @@
                             Honestly, this is mostly here as a joke. It's just past the point where the simulation
                             really starts bogging down on my laptop. Still, it's interesting to watch each data point
                             appear one-by-one in slow motion after hundreds of thousands of rolls.
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Exact+Stats+with+Locking_{r_Riven+Roll_g_{c_CC_-1_-1_d-ddd--d-P-dddd-dddddddd-dddddd}_{c_CD_-1_-1_d-ddd--d-d-Pddd-dddddddd-dddddd}_{c_MS_-1_-1_d-ddd--d-d-dddd-ddddPddd-dddddd}}_{r_Riven+Roll_g_{c_CC_-1_-1_d-ddd--d-P-dddd-dddddddd-dddddd_9}}_{r_Riven+Roll_g_{c_CD_-1_-1_d-ddd--d-L-Pddd-dddddddd-dddddd}_{c_MS_-1_-1_d-ddd--d-L-dddd-ddddPddd-dddddd}}_{r_Riven+Roll_g_{c_CD_-1_-1_d-ddd--d-L-Pddd-dddddddd-dddddd_9}}_{r_Riven+Roll_g_{c_MS_-1_-1_d-ddd--d-L-Lddd-ddddPddd-dddddd_10}}_{r_Riven+Roll_g_{c_Z_-1_-1_d-ddd--d-L-Lddd-ddddLddd-dddddn}}&s=50000&start=start">
+                            Riven with Exact Stats (Experimental Stat Locking)</a>:
+                    </td>
+                    <td>
+                        <p>
+                            <strong class="warn">This is totally an experiment, and does not reflect how Rivens actually work in the game.</strong>
+                        </p>
+                        <p>
+                            The idea is to roll a particular stat 10 times to lock it, and then roll another stat 10
+                            times to lock it, etc, until you have rolled all three positive stats and one negative stat.
+                        </p>
+                        <p>
+                            There are some edge cases not accounted for in the scenario I've built here, but they only
+                            negligibly affect the final result.
+                        </p>
+                        <p>
+                            There are a number of experimental simulator features enabled for just this scenario,
+                            including stat locking itself.  They don't have full documentation yet because they're
+                            pretty out there.
                         </p>
                     </td>
                 </tr>
@@ -5972,6 +6202,28 @@
                     </td>
                     <td>
                         Not that bad on average.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=35X+Medical+Debt-Bonds_{m_20-40+Bounty_0_3_y_{d_Stage+1_1_0_3_{i_2X+Medical+Debt-Bond_20.0000_2_35}}_{d_Stage+2_1_0_3_{i_2X+Medical+Debt-Bond_12.5000_2_35}}_{d_Stage+3_1_0_3_{i_2X+Medical+Debt-Bond_11.1100_2_35}}}&start=start">
+                            35X Medical Debt-Bonds</a>:
+                    </td>
+                    <td>
+                        How many tier 3 Orb Vallis bounties do you have to run to get enough Medical Debt-Bonds to
+                        fully rank up Solaris United standing?  A lot.  The takeaway here is to check Ticker often and
+                        buy the rarer Debt-Bonds whenever they're availble.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="?m=25X+Advances+Debt-Bond_{m_30-50+Bounty_0_3_y_{d_Stage+1_1_0_3_{i_Advances+Debt-Bond_19.3500_2_25}}_{d_Stage+2,+3_1_0_3_{i_Advances+Debt-Bond_14.8100_2_25}}_{d_Stage+3_1_0_3_{i_Advances+Debt-Bond_13.1900_2_25}}}&start=start">
+                            25X Advances Debt-Bonds</a>:
+                    </td>
+                    <td>
+                        How many tier 4 Orb Vallis bounties do you have to run to get enough Advances Debt-Bonds to
+                        fully rank up Solaris United standing?  Also a lot.  The takeaway here is to check Ticker often
+                        and buy the rarer Debt-Bonds whenever they're availble.
                     </td>
                 </tr>
                 <tr>
@@ -6104,7 +6356,7 @@
             <a href="https://github.com/buff0000n/rngsim/issues/1">Feedback</a>
         </div>
         <div>
-            v1.3.4: 2018-10-13
+            v1.4.0: 2018-11-14
         </div>
     </div>
 </div>
