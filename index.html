@@ -534,12 +534,26 @@
     		this.prob = 10.0;
     		this.range = new Range();
     		this.required = 1;
+    		this.inARow = false;
         }
 
 		toString() {
 		    // serialize to a string
-			return writeName(this.name) + FIELD_SEP + this.prob.toFixed(4) + FIELD_SEP + this.range.toString() + FIELD_SEP + this.required;
+			return writeName(this.name)
+			    + FIELD_SEP + this.prob.toFixed(4)
+			    + FIELD_SEP + this.range.toString()
+			    + FIELD_SEP + (this.inARow ? "-" : "") + this.required;
 		}
+
+        setRequired(req) {
+			if (req < 0) {
+			    this.required = -req;
+			    this.inARow = true;
+			} else {
+			    this.required = req;
+			    this.inARow = false;
+			}
+        }
 
 		fromString(s) {
 		    // deserialize from a string
@@ -550,7 +564,7 @@
 			this.name = readName(fields[0]);
 			this.prob = readFloat(fields[1]);
 			this.range = new Range().fromString(fields[2]);
-			this.required = readInt(fields[3]);
+			this.setRequired(readIntWithNegative(fields[3]));
 			return this;
 		}
 	}
@@ -783,7 +797,7 @@
         /* 05 */ ["Channeling Damage", "mpn"],
         /* 06 */ ["Channeling Efficiency", "mpn"],
         /* 07 */ ["Cold Damage", "gmp"],
-        /* 08 */ ["Combo Duration", "mp"],
+        /* 08 */ ["Combo Duration", "mpn"],
         /* 09 */ ["Critical Chance", "gmpn"],
         /* 10 */ ["Critical Chance on Slide Attack", "mpn"],
         /* 11 */ ["Critical Damage", "gmpn"],
@@ -1225,6 +1239,15 @@
 	    // read a number from a string and convert any errors or negative values to zero.
 	    var i = Number.parseInt(intString);
 	    if (Number.isNaN(i) || i < 0) {
+	        return def;
+	    }
+	    return i;
+	}
+
+	function readIntWithNegative(intString) {
+	    // read a number from a string and convert any errors or negative values to zero.
+	    var i = Number.parseInt(intString);
+	    if (Number.isNaN(i)) {
 	        return def;
 	    }
 	    return i;
@@ -1700,6 +1723,15 @@
 			if (i1 < 0) {
 				i1 = -(i1 + 1);
 			}
+
+			for (var i = 0; i < this.x.length; i++) {
+			    // if the item's count must be in a row, and the item didn't drop, and its current count is
+			    // less than the required count, then zero it out.
+			    if (this.drop.items[i].inARow && i != i1 && this.x[i] < this.drop.items[i].required) {
+			        this.x[i] = 0;
+			    }
+			}
+
 			var ret = false;
 			// if the index is not past the end of the cumulative probability list
 			if (i1 < this.x.length) {
@@ -3415,7 +3447,7 @@
                     getFirstChild(item, "inputName").value = itemModel.name;
                     getFirstChild(item, "inputRate").value = itemModel.prob;
                     getFirstChild(item, "inputRange").value = itemModel.range.toString();
-                    getFirstChild(item, "inputRequired").value = itemModel.required;
+                    getFirstChild(item, "inputRequired").value = itemModel.inARow ? -itemModel.required : itemModel.required;
                 }
 
             } else if (model instanceof Mission) {
@@ -3449,7 +3481,7 @@
                         getFirstChild(item, "inputName").value = itemModel.name;
                         getFirstChild(item, "inputRate").value = itemModel.prob;
                         getFirstChild(item, "inputRange").value = itemModel.range.toString();
-                        getFirstChild(item, "inputRequired").value = itemModel.required;
+                        getFirstChild(item, "inputRequired").value = itemModel.inARow ? -itemModel.required : itemModel.required;
                     }
                 }
 
@@ -3536,7 +3568,7 @@
                         itemModel.name = getFirstChild(item, "inputName").value;
                         itemModel.prob = readFloat(getFirstChild(item, "inputRate").value);
                         itemModel.range = new Range().fromString(getFirstChild(item, "inputRange").value);
-                        itemModel.required = readInt(getFirstChild(item, "inputRequired").value);
+                        itemModel.setRequired(readIntWithNegative(getFirstChild(item, "inputRequired").value));
                     }
 
                     // since add() can change this, set it last
@@ -6378,7 +6410,7 @@
             <a href="https://github.com/buff0000n/rngsim/issues/1">Feedback</a>
         </div>
         <div>
-            v1.4.2: 2019-02-28
+            v1.5.0: 2019-03-28
         </div>
     </div>
 </div>
