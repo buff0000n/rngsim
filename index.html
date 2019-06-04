@@ -221,11 +221,11 @@
         /* why is the auto stop text box so hard to center? */
         vertical-align: 15%;
     }
-    .density, .cumulative {
+    .density, .cumulative, .query {
         background-color: #404040;
         color: #D0D0D0;
     }
-    .densitySelected, .cumulativeSelected {
+    .densitySelected, .cumulativeSelected, .querySelected {
         background-color: #80A0D0;
         color: #FFFFFF;
     }
@@ -323,6 +323,10 @@
         content: "bg=#202020;l=#B0B0B0;t=#B0B0B0;to=#202020;b=#80A0D0;b90=#FFFFA0;b99=#FFC0A0;bh=#C0D0FF;bhbg=#204050;fs=15";
     }
 
+    /* query section */
+    .histogramSettings div .tooltip {
+        vertical-align: top;
+    }
 
     /* tooltips, adapted from https://www.w3schools.com/css/css_tooltip.asp */
 
@@ -3718,6 +3722,8 @@
         // update the statistics
         updateResultStatistics(resultElement, customResults);
 
+        updateQuery(resultElement)
+
         // (re)draw the histogram
         updateHistogram(resultElement, );
     }
@@ -3747,31 +3753,33 @@
                         </div>
                         <div class="histogramContainer">
                         </div>`;
-        /* todo
         // too much guesswork and estimates with Time to make queries useful
         if (!time) {
             html += `
                         <div class="histogramSettings">
-                            <table>
+                            <div class="util">
+                                <span class="tooltip">
+                                    <input class="button query" type="submit" value="Query" onClick="toggleQuery(this)"/>
+                                    <span class="tooltiptextbottom">Query the data set.</span>
+                                </span>
+                            </div>
+                            <table class="queryTable" style="display: none;">
                                 <tr>
-                                    <td/>
                                     <td class="statName">Result</td>
                                     <td class="statName">Percentile</td>
                                 </tr>
-                                <tr>
-                                    <td>Query:</td>
+                                <tr class="queryRow">
                                     <td>
-                                        <input class="inputResult" type="number" value="" step="0.01" onchange="calcPercentile(this)"/>
+                                        <input class="inputResult" type="number" value="" step="1" onchange="calcPercentileFromResult(this)"/>
                                     </td>
                                     <td>
-                                        <input class="inputPercentile" type="number" value="" step="0.01"/>%
+                                        <input class="inputPercentile" type="number" value="" step="0.01" onchange="calcResultFromPercentile(this)"/>%
                                     </td>
                                 </tr>
-                            </table>`;
+                            </table>
+                        </div>`;
         }
-        */
         html += `
-                        </div>
                     </td>
                     <!-- go ahead and set the width here to be similar to the canvas -->
                     <td width="550">
@@ -3793,27 +3801,64 @@
         }
     }
 
-/* todo
+    function calcPercentileFromResult(input) {
+        setQuerySide(input, true);
+        calcPercentile(input);
+    }
+
+    function calcResultFromPercentile(input) {
+        setQuerySide(input, false);
+        calcPercentile(input);
+    }
+
+    function setQuerySide(input, lockResult) {
+        var row = getParent(input, "queryRow");
+        getFirstChild(row, "inputResult").lock = lockResult;
+        getFirstChild(row, "inputPercentile").lock = !lockResult;
+    }
 
     function calcPercentile(input) {
-        var result = input.value;
+        var row = getParent(input, "queryRow");
+        var resultInput = getFirstChild(row, "inputResult");
+        var percentileInput = getFirstChild(row, "inputPercentile");
+
+        var resultElement = getParent(input, "trialResult");
+        if (!resultElement) {
+            resultElement = getParent(input, "timeResult");
+        }
+        var trialData = resultElement.trialData;
+        var dataScale = resultElement.dataScale;
+
+        if (resultInput.lock && resultInput.value) {
+            percentileInput.value = (trialData.resultToPercentile(resultInput.value) * 100).toFixed(2);
+
+        } else if (percentileInput.lock && percentileInput.value) {
+            resultInput.value = trialData.percentileToResult(percentileInput.value / 100.0).toFixed(2);
+        }
     }
-*/
+
+    function clearViewButtonSelection(utilGroup) {
+        // find the other buttons
+        var buttonElement = getFirstChild(utilGroup, "button densitySelected");
+        if (buttonElement) {
+            buttonElement.className = "button density";
+        }
+
+        // find the other buttons
+        buttonElement = getFirstChild(utilGroup, "button cumulativeSelected");
+        if (buttonElement) {
+            buttonElement.className = "button cumulative";
+        }
+    }
 
     function switchToDensity(buttonElement) {
         // find the button group containing the button
         var utilGroup = getParent(buttonElement, "utilGroup");
-        // find the other button, assume it's selected
-        var otherButtonElement = getFirstChild(utilGroup, "button cumulativeSelected");
-        // nothing to do
-        if (!otherButtonElement) {
-            return;
-        }
+        // clear the button selections
+        clearViewButtonSelection(utilGroup);
 
         // "select" the button that was clicked
         buttonElement.className = "button densitySelected";
-        // "deselect" the other button
-        otherButtonElement.className = "button cumulative";
 
         // refresh the chart
         redrawHistogram(buttonElement);
@@ -3822,20 +3867,31 @@
     function switchToCumulative(buttonElement) {
         // find the button group containing the button
         var utilGroup = getParent(buttonElement, "utilGroup");
-        // find the other button, assume it's selected
-        var otherButtonElement = getFirstChild(utilGroup, "button densitySelected");
-        // nothing to do
-        if (!otherButtonElement) {
-            return;
-        }
+        // clear the button selections
+        clearViewButtonSelection(utilGroup);
 
         // "select" the button that was clicked
         buttonElement.className = "button cumulativeSelected";
-        // "deselect" the other button
-        otherButtonElement.className = "button density";
 
         // refresh the chart
         redrawHistogram(buttonElement);
+    }
+
+    function toggleQuery(buttonElement) {
+        // find the button group containing the button
+        var parent = getParent(buttonElement, "histogramSettings");
+        var queryTable = getFirstChild(parent, "queryTable");
+        if (buttonElement.className == "button query") {
+            buttonElement.className = "button querySelected";
+            queryTable.style.display = "inline-block";
+
+        } else {
+            buttonElement.className = "button query";
+            queryTable.style.display = "none";
+        }
+
+        // refresh the chart
+        updateQuery(parent);
     }
 
     function redrawHistogram(element) {
@@ -4018,6 +4074,14 @@
                     </table>
             `;
         statisticsElement.innerHTML = html;
+    }
+
+    function updateQuery(resultElement) {
+        var queryElement = getFirstChild(resultElement, "histogramSettings");
+        if (queryElement) {
+            var input = getFirstChild(queryElement, "inputResult");
+            calcPercentile(input);
+        }
     }
 
     function updateHistogram(resultElement) {
@@ -4812,6 +4876,7 @@
                         <option value="?m=Arbitration+Mods+(Survival+1h)_{m_Survival_0_0_y_{d_Rotation+A_1_0_10_{i_Sharpshooter_2.0000_1_1}_{i_Vigorous+Swap_2.0000_1_1}_{i_Rolling+Guard_2.0000_1_1}_{i_Adaptation_2.0000_1_1}}_{d_Rotation+B_1_0_10_{i_Sharpshooter_2.5000_1_1}_{i_Vigorous+Swap_2.5000_1_1}_{i_Rolling+Guard_2.5000_1_1}_{i_Adaptation_2.5000_1_1}}_{d_Rotation+C_4_0_10_{i_Sharpshooter_3.5000_1_1}_{i_Vigorous+Swap_3.5000_1_1}_{i_Rolling+Guard_3.5000_1_1}_{i_Adaptation_3.5000_1_1}}}">Arbitration Mods (Survival 1 hour)</option>
                         <option value="?m=Arbitration+Mods+(Survival+2h)_{m_Survival_0_0_y_{d_Rotation+A_1_0_10_{i_Sharpshooter_2.0000_1_1}_{i_Vigorous+Swap_2.0000_1_1}_{i_Rolling+Guard_2.0000_1_1}_{i_Adaptation_2.0000_1_1}}_{d_Rotation+B_1_0_10_{i_Sharpshooter_2.5000_1_1}_{i_Vigorous+Swap_2.5000_1_1}_{i_Rolling+Guard_2.5000_1_1}_{i_Adaptation_2.5000_1_1}}_{d_Rotation+C_10_0_10_{i_Sharpshooter_3.5000_1_1}_{i_Vigorous+Swap_3.5000_1_1}_{i_Rolling+Guard_3.5000_1_1}_{i_Adaptation_3.5000_1_1}}}">Arbitration Mods (Survival 2 hours)</option>
                         <option value="?m=Arbitration+Mods+(Interception+1h)_{m_Interception_0_0_y_{d_Rotation+A_1_0_8_{i_Sharpshooter_2.0000_1_1}_{i_Vigorous+Swap_2.0000_1_1}_{i_Rolling+Guard_2.0000_1_1}_{i_Adaptation_2.0000_1_1}}_{d_Rotation+B_1_0_8_{i_Sharpshooter_2.5000_1_1}_{i_Vigorous+Swap_2.5000_1_1}_{i_Rolling+Guard_2.5000_1_1}_{i_Adaptation_2.5000_1_1}}_{d_Rotation+C_5_0_8_{i_Sharpshooter_3.5000_1_1}_{i_Vigorous+Swap_3.5000_1_1}_{i_Rolling+Guard_3.5000_1_1}_{i_Adaptation_3.5000_1_1}}}">Arbitration Mods (Interception 1 hour)</option>
+                        <option value="?m=Aura+Forma+(Interception+1h)_{m_Interception_0_0_y_{d_Rotation+A_1_0_8_{i_Aura+Forma_1.5000_1_1}}_{d_Rotation+B_1_0_8_{i_Aura+Forma_2.0000_1_1}}_{d_Rotation+C_5_0_8_{i_Aura+Forma_2.5000_1_1}}}">Aura Forma (Interception 1 hour)</option>
                         <!-- Riven-related scenarios -->
                         <option value="?m=" disabled>---Rivens---</option>
                         <option value="?m=90+Rivens_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_Riven_27.900_1_90}}}&s=1000000">90 Rivens</option>
@@ -4831,10 +4896,11 @@
                         -->
                         <!-- Just some miscellaneous rough grinds -->
                         <option value="?m=" disabled>---Misc---</option>
+                        <option value="?m=All+Ropalyst+Drops_{m_Ropalyst+Assassiate_0_0_y_{d_Mod+Drop_1_0_0_{i_Amalgam+Furax+Body+Count_20.0000_1_1}_{i_Amalgam+Ripkas+True+Steel_20.0000_1_1}_{i_Amalgam+Argonak+Metal+Auger_20.0000_1_1}_{i_Amalgam+Daikyu+Target+Acquired_20.0000_1_1}_{i_Amalgam+Javlok+Magazine+Warp_20.0000_1_1}}_{d_Blueprint+Drop_1_0_0_{i_Wisp_22.5600_1_1}_{i_Helmet_25.8100_1_1}_{i_Chassis_25.8100_1_1}_{i_System_25.8100_1_1}}}&s=1000000">All Ropalyst Drops</option>
                         <option value="?m=Miter_{m_Ceres+Ass_0_10_y_{d_Kill+Krill_1_0_0_{i_Barrel_16.6700_1_1}_{i_Blade_16.6700_1_1}_{i_Handle_16.6700_1_1}_{i_Chassis_16.6700_1_1}_{i_Blueprint_16.6700_1_1}}}&s=1000000">Miter</option>
                         <option value="?m=Imperator+Vandal_{m_Fomorian_0_0_y_{d_Complete_1_0_0_{i_Barrel_11.2800_1_1}_{i_Receiver_11.2800_1_1}_{i_Blueprint_38.7200_1_1}}}&s=1000000">Imperator Vandal</option>
                         <!-- get ready to cry -->
-                        <option value="?m=Wolf+Sledge_{e_Wolf_0_0_y_{d_Kill_1_0_0_{i_Handle_13.5520_1_1}_{i_Head_13.5520_1_1}_{i_Blueprint_3.9480_1_1}_{i_Item_3.9480_1_1}}}&s=1000000">Wolf Sledge</option>
+                        <option value="?m=Wolf+Sledge_{e_Wolf_0_0_y_{d_Kill_1_0_0_{i_Handle_13.5520_1_1}_{i_Head_13.5520_1_1}_{i_Blueprint_3.9480_1_1}_{i_Motor_3.9480_1_1}}}&s=1000000">Wolf Sledge</option>
                         <option value="?m=All+Razorback+Drops_{e_Razorback_0_0_y_{d_Kill_1_0_0_{i_Gorgon+Wraith+Blueprint_18.9700_1_1}_{i_Gorgon+Wraith+Barrel_18.9700_1_1}_{i_Gorgon+Wraith+Receiver_18.9700_1_1}_{i_Gorgon+Wraith+Stock_18.9700_1_1}_{i_Bore_5.5300_1_1}_{i_Piercing+Caliber_5.5300_1_1}_{i_Breach+Loader_5.5300_1_1}_{i_Augur+Strike_5.5300_1_1}_{i_Magma+Chamber_1.0100_1_1}_{i_Searing+Steel_1.0100_1_1}}}&s=1000000">All Razorback Drops</option>
                         <option value="?m=Arcane+Energize+Set_{m_Tridolon+Hunt_0_0_y_{d_Hydrolyst+Capture_1_0_0_{i_Arcane+Energize_5.0000_1_10}}}&s=1000000">Arcane Energize Set</option>
                         <option value="?m=All+Shadow+Stalker+Drops_{e_I+AM+YOUR+RECKONING_0_0_y_{d_Kill_1_0_0_{i_Scimitar+Engines+BP_1.0050_1_1}_{i_Broken+War+BP_2.7650_1_1}_{i_Dread+BP_37.9400_1_1}_{i_Despair+BP_2.7650_1_1}_{i_Hate+BP_2.7650_1_1}_{i_War+BP_2.7650_1_1}}}&s=1000000">All Shadow Stalker Drops</option>
@@ -6077,6 +6143,15 @@
                         one A, one B, and five C rotations.
                     </td>
                 </tr>
+                <tr>
+                    <td>
+                        <a href="?m=Aura+Forma+(Interception+1h)_{m_Interception_0_0_y_{d_Rotation+A_1_0_8_{i_Aura+Forma_1.5000_1_1}}_{d_Rotation+B_1_0_8_{i_Aura+Forma_2.0000_1_1}}_{d_Rotation+C_5_0_8_{i_Aura+Forma_2.5000_1_1}}}&s=1000000&start=start">
+                            Aura Forma (Interception 1h)</a>:
+                    </td>
+                    <td>
+                        You're probably looking at around 6 hours of Arbitration per Aura Forma.
+                    </td>
+                </tr>
             </table>
             <h2 id="Rivens">Rivens</h2>
             <p>
@@ -6244,6 +6319,15 @@
             <table class="notes">
                 <tr>
                     <td>
+                        <a href="?m=All+Ropalyst+Drops_{m_Ropalyst+Assassiate_0_0_y_{d_Mod+Drop_1_0_0_{i_Amalgam+Furax+Body+Count_20.0000_1_1}_{i_Amalgam+Ripkas+True+Steel_20.0000_1_1}_{i_Amalgam+Argonak+Metal+Auger_20.0000_1_1}_{i_Amalgam+Daikyu+Target+Acquired_20.0000_1_1}_{i_Amalgam+Javlok+Magazine+Warp_20.0000_1_1}}_{d_Blueprint+Drop_1_0_0_{i_Wisp_22.5600_1_1}_{i_Helmet_25.8100_1_1}_{i_Chassis_25.8100_1_1}_{i_System_25.8100_1_1}}}&start=start">
+                            All Ropalyst Drops</a>:
+                    </td>
+                    <td>
+                        Depending on how fast you can do the fight, this isn't a total slog.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
                         <a href="?m=Miter_{m_Ceres+Ass_0_10_y_{d_Kill+Krill_1_0_0_{i_Barrel_16.6700_1_1}_{i_Blade_16.6700_1_1}_{i_Handle_16.6700_1_1}_{i_Chassis_16.6700_1_1}_{i_Blueprint_16.6700_1_1}}}&start=start">
                             Miter</a>:
                     </td>
@@ -6271,7 +6355,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=Wolf+Sledge_{e_Wolf_0_0_y_{d_Kill_1_0_0_{i_Handle_13.5520_1_1}_{i_Head_13.5520_1_1}_{i_Blueprint_3.9480_1_1}_{i_Item_3.9480_1_1}}}&start=start">
+                        <a href="?m=Wolf+Sledge_{e_Wolf_0_0_y_{d_Kill_1_0_0_{i_Handle_13.5520_1_1}_{i_Head_13.5520_1_1}_{i_Blueprint_3.9480_1_1}_{i_Motor_3.9480_1_1}}}&start=start">
                             Wolf Sledge</a>:
                     </td>
                     <td>
@@ -6410,7 +6494,7 @@
             <a href="https://github.com/buff0000n/rngsim/issues/1">Feedback</a>
         </div>
         <div>
-            v1.5.0: 2019-03-28
+            v1.6.0: 2019-06-04
         </div>
     </div>
 </div>
