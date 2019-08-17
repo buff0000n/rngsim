@@ -491,7 +491,7 @@
     .container input:checked ~ .checkmark.positive, .positiveHelp {
         background-color: #208020;
     }
-    .container input:checked ~ .checkmark.dontwant, .dontwantHelp {
+    .container input:checked ~ .checkmark.dontcare, .dontcareHelp {
         background-color: #404040;
     }
     .container input:checked ~ .checkmark.negative, .negativeHelp {
@@ -873,7 +873,7 @@
     //   p: wanted positive
     //   N: required negative
     //   n: wanted negative
-    //   d: don't want
+    //   d: don't care
     //   L: locked positive
     //   l: locked negative
     //   -: not applicable (rifle only with melee riven or vice versa)
@@ -918,6 +918,7 @@
                 this.requiredNegatives = this.getStats("N");
                 this.wantedNegatives = this.getStats("n");
                 this.lockedNegatives = this.getStats("l");
+                this.dontcares = this.getStats("d");
                 // total number of applicable stats is the total number of all stats minus the N/A ones
                 this.numStats = this.statPriority.length - this.getStats("-").length;
 
@@ -983,6 +984,24 @@
             errors = this.verifySide(errors, "positive", this.requiredNumPositives, this.requiredPositives, this.lockedPositives, rivenPositiveNumProbs);
             errors = this.verifySide(errors, "negative", this.requiredNumNegatives, this.requiredNegatives, this.lockedNegatives, rivenNegativeNumProbs);
 
+            // super tough corner case: verify that if they set Required Negatives to 1 then at least one stat must be allowed to be negative
+            if (this.requiredNumNegatives > 0) {
+                // union together all the possible negative stats
+                var negatives = union(this.dontcares, union(this.requiredNegatives, union(this.wantedNegatives, this.lockedNegatives)));
+                var foundPossibleNegatives = 0;
+                // search the union for enough stats that actually support being negative to fulfill requiredNumNegatives
+                for (var i = 0; i < negatives.length; i++) {
+                    if (statHasFlag(negatives[i], "n")) {
+                        foundPossibleNegatives++;
+                    }
+                }
+
+                // no dice
+                if (foundPossibleNegatives < this.requiredNumNegatives) {
+                    errors.push("Required Negatives is " + this.requiredNumNegatives + ", at least " + this.requiredNumNegatives + " stat" + (this.requiredNumNegatives > 1 ? "(s)" : "") + " must be allowed to be negative");
+                }
+            }
+
             return errors;
         }
 
@@ -1033,7 +1052,7 @@
             // make sure the state is updated
             this.updatePriorities();
 
-            // make sute the intersection of the Riven positive stats and our wanted negative stats is empty
+            // make sure the intersection of the Riven positive stats and our wanted negative stats is empty
             if (intersection(positiveList, this.wantedNegatives).length > 0) {
                 return false;
             }
@@ -1062,7 +1081,12 @@
 
             // todo: simplify the negative stat checking since there can only be one of them
 
-            // see if the intersection of the Riven negative stats and our required negative stats includes all of our 
+            // make sure the intersection of the Riven negative stats and our wanted positive stats is empty
+            if (intersection(negativeList, this.wantedPositives).length > 0) {
+                return false;
+            }
+
+            // see if the intersection of the Riven negative stats and our required negative stats includes all of our
             // required negative stats
             if (intersection(negativeList, this.requiredNegatives).length < this.requiredNegatives.length) {
                 return false;
@@ -1190,6 +1214,20 @@
         for (var i = 0; i < list1.length; i++) {
             if (list2.indexOf(list1[i]) >= 0) {
                 list3.push(list1[i]);
+            }
+        }
+        return list3;
+    }
+
+    // utility for creating a union of two lists
+    function union(list1, list2) {
+        var list3 = new Array();
+        for (var i = 0; i < list1.length; i++) {
+            list3.push(list1[i]);
+        }
+        for (var i = 0; i < list2.length; i++) {
+            if (list1.indexOf(list2[i]) == -1) {
+                list3.push(list2[i]);
             }
         }
         return list3;
@@ -1433,13 +1471,13 @@
 			i = -(i + 1);
             // insertion point is index 0, so just return that, this also usually doesn't happen
 			if (i == 0) {
-				return this.cDist[0] / lookup;
+				return this.scale * (this.cDist[0] / lookup);
 			}
 
 			// i is ths insertion point, so cDist[i] > lookup, and cDist[i - 1] < lookup
 			// do a linear interpotation between the two, based on how far i is from one to the other.
 			// finally, multiple by the scale since it's based on the bucket index
-			return this.scale * ((i - 1) + (1.0 - (lookup - this.cDist[i - 1]) / (this.cDist[i] - this.cDist[i - 1])));
+			return this.scale * ((i - 1) + ((lookup - this.cDist[i - 1]) / (this.cDist[i] - this.cDist[i - 1])));
 		}
 
 		resultToPercentile(result) {
@@ -3131,7 +3169,7 @@
                                         This list below defines the acceptable stats:<br/>
                                             ++: Required positive stat<br/>
                                             +: Wanted positive stat<br/>
-                                            ?: Don't care<br/>
+                                            ?: Don't Care<br/>
                                             -: Wanted negative stat
                                     </span>
                                 </td>
@@ -3172,10 +3210,10 @@
     var radioId = 0;
 
     function clearRivenCriterion(node) {
-        // reset all the priority selections back to "don't want".
+        // reset all the priority selections back to "don't care".
 
-        // find all the individual "Don't Want" synthetic checkboxes
-        var checkmarks = getAllChildren(node, 'checkmark dontwant');
+        // find all the individual "Don't care" synthetic checkboxes
+        var checkmarks = getAllChildren(node, 'checkmark dontcare');
         for (var i = 0; i < checkmarks.length; i++) {
             // go up to the container and then find the actual checkbox input element
             var parent = getParent(checkmarks[i], 'container');
@@ -3200,7 +3238,7 @@
 
         for (var i = 0; i < stats.length; i++) {
             var index = stats[i];
-            // if we have a starting set of priorities then use that, otherwise initialize to "Don't Want".
+            // if we have a starting set of priorities then use that, otherwise initialize to "Don't Care".
             var priority = statPriority ? statPriority[index] : "d";
             // increment the global radio button group counter
             radioId++;
@@ -3232,11 +3270,11 @@
                                     <span class="checkmark positive">+</span>
                                 </label>`;
             }
-            // always show the "Don't Want" checkbox
+            // always show the "Don't Care" checkbox
             html += `
                                 <label class="container">
                                     <input class="radio" type="radio" ${priority == "d" ? ' checked="checked"' : ""} name="radio${radioId}" onchange="setPriority(getParent(this, 'rivenCriterionNode'), 'd')">
-                                    <span class="checkmark dontwant">?</span>
+                                    <span class="checkmark dontcare">?</span>
                                 </label>`;
             // if the stat is allowed for negative stats then show those checkboxes
             if (statHasFlag(index, "n")) {
@@ -5552,7 +5590,7 @@
             <p>
                 <strong>Required Positives</strong> and <strong>Required Negatives</strong> can be used if you want a
                 specific number of positive or negative stats.  For the positive stats, you can require 2, 3, or accept
-                both 2 or 3.  For the positive stats, you can require 0, 1, or accept both 0 or 1.
+                both 2 or 3.  For the negative stats, you can require 0, 1, or accept both 0 or 1.
             </p>
             <p>
                 For the stats themselves, they are listed in alphabetical order. For each one, one of four options is
@@ -5594,7 +5632,7 @@
                     </p>
                     <p>
                         If there are less than three total Required and Wanted Positives, then the remaining positive
-                        stats in the Riven can come from the Don't Want set.
+                        stats in the Riven can come from the Don't Care set.
                     </p>
                 </li>
                 <li>
@@ -5627,12 +5665,12 @@
                 -->
                 <li>
                     <p>
-                        <strong class="checkmarkHelp dontwantHelp">?</strong>: <strong>Don't Want</strong>
+                        <strong class="checkmarkHelp dontcareHelp">?</strong>: <strong>Don't Care</strong>
                     </p>
                     <p>
-                        The Don't Want category is everything else. If there aren't enough Wanted/Required Positive
+                        The Don't Care category is everything else. If there aren't enough Wanted/Required Positive
                         stats or Wanted Negative stats to fill out a Riven, then the remaining stats can come from the
-                        Don't Want list. Otherwise, stats marked as Don't Want will not appear in accepted Rivens at
+                        Don't Care list. Otherwise, stats marked as Don't Care will not appear in accepted Rivens at
                         all.
                     </p>
                 </li>
@@ -6494,7 +6532,7 @@
             <a href="https://github.com/buff0000n/rngsim/issues/1">Feedback</a>
         </div>
         <div>
-            v1.6.0: 2019-06-04
+            v1.7.0: 2019-08-17
         </div>
     </div>
 </div>
