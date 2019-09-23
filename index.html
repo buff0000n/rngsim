@@ -1778,7 +1778,7 @@
 			// if the index is not past the end of the cumulative probability list
 			if (i1 < this.x.length) {
 			    // one of our items successfuly dropped.  increment the corresponding count
-			    var count = this.drop.items[i1].range.generate();
+			    var count = this.drop.items[i1].range.generate(this.drop.items[i1].required - (this.x[i1] + this.otherx[i1]));
 				this.x[i1] += count;
 	            // see if the total count has just now met or exceeded the required number
 				if (this.x[i1] + this.otherx[i1] - count < this.drop.items[i1].required &&
@@ -1829,13 +1829,21 @@
 	        this.min = 1;
 	        this.max = 1;
 	        this.increment = 1;
+	        this.overflow = true;
 	    }
 
-	    generate() {
-	        if (this.min == this.max) {
+	    generate(left) {
+	        // if we've already overflowed then we have 0 left
+	        if (left < 0) left = 0;
+	        // if we're allowing overflows then use the stated max, otherwise take the min of the max and how many are left
+	        var max = this.overflow ? this.max : Math.min(left, this.max)
+	        if (this.min == max) {
 	            // shortcut
 	            return this.min;
 	        }
+	        if (max == 0) {
+	            return 0;
+            }
 
 	        // Here's where more RNG happens
 
@@ -1844,7 +1852,7 @@
 	            // random number between 0 (inclusive) and 1 (exclusive)
 	            Math.floor(Math.random() *
 	                // multiply by the number of increments there are between min and max, inclusive
-	                Math.floor((this.max - this.min)/this.increment + 1)
+	                Math.floor((max - this.min)/this.increment + 1)
                 ) * this.increment;
 	    }
 
@@ -1866,17 +1874,17 @@
 	    }
 
 	    toString() {
-	        if (this.min == this.max) {
+	        if (this.min == this.max && this.overflow) {
 	            return this.min.toFixed(0);
 	        }
-	        if (this.increment == 1) {
-    	        return this.min + "-" + this.max;
+	        if (this.increment == 1 && this.overflow) {
+    	        return this.min.toFixed(0) + "-" + this.max.toFixed(0);
     	    }
-            return this.min + "-" + this.max + "," + this.increment;
+            return this.min.toFixed(0) + "-" + this.max.toFixed(0) + "," + this.increment.toFixed(0) + "," + (this.overflow ? "o" : "u");
 	    }
 
 	    fromString(s) {
-            var regex = /(\d+)(?:-(\d+)(?:,(\d+))?)?/g;
+            var regex = /(\d+)(?:-(\d+)(?:,(\d+)(?:,([ou]))?)?)?/g;
             var match = regex.exec(s);
             if (!match) {
                 throw "Invalid format: \"" + s + "\"";
@@ -1890,13 +1898,21 @@
 	            if (match[3]) {
     	            this.increment = readInt(match[3]);
 
+                    if (match[4]) {
+                        this.overflow = "o" == match[4];
+
+                    } else {
+                        this.overflow = true;
+                    }
 	            } else {
 	                this.increment = 1;
+                    this.overflow = true;
 	            }
 
 	        } else {
                 this.max = this.min;
                 this.increment = 1;
+                this.overflow = true;
 	        }
 
 	        return this;
@@ -6532,7 +6548,7 @@
             <a href="https://github.com/buff0000n/rngsim/issues/1">Feedback</a>
         </div>
         <div>
-            v1.7.0: 2019-08-17
+            v1.7.1: 2019-09-22
         </div>
     </div>
 </div>
