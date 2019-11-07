@@ -4960,6 +4960,7 @@
                         <option value="?m=All+Shadow+Stalker+Drops_{e_I+AM+YOUR+RECKONING_0_0_y_{d_Kill_1_0_0_{i_Scimitar+Engines+BP_1.0050_1_1}_{i_Broken+War+BP_2.7650_1_1}_{i_Dread+BP_37.9400_1_1}_{i_Despair+BP_2.7650_1_1}_{i_Hate+BP_2.7650_1_1}_{i_War+BP_2.7650_1_1}}}&s=1000000">All Shadow Stalker Drops</option>
                         <option value="?m=Broken+War+Parts_{e_Conculyst_0_0_y_{d_Kill_1_0_0_{i_War+Hilt+BP_0.5000_1_2}_{i_War+Blade+BP_0.5000_1_1}}}&s=1000000">Broken War Parts</option>
                         <option value="?m=Braton+and+Lato+Vandal_{m_Elite+Onslaught_0_0_y_{d_Rotation+A_2_0_5_{i_Lato+Receiver_2.0100_1_1}}_{d_Rotation+B_1_0_5_{i_Braton+Barrel_4.4200_1_1}_{i_Braton+Receiver_4.4200_1_1}_{i_Lato+BP_2.0100_1_1}}_{d_Rotation+C_1_0_5_{i_Braton+Stock_2.2100_1_1}_{i_Braton+BP_2.0100_1_1}_{i_Lato+Barrel_2.2100_1_1}}}&s=1000000">Braton and Lato Vandal</option>
+                        <option value="?m=All+Kuva+Lich+Weapons_{e_Kuva+Lich_0_0_y_{d_Kill_1_0_0_{i_Karak_7.6923_1_1}_{i_Quartakk_7.6923_1_1}_{i_Ogris_7.6923_1_1}_{i_Kohm_7.6923_1_1}_{i_Tonkor_7.6923_1_1}_{i_Drakgoon_7.6923_1_1}_{i_Stubba_7.6923_1_1}_{i_Kraken_7.6923_1_1}_{i_Brakk_7.6923_1_1}_{i_Chakkurr_7.6923_1_1}_{i_Shildeg_7.6923_1_1}_{i_Ayanga_7.6923_1_1}_{i_Seer_7.6923_1_1}}}&s=1000000">All Kuva Lich Weapons</option>
                         <option value="?m=Legendary+Core_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_Legendary+Core_0.1800_1_1}}}&s=1000000">Legendary Core</option>
                         <option value="?m=Xiphos_{m_Tier+1+Sabotage_0_10_y_{d_Rotation+C_1_0_0_{i_Fuselage_0.5000_1_1}}}_{m_Tier+2+Sabotage_0_10_y_{d_Rotation+C_1_0_0_{i_Engines_0.5000_1_1}}}_{m_Tier+3+Sabotage_0_10_y_{d_Rotation+C_1_0_0_{i_Avionics_0.5000_1_1}}}&s=1000000">Xiphos</option>
                     </select>
@@ -5146,6 +5147,7 @@
                                 <li><a href="#SavingaChart">Saving a Chart</a></li>
                             </ul>
                         </li>
+                        <li><a href="#StatQuery">Querying the Data</a></li>
                     </ul>
                 </li>
                 <li>
@@ -5401,6 +5403,23 @@
                 Most browsers should allow you to right-click on a chart and save it directly. However, if you simply
                 click on a chart then it will be converted in-place to a PNG image, which you should definitely be
                 able to save.
+            </p>
+
+            <h2 id="StatQuery">Querying the Data</h2>
+            <p>
+                Underneath the chart is a <strong class="button query">Query</strong> button.  Clicking this button
+                will display two fields:
+            </p>
+            <ul>
+                <li><strong>Result</strong>: A specific result, for example, how many runs you personally took to succeed at the chosen secnario</li>
+                <li><strong>Percentile</strong>: The probability of achieving the given result or better, as a percentage</li>
+            </ul>
+            <p>
+                If you enter a value in either of these fields and hit enter, it will calculate the other value.
+                For example, if you have a particular result and want to know the percentile then you can fill in
+                <strong>Result</strong> and let it calculate Precentile.  Or, if you want to know a percentile other
+                than the provided 50th, 90th, and 99th, then you can fill in <strong>Percentile</strong> and let it
+                calculate the corresponding result.
             </p>
 
             <h1 id="ScenariosInDepth">Scenarios In Depth</h1>
@@ -6458,6 +6477,15 @@
                 </tr>
                 <tr>
                     <td>
+                        <a href="?m=All+Kuva+Lich+Weapons_{e_Kuva+Lich_0_0_y_{d_Kill_1_0_0_{i_Karak_7.6923_1_1}_{i_Quartakk_7.6923_1_1}_{i_Ogris_7.6923_1_1}_{i_Kohm_7.6923_1_1}_{i_Tonkor_7.6923_1_1}_{i_Drakgoon_7.6923_1_1}_{i_Stubba_7.6923_1_1}_{i_Kraken_7.6923_1_1}_{i_Brakk_7.6923_1_1}_{i_Chakkurr_7.6923_1_1}_{i_Shildeg_7.6923_1_1}_{i_Ayanga_7.6923_1_1}_{i_Seer_7.6923_1_1}}}&start=start">
+                            All Kuva Lich Weapons</a>:
+                    </td>
+                    <td>
+                            At at least a couple of hours per try, this is a challenger for heaviest grind.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
                         <a href="?m=Legendary+Core_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_Legendary+Core_0.1800_1_1}}}&start=start">
                             Legendary Core</a>:
                     </td>
@@ -6548,7 +6576,7 @@
             <a href="https://github.com/buff0000n/rngsim/issues/1">Feedback</a>
         </div>
         <div>
-            v1.7.1: 2019-09-22
+            v1.7.2: 2019-11-07
         </div>
     </div>
 </div>
