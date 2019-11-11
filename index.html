@@ -239,7 +239,7 @@
         padding: 1ex;
         border-radius: 1ex;
     }
-    .inputBailEarly, #copyUrlAutoStart {
+    .inputBailEarly, .inputPreventDupes, #copyUrlAutoStart {
         background-color: #101010;
         border: none;
         color: #B0B0B0;
@@ -270,7 +270,7 @@
     .inputStopAfter:disabled {
         background-color: #404040;
     }
-    .inputBailEarly:disabled, #copyUrlAutoStart:disabled {
+    .inputBailEarly:disabled, .inputPreventDupes:disabled, #copyUrlAutoStart:disabled {
         background-color: #202020;
         color: #B0B0B0;
         cursor: not-allowed;
@@ -581,6 +581,7 @@
             this.dropsPerMission = 1;
             this.time = 0;
             this.requiredItems = 0;
+            this.preventConsecutiveDupes = false;
         }
 
 		add(item) {
@@ -593,6 +594,9 @@
 			s += this.dropsPerMission + FIELD_SEP;
 			s += this.requiredItems + FIELD_SEP;
 			s += this.time;
+			if (this.preventConsecutiveDupes) {
+    			s += FIELD_SEP + (this.preventConsecutiveDupes ? "y" : "")
+            }
 			for (var i = 0; i < this.items.length; i++) {
 				s += FIELD_SEP + GROUP_START + "i_" + this.items[i].toString() + GROUP_END;
 			}
@@ -608,6 +612,11 @@
 			this.name = readName(fields[0]);
    			this.dropsPerMission = readInt(fields[1]);
 			this.time = readInt(fields[3]);
+			var itemStart = 4;
+			if (!fields[itemStart].startsWith("i_")) {
+    			this.preventConsecutiveDupes = fields[itemStart].toLowerCase().charAt(0) == "y";
+    			itemStart++;
+			}
 			for (var i = 4; i < fields.length; i++) {
 			    if (fields[i].startsWith("i_")) {
     				this.add(new Item().fromString(fields[i].substring(2)));
@@ -798,8 +807,8 @@
         /* 02 */ ["Damage vs Corpus", "gmpn"],
         /* 03 */ ["Damage vs Grineer", "gmpn"],
         /* 04 */ ["Damage vs Infested", "gmpn"],
-        /* 05 */ ["Channeling Damage", "mpn"],
-        /* 06 */ ["Channeling Efficiency", "mpn"],
+        /* 05 */ ["Initial Combo", "mp"],
+        /* 06 */ ["Melee Combo Efficiency", "mpn"],
         /* 07 */ ["Cold Damage", "gmp"],
         /* 08 */ ["Combo Duration", "mpn"],
         /* 09 */ ["Critical Chance", "gmpn"],
@@ -1516,6 +1525,10 @@
 			// kurtosis is the fourth moment divided by the 4th power of the standard deviation, minus 3 for Excess Kurtosis
 			// this basically describes how many extreme outliers there are compared to a normal distribution
 			this.kurtosis = this.moment(4) / Math.pow(this.standardDeviation, 4) - 3;
+
+			// mode is the most commonly occurring result.  in our case it's the largest bucket
+			// This isn't very useful for huge, varied data sets like most RNG simulator results
+			this.mode = this.calcMode()
 		}
 
 		moment(m) {
@@ -1537,6 +1550,21 @@
 			}
 			// divide by the number of data values for the average
 			return sum / this.numTrials;
+		}
+
+		calcMode() {
+            // track the current mode and its value
+			var mode = 0;
+			var modeValue = 0;
+			// iterate over each data value
+			for (var t = 1; t <= this.max; t+=this.scale) {
+                var value = this.dist[t/this.scale];
+                if (value > modeValue) {
+                    mode = t;
+                    modeValue = value;
+                }
+            }
+			return mode;
 		}
 
 		ensureScaleAndSize(index) {
@@ -1757,14 +1785,24 @@
 		run() {
 		    // This is where the actual RNG happens.
 
-		    // generate a random percentage between 0 and 100.
-			var d = Math.random() * 100.0;
-			// search our cumulative probability list for where the RNG decimal would be inserted
-			var i1 = binarySearch(this.cProbs, d);
-			// convert the "not found" result to an index
-			if (i1 < 0) {
-				i1 = -(i1 + 1);
-			}
+		    var i1;
+
+            for (;;) {
+                // generate a random percentage between 0 and 100.
+                var d = Math.random() * 100.0;
+                // search our cumulative probability list for where the RNG decimal would be inserted
+                i1 = binarySearch(this.cProbs, d);
+                // convert the "not found" result to an index
+                if (i1 < 0) {
+                    i1 = -(i1 + 1);
+                }
+
+                if (!this.drop.preventConsecutiveDupes || !this.lastItem || this.lastItem != this.drop.items[i1]) {
+                    break;
+                } else {
+                    "something".charAt(0);
+                }
+            }
 
 			for (var i = 0; i < this.x.length; i++) {
 			    // if the item's count must be in a row, and the item didn't drop, and its current count is
@@ -2843,6 +2881,15 @@
                                 <input class="inputRequired" type="number" value="0"/>
                             </td>
                         </tr>
+                        <tr>
+                            <td class="tooltip">
+                                Prevent Consecutive Repeats:
+                                <span class="tooltiptextbottom">If enabled then the same result will not be rewarded twice in a row</span>
+                            </td>
+                            <td>
+                                <input class="inputPreventDupes" type="checkbox"/>
+                            </td>
+                        </tr>
                     </table>
 
                     <div class="add">
@@ -2965,6 +3012,15 @@
                         </td>
                         <td>
                             <input class="inputRequired" type="number" value="0"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="tooltip">
+                            Prevent Consecutive Repeats:
+                            <span class="tooltiptextbottom">If enabled then the same result will not be rewarded twice in a row</span>
+                        </td>
+                        <td>
+                            <input class="inputPreventDupes" type="checkbox" checked/>
                         </td>
                     </tr>
                 </table>
@@ -3492,6 +3548,7 @@
                 // copy enemy config
                 getFirstChild(enemy, "inputName").value = enemyModel.name;
                 getFirstChild(enemy, "inputRequired").value = enemyModel.drops[0].requiredItems;
+                getFirstChild(enemy, "inputPreventDupes").checked = enemyModel.drops[0].preventConsecutiveDupes;
 
                 var dropModel = enemyModel.drops[0];
                 var drop = enemy;
@@ -3529,6 +3586,7 @@
                     getFirstChild(drop, "inputCount").value = dropModel.dropsPerMission;
                     getFirstChild(drop, "inputTime").value = dropModel.time;
                     getFirstChild(drop, "inputRequired").value = dropModel.requiredItems;
+                    getFirstChild(drop, "inputPreventDupes").checked = dropModel.preventConsecutiveDupes;
 
                     // loop over the items in this drop
                     for (var d = 0; d < dropModel.items.length; d++) {
@@ -3614,6 +3672,7 @@
                     dropModel.name = getFirstChild(drop, "inputName").value;
                     dropModel.dropsPerMission = readInt(getFirstChild(drop, "inputCount").value);
                     dropModel.time = readInt(getFirstChild(drop, "inputTime").value);
+                    dropModel.preventConsecutiveDupes = getFirstChild(drop, "inputPreventDupes").checked;
 
                     // loop over all the item elements under the drop
                     var items = getAllChildren(drop, "item");
@@ -3653,6 +3712,7 @@
                     var drop = enemy;
                     var dropModel = enemyModel.drops[0];
                     dropModel.requiredItems = readInt(getFirstChild(drop, "inputRequired").value);
+                    dropModel.preventConsecutiveDupes = getFirstChild(drop, "inputPreventDupes").checked;
 
                     // loop over all the item elements under the drop
                     var items = getAllChildren(drop, "item");
@@ -4960,7 +5020,7 @@
                         <option value="?m=All+Shadow+Stalker+Drops_{e_I+AM+YOUR+RECKONING_0_0_y_{d_Kill_1_0_0_{i_Scimitar+Engines+BP_1.0050_1_1}_{i_Broken+War+BP_2.7650_1_1}_{i_Dread+BP_37.9400_1_1}_{i_Despair+BP_2.7650_1_1}_{i_Hate+BP_2.7650_1_1}_{i_War+BP_2.7650_1_1}}}&s=1000000">All Shadow Stalker Drops</option>
                         <option value="?m=Broken+War+Parts_{e_Conculyst_0_0_y_{d_Kill_1_0_0_{i_War+Hilt+BP_0.5000_1_2}_{i_War+Blade+BP_0.5000_1_1}}}&s=1000000">Broken War Parts</option>
                         <option value="?m=Braton+and+Lato+Vandal_{m_Elite+Onslaught_0_0_y_{d_Rotation+A_2_0_5_{i_Lato+Receiver_2.0100_1_1}}_{d_Rotation+B_1_0_5_{i_Braton+Barrel_4.4200_1_1}_{i_Braton+Receiver_4.4200_1_1}_{i_Lato+BP_2.0100_1_1}}_{d_Rotation+C_1_0_5_{i_Braton+Stock_2.2100_1_1}_{i_Braton+BP_2.0100_1_1}_{i_Lato+Barrel_2.2100_1_1}}}&s=1000000">Braton and Lato Vandal</option>
-                        <option value="?m=All+Kuva+Lich+Weapons_{e_Kuva+Lich_0_0_y_{d_Kill_1_0_0_{i_Karak_7.6923_1_1}_{i_Quartakk_7.6923_1_1}_{i_Ogris_7.6923_1_1}_{i_Kohm_7.6923_1_1}_{i_Tonkor_7.6923_1_1}_{i_Drakgoon_7.6923_1_1}_{i_Stubba_7.6923_1_1}_{i_Kraken_7.6923_1_1}_{i_Brakk_7.6923_1_1}_{i_Chakkurr_7.6923_1_1}_{i_Shildeg_7.6923_1_1}_{i_Ayanga_7.6923_1_1}_{i_Seer_7.6923_1_1}}}&s=1000000">All Kuva Lich Weapons</option>
+                        <option value="?m=All+Kuva+Lich+Weapons_{e_Kuva+Lich_0_0_y_{d_Kill_1_0_0_y_{i_Karak_7.6923_1_1}_{i_Quartakk_7.6923_1_1}_{i_Ogris_7.6923_1_1}_{i_Kohm_7.6923_1_1}_{i_Tonkor_7.6923_1_1}_{i_Drakgoon_7.6923_1_1}_{i_Stubba_7.6923_1_1}_{i_Kraken_7.6923_1_1}_{i_Brakk_7.6923_1_1}_{i_Chakkurr_7.6923_1_1}_{i_Shildeg_7.6923_1_1}_{i_Ayanga_7.6923_1_1}_{i_Seer_7.6923_1_1}}}&s=1000000">All Kuva Lich Weapons</option>
                         <option value="?m=Legendary+Core_{m_Sortie_0_0_y_{d_Complete_1_0_0_{i_Legendary+Core_0.1800_1_1}}}&s=1000000">Legendary Core</option>
                         <option value="?m=Xiphos_{m_Tier+1+Sabotage_0_10_y_{d_Rotation+C_1_0_0_{i_Fuselage_0.5000_1_1}}}_{m_Tier+2+Sabotage_0_10_y_{d_Rotation+C_1_0_0_{i_Engines_0.5000_1_1}}}_{m_Tier+3+Sabotage_0_10_y_{d_Rotation+C_1_0_0_{i_Avionics_0.5000_1_1}}}&s=1000000">Xiphos</option>
                     </select>
@@ -5587,6 +5647,11 @@
             <p>
                 This behavior is enabled by default in order to give us the shortest possible time. You can force a
                 particular mission not to bail early by unchecking the Bail Early checkbox under the mission.
+            </p>
+            <h3 id="PreventConsecutiveDupes">Prevent Consecutive Repeats</h3>
+            <p>
+                In some special cases (Kuva Liches) they have added the ability to prevent consecutive duplicate rewards.
+                This checkbox enables that behavior in the simulation.
             </p>
             <h2 id="EnemyScenarios">Enemy Scenarios</h2>
             <p>
@@ -6477,7 +6542,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="?m=All+Kuva+Lich+Weapons_{e_Kuva+Lich_0_0_y_{d_Kill_1_0_0_{i_Karak_7.6923_1_1}_{i_Quartakk_7.6923_1_1}_{i_Ogris_7.6923_1_1}_{i_Kohm_7.6923_1_1}_{i_Tonkor_7.6923_1_1}_{i_Drakgoon_7.6923_1_1}_{i_Stubba_7.6923_1_1}_{i_Kraken_7.6923_1_1}_{i_Brakk_7.6923_1_1}_{i_Chakkurr_7.6923_1_1}_{i_Shildeg_7.6923_1_1}_{i_Ayanga_7.6923_1_1}_{i_Seer_7.6923_1_1}}}&start=start">
+                        <a href="?m=All+Kuva+Lich+Weapons_{e_Kuva+Lich_0_0_y_{d_Kill_1_0_0_y_{i_Karak_7.6923_1_1}_{i_Quartakk_7.6923_1_1}_{i_Ogris_7.6923_1_1}_{i_Kohm_7.6923_1_1}_{i_Tonkor_7.6923_1_1}_{i_Drakgoon_7.6923_1_1}_{i_Stubba_7.6923_1_1}_{i_Kraken_7.6923_1_1}_{i_Brakk_7.6923_1_1}_{i_Chakkurr_7.6923_1_1}_{i_Shildeg_7.6923_1_1}_{i_Ayanga_7.6923_1_1}_{i_Seer_7.6923_1_1}}}&start=start">
                             All Kuva Lich Weapons</a>:
                     </td>
                     <td>
@@ -6576,7 +6641,7 @@
             <a href="https://github.com/buff0000n/rngsim/issues/1">Feedback</a>
         </div>
         <div>
-            v1.7.2: 2019-11-07
+            v1.8.0: 2019-11-11
         </div>
     </div>
 </div>
