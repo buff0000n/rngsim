@@ -231,7 +231,7 @@
     }
 
     /* Fields */
-    .inputName, .inputTime, .inputRequired, .inputCount, .inputRate, .inputRange, .inputStopAfter, .inputResult, .inputPercentile {
+    .inputName, .inputTime, .inputRequired, .inputCount, .inputRate, .inputRange, .inputStopAfter, .inputResult, .inputPercentile, .inputPreventDupes {
         background-color: #101010;
         border: none;
         color: #B0B0B0;
@@ -239,7 +239,7 @@
         padding: 1ex;
         border-radius: 1ex;
     }
-    .inputBailEarly, .inputPreventDupes, #copyUrlAutoStart {
+    .inputBailEarly, #copyUrlAutoStart {
         background-color: #101010;
         border: none;
         color: #B0B0B0;
@@ -262,7 +262,7 @@
         color: #B0B0B0;
         cursor: not-allowed;
     }
-    .inputName:disabled, .inputTime:disabled, .inputRequired:disabled, .inputCount:disabled, .inputRate:disabled, .inputRange:disabled, .inputStopAfter:disabled, .inputResult:disabled, .inputPercentile:disabled {
+    .inputName:disabled, .inputTime:disabled, .inputRequired:disabled, .inputCount:disabled, .inputRate:disabled, .inputRange:disabled, .inputStopAfter:disabled, .inputResult:disabled, .inputPercentile:disabled, .inputPreventDupes:disabled {
         background-color: #202020;
         color: #B0B0B0;
         cursor: not-allowed;
@@ -270,7 +270,7 @@
     .inputStopAfter:disabled {
         background-color: #404040;
     }
-    .inputBailEarly:disabled, .inputPreventDupes:disabled, #copyUrlAutoStart:disabled {
+    .inputBailEarly:disabled, #copyUrlAutoStart:disabled {
         background-color: #202020;
         color: #B0B0B0;
         cursor: not-allowed;
@@ -581,7 +581,7 @@
             this.dropsPerMission = 1;
             this.time = 0;
             this.requiredItems = 0;
-            this.preventConsecutiveDupes = false;
+            this.preventConsecutiveDupes = 0;
         }
 
 		add(item) {
@@ -593,10 +593,8 @@
 		    var s = writeName(this.name) + FIELD_SEP;
 			s += this.dropsPerMission + FIELD_SEP;
 			s += this.requiredItems + FIELD_SEP;
-			s += this.time;
-			if (this.preventConsecutiveDupes) {
-    			s += FIELD_SEP + (this.preventConsecutiveDupes ? "y" : "")
-            }
+			s += this.time + FIELD_SEP;
+			s += this.preventConsecutiveDupes
 			for (var i = 0; i < this.items.length; i++) {
 				s += FIELD_SEP + GROUP_START + "i_" + this.items[i].toString() + GROUP_END;
 			}
@@ -614,7 +612,10 @@
 			this.time = readInt(fields[3]);
 			var itemStart = 4;
 			if (!fields[itemStart].startsWith("i_")) {
-    			this.preventConsecutiveDupes = fields[itemStart].toLowerCase().charAt(0) == "y";
+			    if (fields[itemStart] == "y")
+    			    this.preventConsecutiveDupes = 1;
+                else
+                    this.preventConsecutiveDupes = readInt(fields[itemStart]);
     			itemStart++;
 			}
 			for (var i = 4; i < fields.length; i++) {
@@ -1723,6 +1724,11 @@
 			// also track how many of the last item dropped
 			this.lastItemCount = 0;
 
+			// Only worry about history if preventConsecutiveDupes is enabled
+			if (this.drop.preventConsecutiveDupes > 0) {
+    			this.lastHistory = new Array();
+            }
+
     		// if the drop's required items is 0 then all items are required
             this.requiredItems = this.drop.requiredItems > 0 ? this.drop.requiredItems : this.drop.items.length;
 
@@ -1765,6 +1771,9 @@
 		    if (this.drop.dropsPerMission <= 0) {
 		        errors.push("number of drops is zero");
 		    }
+		    if (this.drop.preventConsecutiveDupes >= this.drop.items.length) {
+		        errors.push("Prevented Consecutive Repeats must be less than the number of drop items");
+		    }
 		    return errors;
 		}
 
@@ -1775,6 +1784,10 @@
 	            this.otherx[i] = 0;
 	        }
 			this.numSuccess = 0;
+			// clear history, if necessary
+			if (this.drop.preventConsecutiveDupes > 0) {
+    			this.lastHistory = new Array();
+            }
 		}
 
 		hasSucceeded() {
@@ -1787,6 +1800,9 @@
 
 		    var i1;
 
+            // this needs to be run in a loop because of preventConsecutiveDupes
+            // Just repeating the RNG roll is quicker in most cases than building a custom cProbs table without the
+            // duplicate results every time.
             for (;;) {
                 // generate a random percentage between 0 and 100.
                 var d = Math.random() * 100.0;
@@ -1797,8 +1813,11 @@
                     i1 = -(i1 + 1);
                 }
 
-                if (!this.drop.preventConsecutiveDupes || !this.lastItem || this.lastItem != this.drop.items[i1]) {
+                // If we don't need to check history, or if our history does not include the current drop, then we
+                // can exit the loop
+                if (this.drop.preventConsecutiveDupes <= 0 || !this.lastHistory.includes(i1)) {
                     break;
+
                 } else {
                     "something".charAt(0);
                 }
@@ -1829,8 +1848,19 @@
 						ret = true;
 					}
 				}
+				// Save the last result
 				this.lastItem = this.drop.items[i1];
 				this.lastItemCount = count;
+
+				// track recent history, if necessary
+				if (this.drop.preventConsecutiveDupes > 0) {
+				    // add the last result to the end
+				    this.lastHistory.push(i1);
+				    // while we have more history than we need, remove the first/oldest element
+				    while (this.lastHistory.length > this.drop.preventConsecutiveDupes) {
+				        this.lastHistory.shift();
+				    }
+				}
 
 			} else {
 				this.lastItem = null;
@@ -2884,10 +2914,10 @@
                         <tr>
                             <td class="tooltip">
                                 Prevent Consecutive Repeats:
-                                <span class="tooltiptextbottom">If enabled then the same result will not be rewarded twice in a row</span>
+                                <span class="tooltiptextbottom">If set to N greater than zero, then the drop will not return the last N items that dropped</span>
                             </td>
                             <td>
-                                <input class="inputPreventDupes" type="checkbox"/>
+                                <input class="inputPreventDupes" type="number" value="0"/>
                             </td>
                         </tr>
                     </table>
@@ -3017,10 +3047,10 @@
                     <tr>
                         <td class="tooltip">
                             Prevent Consecutive Repeats:
-                            <span class="tooltiptextbottom">If enabled then the same result will not be rewarded twice in a row</span>
+                            <span class="tooltiptextbottom">If set to N greater than zero, then the drop will not return the last N items that dropped</span>
                         </td>
                         <td>
-                            <input class="inputPreventDupes" type="checkbox" checked/>
+                            <input class="inputPreventDupes" type="number" value="0"/>
                         </td>
                     </tr>
                 </table>
@@ -3548,7 +3578,7 @@
                 // copy enemy config
                 getFirstChild(enemy, "inputName").value = enemyModel.name;
                 getFirstChild(enemy, "inputRequired").value = enemyModel.drops[0].requiredItems;
-                getFirstChild(enemy, "inputPreventDupes").checked = enemyModel.drops[0].preventConsecutiveDupes;
+                getFirstChild(enemy, "inputPreventDupes").value = enemyModel.drops[0].preventConsecutiveDupes;
 
                 var dropModel = enemyModel.drops[0];
                 var drop = enemy;
@@ -3586,7 +3616,7 @@
                     getFirstChild(drop, "inputCount").value = dropModel.dropsPerMission;
                     getFirstChild(drop, "inputTime").value = dropModel.time;
                     getFirstChild(drop, "inputRequired").value = dropModel.requiredItems;
-                    getFirstChild(drop, "inputPreventDupes").checked = dropModel.preventConsecutiveDupes;
+                    getFirstChild(drop, "inputPreventDupes").value = dropModel.preventConsecutiveDupes;
 
                     // loop over the items in this drop
                     for (var d = 0; d < dropModel.items.length; d++) {
@@ -3672,7 +3702,7 @@
                     dropModel.name = getFirstChild(drop, "inputName").value;
                     dropModel.dropsPerMission = readInt(getFirstChild(drop, "inputCount").value);
                     dropModel.time = readInt(getFirstChild(drop, "inputTime").value);
-                    dropModel.preventConsecutiveDupes = getFirstChild(drop, "inputPreventDupes").checked;
+                    dropModel.preventConsecutiveDupes = readInt(getFirstChild(drop, "inputPreventDupes").value);
 
                     // loop over all the item elements under the drop
                     var items = getAllChildren(drop, "item");
@@ -3712,7 +3742,7 @@
                     var drop = enemy;
                     var dropModel = enemyModel.drops[0];
                     dropModel.requiredItems = readInt(getFirstChild(drop, "inputRequired").value);
-                    dropModel.preventConsecutiveDupes = getFirstChild(drop, "inputPreventDupes").checked;
+                    dropModel.preventConsecutiveDupes = readInt(getFirstChild(drop, "inputPreventDupes").value);
 
                     // loop over all the item elements under the drop
                     var items = getAllChildren(drop, "item");
@@ -5648,10 +5678,15 @@
                 This behavior is enabled by default in order to give us the shortest possible time. You can force a
                 particular mission not to bail early by unchecking the Bail Early checkbox under the mission.
             </p>
-            <h3 id="PreventConsecutiveDupes">Prevent Consecutive Repeats</h3>
+            <h3 id="PreventConsecutiveDupes">Prevented Consecutive Repeats</h3>
             <p>
                 In some special cases (Kuva Liches) they have added the ability to prevent consecutive duplicate rewards.
-                This checkbox enables that behavior in the simulation.
+                Setting this to 1 will enable that behavior in the simulation.
+            </p>
+            <p>
+                You can also set this value to more than 1, if you want to prevent duplicate rewards going back the given
+                number of consecutive drops.  Note that Prevented Consecutive Repeats must be less than the number
+                of items in the drop.
             </p>
             <h2 id="EnemyScenarios">Enemy Scenarios</h2>
             <p>
@@ -6641,7 +6676,7 @@
             <a href="https://github.com/buff0000n/rngsim/issues/1">Feedback</a>
         </div>
         <div>
-            v1.8.0: 2019-11-11
+            v1.8.1: 2019-11-11
         </div>
     </div>
 </div>
