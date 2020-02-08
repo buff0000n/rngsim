@@ -582,6 +582,7 @@
             this.time = 0;
             this.requiredItems = 0;
             this.preventConsecutiveDupes = 0;
+            this.preventConsecutiveDupesAppliesToNew = false;
         }
 
 		add(item) {
@@ -594,7 +595,7 @@
 			s += this.dropsPerMission + FIELD_SEP;
 			s += this.requiredItems + FIELD_SEP;
 			s += this.time + FIELD_SEP;
-			s += this.preventConsecutiveDupes
+			s += this.preventConsecutiveDupesAppliesToNew ? -this.preventConsecutiveDupes : this.preventConsecutiveDupes;
 			for (var i = 0; i < this.items.length; i++) {
 				s += FIELD_SEP + GROUP_START + "i_" + this.items[i].toString() + GROUP_END;
 			}
@@ -614,8 +615,18 @@
 			if (!fields[itemStart].startsWith("i_")) {
 			    if (fields[itemStart] == "y")
     			    this.preventConsecutiveDupes = 1;
-                else
-                    this.preventConsecutiveDupes = readInt(fields[itemStart]);
+
+                else {
+                    var p = readIntWithNegative(fields[itemStart]);
+                    if (p < 0) {
+                        this.preventConsecutiveDupes = -p;
+                        this.preventConsecutiveDupesAppliesToNew = true;
+
+                    } else {
+                        this.preventConsecutiveDupes = p;
+                        this.preventConsecutiveDupesAppliesToNew = false;
+                    }
+                }
     			itemStart++;
 			}
 			for (var i = 4; i < fields.length; i++) {
@@ -1727,6 +1738,7 @@
 			// Only worry about history if preventConsecutiveDupes is enabled
 			if (this.drop.preventConsecutiveDupes > 0) {
     			this.lastHistory = new Array();
+    			this.lastNewHistory = new Array();
             }
 
     		// if the drop's required items is 0 then all items are required
@@ -1787,6 +1799,7 @@
 			// clear history, if necessary
 			if (this.drop.preventConsecutiveDupes > 0) {
     			this.lastHistory = new Array();
+    			this.lastNewHistory = new Array();
             }
 		}
 
@@ -1815,7 +1828,10 @@
 
                 // If we don't need to check history, or if our history does not include the current drop, then we
                 // can exit the loop
-                if (this.drop.preventConsecutiveDupes <= 0 || !this.lastHistory.includes(i1)) {
+                // check the appropriate history according to preventConsecutiveDupesAppliesToNew
+                if (this.drop.preventConsecutiveDupes == 0 ||
+                        (!this.drop.preventConsecutiveDupesAppliesToNew && !this.lastHistory.includes(i1)) ||
+                        (this.drop.preventConsecutiveDupesAppliesToNew && !this.lastNewHistory.includes(i1))) {
                     break;
 
                 } else {
@@ -1859,6 +1875,15 @@
 				    // while we have more history than we need, remove the first/oldest element
 				    while (this.lastHistory.length > this.drop.preventConsecutiveDupes) {
 				        this.lastHistory.shift();
+				    }
+				    // if this is the first drop for the last result then add it to the last new history
+				    if (count == this.x[i1]) {
+                        // add the last result to the end
+                        this.lastNewHistory.push(i1);
+                        // while we have more history than we need, remove the first/oldest element
+                        while (this.lastNewHistory.length > this.drop.preventConsecutiveDupes) {
+                            this.lastNewHistory.shift();
+                        }
 				    }
 				}
 
@@ -3578,7 +3603,7 @@
                 // copy enemy config
                 getFirstChild(enemy, "inputName").value = enemyModel.name;
                 getFirstChild(enemy, "inputRequired").value = enemyModel.drops[0].requiredItems;
-                getFirstChild(enemy, "inputPreventDupes").value = enemyModel.drops[0].preventConsecutiveDupes;
+                getFirstChild(enemy, "inputPreventDupes").value = enemyModel.drops[0].preventConsecutiveDupesAppliesToNew ? -enemyModel.drops[0].preventConsecutiveDupes : enemyModel.drops[0].preventConsecutiveDupes;
 
                 var dropModel = enemyModel.drops[0];
                 var drop = enemy;
@@ -3617,6 +3642,7 @@
                     getFirstChild(drop, "inputTime").value = dropModel.time;
                     getFirstChild(drop, "inputRequired").value = dropModel.requiredItems;
                     getFirstChild(drop, "inputPreventDupes").value = dropModel.preventConsecutiveDupes;
+                    getFirstChild(drop, "inputPreventDupes").value = dropModel.preventConsecutiveDupesAppliesToNew ? -dropModel.preventConsecutiveDupes : dropModel.preventConsecutiveDupes;
 
                     // loop over the items in this drop
                     for (var d = 0; d < dropModel.items.length; d++) {
@@ -3702,7 +3728,9 @@
                     dropModel.name = getFirstChild(drop, "inputName").value;
                     dropModel.dropsPerMission = readInt(getFirstChild(drop, "inputCount").value);
                     dropModel.time = readInt(getFirstChild(drop, "inputTime").value);
-                    dropModel.preventConsecutiveDupes = readInt(getFirstChild(drop, "inputPreventDupes").value);
+                    var ipd = readIntWithNegative(getFirstChild(drop, "inputPreventDupes").value)
+                    dropModel.preventConsecutiveDupes = ipd < 0 ? -ipd : ipd;
+                    dropModel.preventConsecutiveDupesAppliesToNew = ipd < 0;
 
                     // loop over all the item elements under the drop
                     var items = getAllChildren(drop, "item");
@@ -3742,7 +3770,9 @@
                     var drop = enemy;
                     var dropModel = enemyModel.drops[0];
                     dropModel.requiredItems = readInt(getFirstChild(drop, "inputRequired").value);
-                    dropModel.preventConsecutiveDupes = readInt(getFirstChild(drop, "inputPreventDupes").value);
+                    var ipd = readIntWithNegative(getFirstChild(drop, "inputPreventDupes").value)
+                    dropModel.preventConsecutiveDupes = ipd < 0 ? -ipd : ipd;
+                    dropModel.preventConsecutiveDupesAppliesToNew = ipd < 0;
 
                     // loop over all the item elements under the drop
                     var items = getAllChildren(drop, "item");
@@ -6682,7 +6712,7 @@
             <a href="https://github.com/buff0000n/rngsim/issues/1">Feedback</a>
         </div>
         <div>
-            v1.8.1: 2019-11-11
+            v1.8.2: 2020-02-08
         </div>
     </div>
 </div>
