@@ -231,7 +231,7 @@
     }
 
     /* Fields */
-    .inputName, .inputTime, .inputRequired, .inputCount, .inputRate, .inputRange, .inputStopAfter, .inputResult, .inputPercentile, .inputPreventDupes {
+    .inputName, .inputTime, .inputRequired, .inputCount, .inputRate, .inputRange, .inputStopAfter, .inputResult, .inputPercentile, .inputOdds, .inputPreventDupes {
         background-color: #101010;
         border: none;
         color: #B0B0B0;
@@ -3941,6 +3941,7 @@
                                 <tr>
                                     <td class="statName">Result</td>
                                     <td class="statName">Percentile</td>
+                                    <td class="statName">Odds</td>
                                 </tr>
                                 <tr class="queryRow">
                                     <td>
@@ -3948,6 +3949,9 @@
                                     </td>
                                     <td>
                                         <input class="inputPercentile" type="number" value="" step="0.01" onchange="calcResultFromPercentile(this)"/>%
+                                    </td>
+                                    <td>
+                                        1 in <input class="inputOdds" type="number" value="" step="1" onchange="calcResultFromOdds(this)"/>
                                     </td>
                                 </tr>
                             </table>
@@ -3981,6 +3985,15 @@
     }
 
     function calcResultFromPercentile(input) {
+        var row = getParent(input, "queryRow");
+        getFirstChild(row, "inputOdds").value = 100 / (100 - getFirstChild(row, "inputPercentile").value);
+        setQuerySide(input, false);
+        calcPercentile(input);
+    }
+
+    function calcResultFromOdds(input) {
+        var row = getParent(input, "queryRow");
+        getFirstChild(row, "inputPercentile").value = 100  * (1 - (1 / getFirstChild(row, "inputOdds").value));
         setQuerySide(input, false);
         calcPercentile(input);
     }
@@ -3989,12 +4002,14 @@
         var row = getParent(input, "queryRow");
         getFirstChild(row, "inputResult").lock = lockResult;
         getFirstChild(row, "inputPercentile").lock = !lockResult;
+        getFirstChild(row, "inputOdds").lock = !lockResult;
     }
 
     function calcPercentile(input) {
         var row = getParent(input, "queryRow");
         var resultInput = getFirstChild(row, "inputResult");
         var percentileInput = getFirstChild(row, "inputPercentile");
+        var oddsInput = getFirstChild(row, "inputOdds");
 
         var resultElement = getParent(input, "trialResult");
         if (!resultElement) {
@@ -4004,7 +4019,9 @@
         var dataScale = resultElement.dataScale;
 
         if (resultInput.lock && resultInput.value) {
-            percentileInput.value = (trialData.resultToPercentile(resultInput.value) * 100).toFixed(2);
+            var percentile = trialData.resultToPercentile(resultInput.value) * 100;
+            percentileInput.value = (percentile).toFixed(6);
+            oddsInput.value = (100 / (100 - percentile)).toFixed(6);
 
         } else if (percentileInput.lock && percentileInput.value) {
             resultInput.value = trialData.percentileToResult(percentileInput.value / 100.0).toFixed(2);
@@ -6712,7 +6729,7 @@
             <a href="https://github.com/buff0000n/rngsim/issues/1">Feedback</a>
         </div>
         <div>
-            v1.8.2: 2020-02-08
+            v1.8.3: 2020-02-17
         </div>
     </div>
 </div>
