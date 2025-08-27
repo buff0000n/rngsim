@@ -45,7 +45,7 @@ var Analysis = (function() {
         return "(" + array.join(", ") + ")";
     }
 
-    function defaultResultCallback(value) {
+    var defaultResultCallback = (function() {
         function expectedValueResult(value) {
             console.log("Mean: " + value);
         }
@@ -57,7 +57,7 @@ var Analysis = (function() {
             expectedValueResult: expectedValueResult,
             varianceResult: varianceResult
         };
-    }
+    })();
 
     function defaultProgressCallback(fraction) {
         console.log("Progress: " + (fraction * 100).toFixed(2));
@@ -201,11 +201,13 @@ var Analysis = (function() {
      * resultCallback: callback object with expectedValueResult() and varianceResult()
      * returns: expected average number of trials for full success
      **/
-    function calculateStats(probs, nums=null, progressCallback=defaultProgressCallback, resultCallback=defaultResultCallback()) {
+    function calculateStats(probs, nums=null, progressCallback=defaultProgressCallback, resultCallback=defaultResultCallback) {
         // todo: there are a lot of optimizations that can be done if all the probabilities and nums are equal
         // not to do: skew, excess kurtosis, probably feasible but not worth the trouble
         // very not to do: The median, 90th percentile, and 99th percentile are apparently not
         // feasible to calculate analytically
+
+        var start = Date.now();
 
         // apply default nums if necessary
         if (nums == null) {
@@ -244,10 +246,9 @@ var Analysis = (function() {
                 }
             }
 
-            calcs++;
             result[0] = expectedValue(getExpectedValue, probs, index, nnz, fnzi)
-            calcs++;
             result[1] = variance(getVariance, getExpectedValue, probs, index, nnz, fnzi)
+            calcs++;
         }
 
         // recursive implementation
@@ -273,8 +274,11 @@ var Analysis = (function() {
             // down recursively to the base cases and add everything up
             var expectedValue = getExpectedValue(nums);
             var variance = getVariance(nums);
+
+            var end = Date.now();
+            var time = ((end - start) / 1000).toFixed(2);
             // log some stats
-            console.log("finished with " + calcs + " sub-calculations and " + cacheHits + " cache hits, max recursive depth: " + maxDepth + ", batches: " + numBatches);
+            console.log("finished with " + calcs + " sub-calculations and " + cacheHits + " cache hits, max recursive depth: " + maxDepth + ", batches: " + numBatches + ", time: " + time + "s");
             // holy crap that's it
             progressCallback(1);
             resultCallback.expectedValueResult(expectedValue);

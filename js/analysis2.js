@@ -45,7 +45,7 @@ var Analysis2 = (function() {
         return "(" + array.join(", ") + ")";
     }
 
-    function defaultResultCallback(value) {
+    var defaultResultCallback = (function() {
         function expectedValueResult(value) {
             console.log("Mean: " + value);
         }
@@ -57,7 +57,7 @@ var Analysis2 = (function() {
             expectedValueResult: expectedValueResult,
             varianceResult: varianceResult
         };
-    }
+    })();
 
     function defaultProgressCallback(fraction) {
         console.log("Progress: " + (fraction * 100).toFixed(2));
@@ -200,11 +200,13 @@ var Analysis2 = (function() {
      * progressCallback: callback function to display progress, takes a fraction between 0 and 1
      * resultCallback: callback object with expectedValueResult() and varianceResult()
      **/
-    function calculateStats(dropTable, requiredDrops, progressCallback=defaultProgressCallback, resultCallback=defaultResultCallback()) {
+    function calculateStats(dropTable, requiredDrops, progressCallback=defaultProgressCallback, resultCallback=defaultResultCallback) {
         // todo: there are a lot of optimizations that can be done if all the probabilities and nums are equal
         // not to do: skew, excess kurtosis, probably feasible but not worth the trouble
         // very not to do: The median, 90th percentile, and 99th percentile are apparently not
         // feasible to calculate analytically
+
+        var start = Date.now();
 
         // apply default nums if necessary
         if (requiredDrops == null) {
@@ -316,8 +318,11 @@ var Analysis2 = (function() {
             // down recursively to the base cases and add everything up
             var expectedValue = getExpectedValue(requiredDrops);
             var variance = getVariance(requiredDrops);
+
+            var end = Date.now();
+            var time = ((end - start) / 1000).toFixed(2);
             // log some stats
-            console.log("finished with " + calcs + " sub-calculations and " + cacheHits + " cache hits, max recursive depth: " + maxDepth + ", batches: " + numBatches);
+            console.log("finished with " + calcs + " sub-calculations and " + cacheHits + " cache hits, max recursive depth: " + maxDepth + ", batches: " + numBatches + ", time: " + time + "s");
             // holy crap that's it
             progressCallback(1);
             resultCallback.expectedValueResult(expectedValue);
@@ -400,29 +405,15 @@ var Analysis2 = (function() {
         // Standard Deviation:	8.12
     }
 
-    function test3() {
-        var dropTable = new DropTable()
-            .addEntry(new DropTableEntry(0.1).addDrop("A", 1))
-            .addEntry(new DropTableEntry(0.1).addDrop("B", 1))
-            .addEntry(new DropTableEntry(0.1).addDrop("C", 1))
-            .addEntry(new DropTableEntry(0.1).addDrop("D", 1))
-            .addEntry(new DropTableEntry(0.1).addDrop("E", 1))
-            .addEntry(new DropTableEntry(0.1).addDrop("F", 1))
-            .addEntry(new DropTableEntry(0.1).addDrop("G", 1))
-            .addEntry(new DropTableEntry(0.1).addDrop("H", 1))
-            .addEntry(new DropTableEntry(0.1).addDrop("I", 1))
-            .addEntry(new DropTableEntry(0.1).addDrop("J", 1));
-        var requiredDrops = new IntMap()
-            .add("A", 3)
-            .add("B", 3)
-            .add("C", 3)
-            .add("D", 3)
-            .add("E", 3)
-            .add("F", 3)
-            .add("G", 3)
-            .add("H", 3)
-            .add("I", 3)
-            .add("J", 3);
+    function test3(numDrops=10, numRequired=3) {
+        var dropTable = new DropTable();
+        var requiredDrops = new IntMap();
+
+        for (var i = 1; i <= numDrops; i++) {
+            var key = "D" + i;
+            dropTable.addEntry(new DropTableEntry(0.1).addDrop(key, 1))
+            requiredDrops.add(key, numRequired)
+        }
 
         calculateStats(dropTable, requiredDrops);
         // Average:	16.56
