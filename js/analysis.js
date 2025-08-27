@@ -330,6 +330,10 @@ var Analysis = (function() {
         runBatch();
     }
 
+    function test3() {
+        calculateStats([0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], [3, 3, 3, 3, 3, 3, 3, 3, 3, 3]);
+    }
+
     return  {
         /**
          * probs: Array of probabilities for each item
@@ -338,7 +342,8 @@ var Analysis = (function() {
          * progressCallback: callback function to display progress, takes a fraction between 0 and 1
          * resultCallback: callback object with expectedValueResult() and varianceResult()
          **/
-        calculateStats: calculateStats // (probs, nums=null, progressCallback=defaultProgressCallback, resultCallback=defaultResultCallback)
+        calculateStats: calculateStats, // (probs, nums=null, progressCallback=defaultProgressCallback, resultCallback=defaultResultCallback)
+        test3: test3
     };
 })();
 
