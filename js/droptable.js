@@ -145,9 +145,18 @@ class DropTable {
     }
 
     checkInvalid() {
-        // floating point math is a b*tch
-        if (this.totalProb > 1.000001) {
+        // allow 1% rounding error
+        if (this.totalProb > 1.01) {
             throw new Error("Total probability exceeds 1: " + this.totalProb)
+
+        } else if (this.totalProb > 1) {
+            console.log("Fixing rounding error: " + this.totalProb.toFixed(4) + " -> 1.0");
+            var factor = 1.0/this.totalProb;
+            this.totalProb = 0;
+            for (var i = 0; i < this.table.length; i++) {
+                this.table[i].prob *= factor;
+            }
+            this.totalProb = 1;
         }
     }
 
