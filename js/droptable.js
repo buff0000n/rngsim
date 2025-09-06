@@ -134,91 +134,6 @@ var DropTableUtils = (function() {
     };
 })();
 
-
-/**
- * Basic utility object for mapping string to integers.
- **/
-class IntMap {
-    constructor(map = new Map()) {
-        this.map = map;
-    }
-
-    // gets the value associated with the give key, or 0 if it's not present.
-    get(key) {
-        return this.map.has(key) ? this.map.get(key) : 0;
-    }
-
-    // sets a value directly for the given key, removing it if the value is 0
-    set(key, amount) {
-        if (amount == 0) this.map.delete(key)
-        else this.map.set(key, amount);
-        // support chaining
-        return this;
-    }
-
-    // add a value to the map, if this map already has a value for the given key then it will be added to
-    add(key, amount) {
-        var prevAmount = 0;
-        if (this.map.has(key)) {
-            prevAmount = this.map.get(key);
-        }
-        this.set(key, prevAmount + amount);
-        // support chaining
-        return this;
-    }
-
-    // create a deep copy of this IntMap
-    clone() {
-        var newIntMap = new IntMap();
-        for (var [key, value] of this.map.entries()) {
-            newIntMap.map.set(key, value);
-        }
-        return newIntMap;
-    }
-
-    // add all the entries in another IntMap to this one
-    addAll(otherIntMap) {
-        for (var [key, value] of otherIntMap.map.entries()) {
-            this.add(key, value);
-        }
-        // support chaining
-        return this;
-    }
-
-    // number of entries in the IntMap
-    size() {
-        return this.map.size;
-    }
-
-    // whether there are no entries in this IntMap
-    isEmpty() {
-        return this.map.size == 0;
-    }
-
-    // check against another IntMap for equality
-    equals(otherIntMap) {
-        // compare sizes
-        if (otherIntMap.map.size != this.map.size) return false;
-        // compare entry by entry, it doesn't matter which IntMap's entries we use to iterate
-        for (var [key, amount] of this.map.entries()) {
-            if (!otherIntMap.map.has(key)) return false;
-            if (otherIntMap.map.get(key) != amount) return false;
-        }
-        // shouldn't have to check anything else
-        return true;
-    }
-
-    toString() {
-        var s = "";
-        for (var [key, amount] of this.map.entries()) {
-            if (s != "") s += ", ";
-            if (amount != 1) s += amount + "x";
-            s += key;
-        }
-        return s;
-    }
-}
-
 // basic struct to hold a probability and a dropMap
 class DropTableEntry {
     constructor(prob, dropMap = new IntMap) {
@@ -271,12 +186,20 @@ class DropTable {
 
         // reusable filtered version
         this.filteredClone = null;
+
+        // mercy rule configuration, if specified
+        this.mercyGrid = null;
+        this.mercyTotals = null;
     }
 
     // convert a drop key to an index in the drop list, creating one if it's not present
-    getDropId(key) {
+    getDropId(key, allowAdd=true) {
         // check if we already have the drop key
         if (!this.dropIdMap.has(key)) {
+            // if it's a new drop key and we aren't allowed to add more then it's an error
+            if (!allowAdd) {
+                throw new Error("Drop key " + key + " not found in drop table");
+            }
             // create new entries for this drop key
             this.dropIdMap.set(key, this.dropKeyList.length);
             this.dropKeyList.push(key);
@@ -292,10 +215,37 @@ class DropTable {
     }
 
     // convert a drop IntMap to a drop array, with values in the right indices
-    // corresponding to drops from the drop map
+    // corresponding to drops from the drop map.
+    // if this drop table has mercy rules then they will be added into the drop array
     // dropMap: IntMap containing drop info
     // allowAdd: Whether it's allowed to add new drop keys/ids
     // returns: [total count of drops, drop array]
+    convertDropMapToFullArray(dropMap, allowAdd=true) {
+        var [dropTotal, dropArray] = this.convertDropMapToArray(dropMap, allowAdd);
+
+        // apply mercy rules if present
+        if (this.mercyGrid != null) {
+            // loop over possible mercy drops
+            for (var mercyId = 0; mercyId < this.numDrops; mercyId++) {
+                if (this.mercyTotals[mercyId] == 0) continue;
+                var total = 0;
+                // loop over drops
+                for (var j = 0; j < this.numDrops; j++) {
+                    // see if there's a mercy rule for this drop and mercy drop
+                    if (this.mercyGrid[mercyId][j] > 0) {
+                        // calculate the amount of mercy drops required to meet the drop amount
+                        var mercyAmount = dropArray[j] * this.mercyGrid[mercyId][j]
+                        // increment the required mercy drops
+                        dropArray[mercyId] += mercyAmount;
+                        // increment the total
+                        dropTotal += mercyAmount;
+                    }
+                }
+            }
+        }
+        return [dropTotal, dropArray];
+    }
+
     convertDropMapToArray(dropMap, allowAdd=true) {
         // create blank array with one entry for each distinct drop
         var t = new Array(this.numDrops);
@@ -305,12 +255,8 @@ class DropTable {
         var dropTotal = 0;
         // loop over the IntMap
         for (var [key, value] of dropMap.map.entries()) {
-            // if it's a new drop key and we aren't allowed to add more then it's an error
-            if (!allowAdd && !this.dropIdMap.has(key)) {
-                throw new Error("Drop key " + key + " not found in drop table");
-            }
             // get the id for thsi drop key
-            var dropId = this.getDropId(key);
+            var dropId = this.getDropId(key, allowAdd);
             // if this.getDropId() increased the dropNum this should be fine because it will
             // append to the immediate end of the array
             t[dropId] = value;
@@ -388,7 +334,8 @@ class DropTable {
 
     clone() {
         // create a new drop table with the same drop key mapping
-        var clone = new DropTable(this.dropKeyList, this.dropIdMap);
+        // create a new object using this one as the template, preserving any overridden functions or attributes
+        var clone = Object.create(this);
         // copy a bunch of arrays
         clone.dropGrid = ArrayUtils.arrayCopy(this.dropGrid, 2);
         clone.dropTotalArray = ArrayUtils.arrayCopy(this.dropTotalArray);
@@ -449,6 +396,99 @@ class DropTable {
         }
         // that was a lot
         return f;
+    }
+
+    // add a mercy rule to the drop table
+    // mercyDropName: the drop name of the mercy drop, must already be in this drop table
+    // requiredMercyDropAmount: the amount of mercy drops required
+    // dropName: the regular drop that amount of mercy drops can be exchanged for.
+    //           It's assumed that the drop can be exchanged for one at a time
+    addMercyRule(mercyDropName, requiredMercyDropAmount, dropName) {
+        // initialize the mercy state if this is our first mercy rule
+        if (this.mercyGrid == null) {
+            this.mercyGrid = ArrayUtils.createArray([this.numDrops, this.numDrops], 0);
+            this.mercyTotals = ArrayUtils.createArray([this.numDrops], 0);
+        }
+        // get the ids of the mercy drop and the result drop
+        var mercyId = this.getDropId(mercyDropName, false);
+        var dropId = this.getDropId(dropName, false);
+        // update the mercy grid
+        this.mercyGrid[mercyId][dropId] += requiredMercyDropAmount;
+        this.mercyTotals[mercyId] += requiredMercyDropAmount;
+        // todo: checks, you can't have a mercy rule for another mercy drop
+        // return this to support chaining
+        return this;
+    }
+
+    reduceRequiredDropArray(requiredDropArray, dropArray, tempDropArray) {
+        if (this.mercyGrid == null) {
+            // if there are no mercy rules then just do a basic subtraction
+            ArrayUtils.arraySubtract(requiredDropArray, dropArray, tempDropArray);
+        } else {
+            // we have to evaluate the mercy rules
+            this.reduceRequiredDropArrayWithMercyRule(requiredDropArray, dropArray, tempDropArray)
+        }
+    }
+
+    reduceRequiredDropArrayWithMercyRule(requiredDropArray, dropArray, tempDropArray) {
+        // go through and decrement the required mercy drops first
+        for (var mercyId = 0; mercyId < this.numDrops; mercyId++) {
+            if (this.mercyTotals[mercyId] > 0) {
+                tempDropArray[mercyId] = requiredDropArray[mercyId] - dropArray[mercyId];
+                // cut off at zero
+                if (tempDropArray[mercyId] < 0) {
+                    tempDropArray[mercyId] = 0;
+                }
+            }
+        }
+
+        // loop over the non-mercy drops
+        for (var i = 0; i < this.numDrops; i++) {
+            if (this.mercyTotals[i] > 0) continue;
+            if (dropArray[i] > 0) {
+                // truncate to required amount
+                var dropped = dropArray[i] > requiredDropArray[i] ? requiredDropArray[i] : dropArray[i];
+                // save to result
+                tempDropArray[i] = requiredDropArray[i] - dropped;
+                // loop over the mercy rules
+                for (var mercyId = 0; mercyId < this.numDrops; mercyId++) {
+                    // if there's a mercy rule for this drop
+                    if (this.mercyGrid[mercyId][i] > 0) {
+                        // decrement the required mercy drop amount by the amount for this drop
+                        tempDropArray[mercyId] -= this.mercyGrid[mercyId][i] * dropped;
+                        // cut off at zero
+                        if (tempDropArray[mercyId] < 0) {
+                            tempDropArray[mercyId] = 0;
+                        }
+                    }
+                }
+            } else {
+                // no amount was dropped for this drop, copy the required amount over to the
+                // result unchanged
+                tempDropArray[i] = requiredDropArray[i];
+            }
+        }
+
+        // calculate if there are no more required mercy drops
+        var mercyHit = true;
+        for (var mercyId = 0; mercyId < this.numDrops; mercyId++) {
+            if (this.mercyTotals[mercyId] > 0 && tempDropArray[mercyId] > 0) {
+                // One mercy drop is still pending, prevent the mercy rule from triggering
+                mercyHit = false;
+                break;
+            }
+        }
+        // if we've hit the mercy requirement then we're done
+        if (mercyHit) {
+            // console.log("Mercy rule: " + tempDropArray[mercyId] + " >= " + mercyRequired);
+            // reduce all remaining drops.  we've accumulated enough mercy drops to exchange for anything
+            // outstanding
+            for (var i = 0; i < this.numDrops; i++) {
+                tempDropArray[i] = 0;
+            }
+        }
+        // otherwise what we have is the new remaining drop amounts.
+        // console.log("Reduce: " + ArrayUtils.arrayToString(requiredDropArray) + " - " + ArrayUtils.arrayToString(dropArray) + " = " + ArrayUtils.arrayToString(tempDropArray));
     }
 
     // get the list of drop keys
@@ -525,6 +565,19 @@ class DropTable {
         });
 
         s += "total entries: " + this.numDropTableEntries + ", nonempty: " + this.numNonemptyDropTableEntries;
+
+        if (this.mercyGrid != null) {
+            for (var mercyId = 0; mercyId < this.numDrops; mercyId++) {
+                if (this.mercyTotals[mercyId] > 0) {
+                    for (var i = 0; i < this.numDrops; i++) {
+                        if (this.mercyGrid[mercyId][i] > 0) {
+                            s += "\nMercy rule: " + this.mercyGrid[mercyId][i] + "x" + this.dropKeyList[mercyId] + " = " + this.dropKeyList[i];
+                        }
+                    }
+                }
+            }
+        }
+
         return s;
     }
 }

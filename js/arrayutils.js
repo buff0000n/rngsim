@@ -1,16 +1,16 @@
 var ArrayUtils = (function() {
 
-    function createArray(dims) {
-        return createArray0(dims, 0);
+    function createArray(dims, fillValue=0) {
+        return createArray0(dims, 0, fillValue);
     }
 
-    function createArray0(dims, start) {
+    function createArray0(dims, start, fillValue) {
         if (start == dims.length) {
-            return -1;
+            return fillValue;
         }
         var a = Array();
         for (var i = 0; i < dims[start]; i++) {
-            a.push(createArray0(dims, start + 1));
+            a.push(createArray0(dims, start + 1, fillValue));
         }
         return a;
     }

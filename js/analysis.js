@@ -7,8 +7,8 @@ var Analysis = (function() {
     }
 
     // default callback that just logs progress to the console
-    function defaultProgressCallback(fraction) {
-        console.log("Progress: " + (fraction * 100).toFixed(2));
+    function defaultProgressCallback(fraction, message) {
+        console.log("Progress: " + (fraction * 100).toFixed(2) + " - " + message);
     }
 
     // okay statistics time.  start with an easy one
@@ -64,7 +64,7 @@ var Analysis = (function() {
             probSum += dropProb;
             // reduce the current required drops by the outcome of this drop entry and put the result in the
             // temp array.  The temp array is already the top of the stack.
-            ArrayUtils.arraySubtract(requiredDropArray, dropArray, tempDropArray);
+            dropTable.reduceRequiredDropArray(requiredDropArray, dropArray, tempDropArray);
             // calculate the expected trials given the outcome of this drop entry, weight it by the
             // drop entry's probability, and add to the total.
             caseSum += dropProb * expCallback(dropTable, requiredDropArrayStack);
@@ -148,7 +148,7 @@ var Analysis = (function() {
             probSum += dropProb;
             // reduce the current required drops by the outcome of this drop entry and put the result in the
             // temp array.  The temp array is already the top of the stack.
-            var reducedRequiredDropArray = ArrayUtils.arraySubtract(requiredDropArray, dropArray, tempDropArray);
+            dropTable.reduceRequiredDropArray(requiredDropArray, dropArray, tempDropArray);
             // calculate the variance given the outcome of this drop entry, weight it by the
             // drop entry's probability, and add to the total.
             vSum += dropProb * varCallback(dropTable, requiredDropArrayStack);
@@ -181,7 +181,7 @@ var Analysis = (function() {
      * requiredDrops: an IntMap object containing the required drop keys and respective amounts.
      *                If omitted then all the distinct drops in the drop table are assumed to have a required
      *                amount of 1.
-     * progressCallback: function(progress), with progress a number between 0 and 1
+     * progressCallback: function(progress, message), with progress a number between 0 and 1
      *                   by default, will log to the console
      * resultCallback: function(expectedValue, variance), takes the result of this calculation
      *                 by default, will log to the console
@@ -203,9 +203,10 @@ var Analysis = (function() {
             requiredDropArray = ArrayUtils.fillArray(dropTable.getNumDrops(), 1);
 
         } else {
-            // convert provided drop IntMap to an array for teh given drop table
+            // convert provided drop IntMap to an array for the given drop table
             // if any of the drops in the map are not found in the drop table then throw an error
-            var [_, requiredDropArray] = dropTable.convertDropMapToArray(requiredDrops, false);
+            // This also applies any mercy rules to the require ddrops, if present
+            var [_, requiredDropArray] = dropTable.convertDropMapToFullArray(requiredDrops, false);
         }
 
         // track the total number of sub-calculations
@@ -221,7 +222,7 @@ var Analysis = (function() {
         // one more cache level to store mean and variance in the same place
         dims.push(2);
         // create the cache
-        var cache = ArrayUtils.createArray(dims);
+        var cache = ArrayUtils.createArray(dims, -1);
 
         // track some calculation stats
         var calcs = 0;
@@ -234,7 +235,7 @@ var Analysis = (function() {
         // takes the current drop table, an index stack containing the current required drops state on its top,
         // and an array to put the results in
         function runCalc(currentDropTable, indexStack, resultArray) {
-            //console.log("Calc: " + ArrayUtils.arrayToString(index));
+            // console.log("Calc: " + ArrayUtils.arrayToString(indexStack[indexStack.length - 1]));
 
             // peek the required drops off the top of the stack
             var index = indexStack[indexStack.length - 1];
@@ -294,6 +295,7 @@ var Analysis = (function() {
         // get the expected value or variance value for the required drop state at the top of the given stack,
         // using the given possibly filtered drop table
         function getCachedOrCalculate(dropTable, indexStack, avgOrVar) {
+            // console.log("Check Cache: " + ArrayUtils.arrayToString(indexStack[indexStack.length - 1]));
             // peek the required drops off the top of the stack
             var index = indexStack[indexStack.length - 1];
             // I keep calling it an index because it's literally an index into the cache
@@ -340,7 +342,7 @@ var Analysis = (function() {
             // log some stats
             console.log("finished with " + calcs + " sub-calculations and " + cacheHits + " cache hits, max recursive depth: " + maxDepth + ", batches: " + numBatches + ", time: " + time + "s");
             // set progress to 100%
-            progressCallback(1);
+            progressCallback(1, "Completed " + totalCalcs + " calculations");
             // send the results
             resultCallback(expectedValue, variance);
             // holy crap that's it
@@ -397,13 +399,13 @@ var Analysis = (function() {
                 getVariance(dropTable, calcIndexStack);
             }
             // send progress
-            progressCallback(calcs / totalCalcs);
+            progressCallback(calcs / totalCalcs, calcs + " out of " + totalCalcs + " calculations complete");
             // yield and run another batch ASAP
             setTimeout(runBatch, 1);
         }
 
         // start at 0% progress
-        progressCallback(0);
+        progressCallback(0, "Starting");
         // start the batches
         runBatch();
         // good luck!
@@ -469,22 +471,6 @@ var Analysis = (function() {
         calculateStats(d, r);
     }
 
-    function test4b() {
-        // khora
-        var da = Array()
-        da.push(new DropTable().addEntry(new DropTableEntry(0.10).addDrop("Chassis", 1)));
-        da.push(new DropTable().addEntry(new DropTableEntry(0.10).addDrop("Helmet", 1)));
-        da.push(new DropTable().addEntry(new DropTableEntry(0.10).addDrop("Systems", 1)).addEntry(new DropTableEntry(0.10).addDrop("BP", 1)));
-
-        var d = DropTableUtils.flatten(da);
-        var r = new IntMap().add("Chassis", 1).add("Helmet", 1).add("Systems", 1).add("BP", 1);
-
-        console.log(d.toString());
-        Analysis3.calculateStats(d, r);
-        //Average:	18.50
-        //Standard Deviation:	10.78
-    }
-
     function test5() {
         // equinox
         var d = new DropTable()
@@ -505,6 +491,93 @@ var Analysis = (function() {
 
     }
 
+    function test6() {
+        // oraxia
+        var da = Array()
+        da.push(new DropTable()
+            .addEntry(new DropTableEntry(0.0769).addDrop("BP", 1))
+            .addEntry(new DropTableEntry(0.0769).addDrop("H", 1))
+            .addEntry(new DropTableEntry(0.0769).addDrop("C", 1))
+            .addEntry(new DropTableEntry(0.0769).addDrop("S", 1)));
+
+        da.push(new DropTable()
+            .addEntry(new DropTableEntry(0.195).addDrop("Husk", 16))
+            .addEntry(new DropTableEntry(0.195).addDrop("Husk", 17))
+            .addEntry(new DropTableEntry(0.220).addDrop("Husk", 18))
+            .addEntry(new DropTableEntry(0.195).addDrop("Husk", 19))
+            .addEntry(new DropTableEntry(0.195).addDrop("Husk", 20)));
+
+        var d = DropTableUtils.flatten(da)
+            .addMercyRule("Husk", 60, "BP")
+            .addMercyRule("Husk", 20, "H")
+            .addMercyRule("Husk", 20, "C")
+            .addMercyRule("Husk", 20, "S")
+        ;
+
+        var r = new IntMap().add("BP", 2).add("H", 2).add("C", 2).add("S", 2);
+
+        console.log(d.toString());
+        calculateStats(d, r);
+    }
+
+    function test7() {
+        // isleweaver
+        var da = Array()
+        da.push(new DropTable()
+            .addEntry(new DropTableEntry(0.0769).addDrop("OBP", 1))
+            .addEntry(new DropTableEntry(0.0769).addDrop("OH", 1))
+            .addEntry(new DropTableEntry(0.0769).addDrop("OC", 1))
+            .addEntry(new DropTableEntry(0.0769).addDrop("OS", 1))
+            .addEntry(new DropTableEntry(0.0769).addDrop("ScBP", 1))
+            .addEntry(new DropTableEntry(0.0769).addDrop("ScG", 1))
+            .addEntry(new DropTableEntry(0.0769).addDrop("ScB", 1))
+            .addEntry(new DropTableEntry(0.0769).addDrop("SpBP", 1))
+            .addEntry(new DropTableEntry(0.0769).addDrop("SpBP", 1))
+            .addEntry(new DropTableEntry(0.0769).addDrop("SpB", 1))
+            .addEntry(new DropTableEntry(0.0769).addDrop("SpH", 1))
+            .addEntry(new DropTableEntry(0.0769).addDrop("SpS", 1))
+        );
+
+        da.push(new DropTable()
+            .addEntry(new DropTableEntry(0.195).addDrop("Husk", 16))
+            .addEntry(new DropTableEntry(0.195).addDrop("Husk", 17))
+            .addEntry(new DropTableEntry(0.220).addDrop("Husk", 18))
+            .addEntry(new DropTableEntry(0.195).addDrop("Husk", 19))
+            .addEntry(new DropTableEntry(0.195).addDrop("Husk", 20)));
+
+        var d = DropTableUtils.flatten(da)
+            .addMercyRule("Husk", 60, "OBP")
+            .addMercyRule("Husk", 20, "OH")
+            .addMercyRule("Husk", 20, "OC")
+            .addMercyRule("Husk", 20, "OS")
+            .addMercyRule("Husk", 48, "ScBP")
+            .addMercyRule("Husk", 12, "ScG")
+            .addMercyRule("Husk", 12, "ScB")
+            .addMercyRule("Husk", 12, "SpBP")
+            .addMercyRule("Husk", 16, "SpB")
+            .addMercyRule("Husk", 16, "SpH")
+            .addMercyRule("Husk", 16, "SpS")
+        ;
+
+        var r = new IntMap()
+            .add("OBP", 2)
+            .add("OH", 2)
+            .add("OC", 2)
+            .add("OS", 2)
+            .add("ScBP", 1)
+            .add("ScG", 2)
+            .add("ScB", 2)
+            .add("SpBP", 1)
+            .add("SpB", 1)
+            .add("SpH", 1)
+            .add("SpS", 1)
+        ;
+
+        console.log(d.toString());
+        calculateStats(d, r);
+
+    }
+
     return  {
     /**
      * dropTable: a DropTable object.  If there are more than one drop table per trial then use
@@ -512,7 +585,7 @@ var Analysis = (function() {
      * requiredDrops: an IntMap object containing the required drop keys and respective amounts.
      *                If omitted then all the distinct drops in the drop table are assumed to have a required
      *                amount of 1.
-     * progressCallback: function(progress), with progress a number between 0 and 1
+     * progressCallback: function(progress, message), with progress a number between 0 and 1
      *                   by default, will log to the console
      * resultCallback: function(expectedValue, variance), takes the result of this calculation
      *                 by default, will log to the console
@@ -522,8 +595,9 @@ var Analysis = (function() {
         , test2: test2
         , test3: test3
         , test4: test4
-        , test4b: test4b
         , test5: test5
+        , test6: test6
+        , test7: test7
     };
 })();
 
