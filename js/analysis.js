@@ -50,7 +50,7 @@ var Analysis = (function() {
         var requiredDropArray = requiredDropArrayStack.pop();
         // the next to last item on the stack is a temp array we can toy with.  make sure it's there.
         if (requiredDropArrayStack.length == 0) {
-            requiredDropArrayStack.push(ArrayUtils.fillArray(requiredDropArray.length));
+            requiredDropArrayStack.push(new IntSumArray(0, ArrayUtils.fillArray(requiredDropArray.list.length)));
         }
         var tempDropArray = requiredDropArrayStack[requiredDropArrayStack.length - 1];
 
@@ -130,7 +130,7 @@ var Analysis = (function() {
         var requiredDropArray = requiredDropArrayStack.pop();
         // the next to last item on the stack is a temp array we can toy with.  make sure it's there.
         if (requiredDropArrayStack.length == 0) {
-            requiredDropArrayStack.push(ArrayUtils.fillArray(requiredDropArray.length));
+            requiredDropArrayStack.push(new IntSumArray(0, ArrayUtils.fillArray(requiredDropArray.list.length)));
         }
         var tempDropArray = requiredDropArrayStack[requiredDropArrayStack.length - 1];
 
@@ -200,22 +200,22 @@ var Analysis = (function() {
         // apply default required drops if necessary
         if (requiredDrops == null) {
             // create a new array of 1's for each drop
-            requiredDropArray = ArrayUtils.fillArray(dropTable.getNumDrops(), 1);
+            requiredDropArray = new IntSumArray(dropTable.getNumDrops(), ArrayUtils.fillArray(dropTable.getNumDrops(), 1));
 
         } else {
             // convert provided drop IntMap to an array for the given drop table
             // if any of the drops in the map are not found in the drop table then throw an error
             // This also applies any mercy rules to the require ddrops, if present
-            var [_, requiredDropArray] = dropTable.convertDropMapToFullArray(requiredDrops, false);
+            var requiredDropArray = dropTable.convertDropMapToFullArray(requiredDrops, false);
         }
 
         // track the total number of sub-calculations
         var totalCalcs = 1;
         // the dimensions of the cache array are 1 more than each of the
         // drop array's required amounts
-        var dims = new Array(requiredDropArray.length + 1);
-        for (var i = 0; i < requiredDropArray.length; i++) {
-            dims[i] = requiredDropArray[i] + 1;
+        var dims = new Array(requiredDropArray.list.length + 1);
+        for (var i = 0; i < requiredDropArray.list.length; i++) {
+            dims[i] = requiredDropArray.list[i] + 1;
             // calculate the total number of sub-calculations, we'll need this for showing progress
             totalCalcs *= dims[i];
         }
@@ -243,8 +243,8 @@ var Analysis = (function() {
             // find how many required drops are non-zero
             var nnz = 0; // number of non-zero indices
             var fnzi = -1; // first non-zero index
-            for (var i = 0; i < index.length; i++) {
-                if (index[i] > 0) {
+            for (var i = 0; i < index.list.length; i++) {
+                if (index.list[i] > 0) {
                     nnz++;
                     if (fnzi == -1) fnzi = i;
                 }
@@ -268,10 +268,10 @@ var Analysis = (function() {
                     // easy way to get to the lone drop entry, just assume this callback only gets called once
                     filteredDropTable.forEachDropEntry((dropProb, dropArray) => {
                         // get the drop amount for the lone remaining required drop
-                        var dropAmount = dropArray[fnzi];
+                        var dropAmount = dropArray.list[fnzi];
                         // calculate the actual number of drops required, both the required amount and the
                         // drop outcome amount may be greater than 1
-                        var numDropsRequired = Math.ceil(index[fnzi] / dropAmount);
+                        var numDropsRequired = Math.ceil(index.list[fnzi] / dropAmount);
                         // calculate the expected value base case
                         resultArray[0] = expectedValueBaseCase(dropProb, numDropsRequired);
                         // calculate the variance base case
@@ -300,7 +300,7 @@ var Analysis = (function() {
             var index = indexStack[indexStack.length - 1];
             // I keep calling it an index because it's literally an index into the cache
             // this will return a 2-element array possibly containing the expected value and variance
-            var value = ArrayUtils.getArrayValue(cache, index);
+            var value = ArrayUtils.getArrayValue(cache, index.list);
             // check if the cache value is populated
             if (value[avgOrVar] > -1) {
                 // oh good, it is
@@ -354,9 +354,9 @@ var Analysis = (function() {
         // this ensures we'll never have to actually do a recursive calculation: The calculations any given state
         // depends on should already be in the cache.  That being said, this is overengineered to support a full
         // recursive calculation because why not.
-        var calcIndex = ArrayUtils.fillArray(requiredDropArray.length, 0);
+        var calcIndex = new IntSumArray(0, ArrayUtils.fillArray(requiredDropArray.list.length, 0));
         // set the first index to -1 to make things easier.
-        calcIndex[0] = -1;
+        calcIndex.set(0, -1);
         // start a stack and put the index on it.  This should get expanded exactly once during the course of the
         // calculation.
         var calcIndexStack = new Array();
@@ -375,18 +375,18 @@ var Analysis = (function() {
                 // if an index exceeds its respective max number
                 for (var i = 0;; i++) {
                     // bubbled up past the end of the array, we are done.
-                    if (i >= requiredDropArray.length) {
+                    if (i >= requiredDropArray.list.length) {
                         // run the finish function
                         finish();
                         // exit the calculation
                         return;
                     }
                     // increment the current index
-                    calcIndex[i]++;
+                    calcIndex.add(i, 1);
                     // check if the index has gone past its respective max number
-                    if (calcIndex[i] > requiredDropArray[i]) {
+                    if (calcIndex.list[i] > requiredDropArray.list[i]) {
                         // reset to 0
-                        calcIndex[i] = 0;
+                        calcIndex.set(i, 0);
                         // continue iterating to bubble up to the next index
                     } else {
                         // current index is fine, don't continue bubbling up

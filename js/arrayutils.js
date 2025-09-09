@@ -33,7 +33,7 @@ var ArrayUtils = (function() {
         a[indices[indices.length - 1]] = value;
     }
 
-    function fillArray(size, value) {
+    function fillArray(size, value=0) {
         var a = Array();
         for (var i = 0; i < size; i++) {
             a.push(value);
@@ -62,13 +62,6 @@ var ArrayUtils = (function() {
         return a2;
     }
 
-    function arraySubtract(a, s, d) {
-        for (var i = 0; i < a.length; i++) {
-            d[i] = s[i] > a[i] ? 0 : a[i] - s[i];
-        }
-        return d;
-    }
-
     return {
         createArray: createArray,
         getArrayValue: getArrayValue,
@@ -77,7 +70,6 @@ var ArrayUtils = (function() {
         fillArray: fillArray,
         arrayEquals: arrayEquals,
         arrayCopy: arrayCopy,
-        arraySubtract: arraySubtract,
         arrayToString:arrayToString
     }
 })();
