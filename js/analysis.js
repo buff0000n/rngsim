@@ -11,6 +11,13 @@ var Analysis = (function() {
         console.log("Progress: " + (fraction * 100).toFixed(2) + " - " + message);
     }
 
+    // util function so I don't have to copy/paste it twice
+    function ensureStack(requiredDropArrayStack, requiredDropArray) {
+        if (requiredDropArrayStack.length == 0) {
+            requiredDropArrayStack.push(IntUtils.newIntSumArray(requiredDropArray.list.length, 0));
+        }
+    }
+
     // okay statistics time.  start with an easy one
     function expectedValueBaseCase(dropProb, numDropsRequired) {
         // easy base case
@@ -49,9 +56,7 @@ var Analysis = (function() {
         // the top of the stack is the current required drop array
         var requiredDropArray = requiredDropArrayStack.pop();
         // the next to last item on the stack is a temp array we can toy with.  make sure it's there.
-        if (requiredDropArrayStack.length == 0) {
-            requiredDropArrayStack.push(new IntSumArray(0, ArrayUtils.fillArray(requiredDropArray.list.length)));
-        }
+        ensureStack(requiredDropArrayStack, requiredDropArray);
         var tempDropArray = requiredDropArrayStack[requiredDropArrayStack.length - 1];
 
         // accumulates the weighted expected trials for each possible success
@@ -129,9 +134,7 @@ var Analysis = (function() {
         // the top of the stack is the current required drop array
         var requiredDropArray = requiredDropArrayStack.pop();
         // the next to last item on the stack is a temp array we can toy with.  make sure it's there.
-        if (requiredDropArrayStack.length == 0) {
-            requiredDropArrayStack.push(new IntSumArray(0, ArrayUtils.fillArray(requiredDropArray.list.length)));
-        }
+        ensureStack(requiredDropArrayStack, requiredDropArray);
         var tempDropArray = requiredDropArrayStack[requiredDropArrayStack.length - 1];
 
         // variance sum
@@ -200,7 +203,7 @@ var Analysis = (function() {
         // apply default required drops if necessary
         if (requiredDrops == null) {
             // create a new array of 1's for each drop
-            requiredDropArray = new IntSumArray(dropTable.getNumDrops(), ArrayUtils.fillArray(dropTable.getNumDrops(), 1));
+            requiredDropArray = IntUtils.newIntSumArray(dropTable.getNumDrops(), 1);
 
         } else {
             // convert provided drop IntMap to an array for the given drop table
@@ -354,7 +357,7 @@ var Analysis = (function() {
         // this ensures we'll never have to actually do a recursive calculation: The calculations any given state
         // depends on should already be in the cache.  That being said, this is overengineered to support a full
         // recursive calculation because why not.
-        var calcIndex = new IntSumArray(0, ArrayUtils.fillArray(requiredDropArray.list.length, 0));
+        var calcIndex = IntUtils.newIntSumArray(requiredDropArray.list.length, 0);
         // set the first index to -1 to make things easier.
         calcIndex.set(0, -1);
         // start a stack and put the index on it.  This should get expanded exactly once during the course of the

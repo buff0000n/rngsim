@@ -31,7 +31,7 @@ class DropTable {
         this.probArray = new Array();
 
         // first drop is the null drop, no items dropped.  Starts at 100%
-        this.dropGrid.push(new IntSumArray());
+        this.dropGrid.push(IntUtils.newIntSumArray(0));
         this.probArray.push(1);
 
         // explicit count of distinct drops, easier than calling this.dropKeyList.length
@@ -106,10 +106,12 @@ class DropTable {
         return a;
     }
 
+    // dropMap: map of drops
+    // allowAdd: true if unknown drop names should be added to this drop table
     // returns: IntSumArray
     convertDropMapToArray(dropMap, allowAdd=true) {
         // create blank array with one entry for each distinct drop
-        var a = new IntSumArray(0, ArrayUtils.fillArray(this.numDrops, 0));
+        var a = IntUtils.newIntSumArray(this.numDrops, 0);
 
         // loop over the IntMap
         for (var [key, value] of dropMap.map.entries()) {
@@ -228,7 +230,6 @@ class DropTable {
                 // shortcuts to this drop table's data
                 var te = this.dropGrid[i];
                 var fe = f.dropGrid[i];
-//                fe.total = te.total;
                 // loop over the drops
                 for (var j = 0; j < this.numDrops; j++) {
                     // check if this object's drop amount is greater than the required amount
@@ -262,7 +263,7 @@ class DropTable {
         if (this.mercyGrid == null) {
             this.mercyGrid = new Array(this.numDrops);
             for (var i = 0; i < this.numDrops; i++) {
-                this.mercyGrid[i] = new IntSumArray(0, ArrayUtils.fillArray(this.numDrops));
+                this.mercyGrid[i] = IntUtils.newIntSumArray(this.numDrops, 0);
             }
         }
         // get the ids of the mercy drop and the result drop
@@ -339,9 +340,8 @@ class DropTable {
             // reduce all remaining drops.  we've accumulated enough mercy drops to exchange for anything
             // outstanding
             for (var i = 0; i < this.numDrops; i++) {
-                tempDropArray.list[i] = 0;
+                tempDropArray.set(i, 0);
             }
-            tempDropArray.total = 0;
         }
         // otherwise what we have is the new remaining drop amounts.
         // console.log("Reduce: " + ArrayUtils.arrayToString(requiredDropArray) + " - " + ArrayUtils.arrayToString(dropArray) + " = " + ArrayUtils.arrayToString(tempDropArray));
