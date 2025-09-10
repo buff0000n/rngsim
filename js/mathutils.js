@@ -30,7 +30,33 @@ var MathUtils = (function() {
         return -(low + 1);  // key not found.
     }
 
+    function getGcd(a, b) {
+        // easy case a == b
+        if (a == b) {
+            return a;
+        }
+        // make a > b
+        if (a < b) {
+            var c = a;
+            a = b;
+            b = c;
+        }
+        // oh look it's the Euclidean algorithm
+        for (;;) {
+            var c = a % b;
+            if (c == 0) {
+                return b;
+            }
+            if (c == 1) {
+                return 1;
+            }
+            a = b;
+            b = c;
+        }
+    }
+
     return {
-        binarySearch: binarySearch
+        binarySearch: binarySearch,
+        getGcd: getGcd
     }
 })()

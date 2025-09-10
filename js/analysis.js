@@ -198,19 +198,8 @@ var Analysis = (function() {
         // might as well time it
         var start = Date.now();
 
-        // will need the required drops in array form
-        var requiredDropArray = null;
-        // apply default required drops if necessary
-        if (requiredDrops == null) {
-            // create a new array of 1's for each drop
-            requiredDropArray = IntUtils.newIntSumArray(dropTable.getNumDrops(), 1);
-
-        } else {
-            // convert provided drop IntMap to an array for the given drop table
-            // if any of the drops in the map are not found in the drop table then throw an error
-            // This also applies any mercy rules to the require ddrops, if present
-            var requiredDropArray = dropTable.convertDropMapToFullArray(requiredDrops, false);
-        }
+        // convert required drop map into an array, applying defaults and mercy rules.
+        var requiredDropArray = dropTable.toRequiredDropArray(requiredDrops);
 
         // track the total number of sub-calculations
         var totalCalcs = 1;
@@ -523,7 +512,7 @@ var Analysis = (function() {
         calculateStats(d, r);
     }
 
-    function test7() {
+    function test7(mercy=true) {
         // isleweaver
         var da = Array()
         da.push(new DropTable()
@@ -548,19 +537,22 @@ var Analysis = (function() {
             .addEntry(new DropTableEntry(0.195).addDrop("Husk", 19))
             .addEntry(new DropTableEntry(0.195).addDrop("Husk", 20)));
 
-        var d = DropTableUtils.flatten(da)
-            .addMercyRule("Husk", 60, "OBP")
-            .addMercyRule("Husk", 20, "OH")
-            .addMercyRule("Husk", 20, "OC")
-            .addMercyRule("Husk", 20, "OS")
-            .addMercyRule("Husk", 48, "ScBP")
-            .addMercyRule("Husk", 12, "ScG")
-            .addMercyRule("Husk", 12, "ScB")
-            .addMercyRule("Husk", 12, "SpBP")
-            .addMercyRule("Husk", 16, "SpB")
-            .addMercyRule("Husk", 16, "SpH")
-            .addMercyRule("Husk", 16, "SpS")
-        ;
+        var d = DropTableUtils.flatten(da);
+        if (mercy) {
+            d = d
+                .addMercyRule("Husk", 60, "OBP")
+                .addMercyRule("Husk", 20, "OH")
+                .addMercyRule("Husk", 20, "OC")
+                .addMercyRule("Husk", 20, "OS")
+                .addMercyRule("Husk", 48, "ScBP")
+                .addMercyRule("Husk", 12, "ScG")
+                .addMercyRule("Husk", 12, "ScB")
+                .addMercyRule("Husk", 12, "SpBP")
+                .addMercyRule("Husk", 16, "SpB")
+                .addMercyRule("Husk", 16, "SpH")
+                .addMercyRule("Husk", 16, "SpS")
+            ;
+        }
 
         var r = new IntMap()
             .add("OBP", 2)

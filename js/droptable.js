@@ -76,6 +76,23 @@ class DropTable {
         return this.dropIdMap.get(key);
     }
 
+    // convert required drop map into an array, applying defaults and mercy rules.
+    // requiredDrops: IntMap
+    // returns: IntSumArray
+    toRequiredDropArray(requiredDrops) {
+        // apply default required drops if necessary
+        if (requiredDrops == null) {
+            // create a new array of 1's for each drop
+            return IntUtils.newIntSumArray(this.getNumDrops(), 1);
+
+        } else {
+            // convert provided drop IntMap to an array for the given drop table
+            // if any of the drops in the map are not found in the drop table then throw an error
+            // This also applies any mercy rules to the required drops, if present
+            return this.convertDropMapToFullArray(requiredDrops, false);
+        }
+    }
+
     // convert a drop IntMap to a drop array, with values in the right indices
     // corresponding to drops from the drop map.
     // if this drop table has mercy rules then they will be added into the drop array
@@ -102,7 +119,11 @@ class DropTable {
                     }
                 }
             }
+
+            // oh shit this is a huge hack
+            this.originalRequiredDropArray = a;
         }
+
         return a;
     }
 
@@ -276,23 +297,23 @@ class DropTable {
         return this;
     }
 
-    reduceRequiredDropArray(requiredDropArray, dropArray, tempDropArray) {
+    reduceRequiredDropArray(requiredDropArray, dropArray, tempDropArray, truncate=true) {
         if (this.mercyGrid == null) {
             // if there are no mercy rules then just do a basic subtraction
-            return requiredDropArray.subtractAllTruncateTo(dropArray, tempDropArray);
+            return requiredDropArray.subtractAllTo(dropArray, tempDropArray, truncate);
         } else {
             // we have to evaluate the mercy rules
-            return this.reduceRequiredDropArrayWithMercyRule(requiredDropArray, dropArray, tempDropArray)
+            return this.reduceRequiredDropArrayWithMercyRule(requiredDropArray, dropArray, tempDropArray, truncate)
         }
     }
 
-    reduceRequiredDropArrayWithMercyRule(requiredDropArray, dropArray, tempDropArray) {
+    reduceRequiredDropArrayWithMercyRule(requiredDropArray, dropArray, tempDropArray, truncate=true) {
         // go through and decrement the required mercy drops first
         for (var mercyId = 0; mercyId < this.numDrops; mercyId++) {
             if (this.mercyGrid[mercyId].total > 0) {
                 tempDropArray.set(mercyId, requiredDropArray.list[mercyId] - dropArray.list[mercyId]);
                 // cut off at zero
-                if (tempDropArray.list[mercyId] < 0) {
+                if (truncate && tempDropArray.list[mercyId] < 0) {
                     tempDropArray.set(mercyId) = 0;
                 }
             }
@@ -313,7 +334,7 @@ class DropTable {
                         // decrement the required mercy drop amount by the amount for this drop
                         tempDropArray.add(mercyId, -this.mercyGrid[mercyId].list[i] * dropped);
                         // cut off at zero
-                        if (tempDropArray.list[mercyId] < 0) {
+                        if (truncate && tempDropArray.list[mercyId] < 0) {
                             tempDropArray.set(mercyId, 0);
                         }
                     }
@@ -339,8 +360,35 @@ class DropTable {
             // console.log("Mercy rule: " + tempDropArray[mercyId] + " >= " + mercyRequired);
             // reduce all remaining drops.  we've accumulated enough mercy drops to exchange for anything
             // outstanding
-            for (var i = 0; i < this.numDrops; i++) {
-                tempDropArray.set(i, 0);
+            if (truncate) {
+                for (var i = 0; i < this.numDrops; i++) {
+                    tempDropArray.set(i, 0);
+                }
+            } else {
+                // add back mercy drops that we used
+                for (var i = 0; i < this.numDrops; i++) {
+                    if (this.mercyGrid[i].total > 0) continue;
+                    if (tempDropArray.list[i] > 0) {
+                        for (var mercyId = 0; mercyId < this.numDrops; mercyId++) {
+                            // if there's a mercy rule for this drop
+                            if (this.mercyGrid[mercyId].list[i] > 0) {
+                                // re-increment the required mercy drop amount by the amount for this drop
+                                tempDropArray.add(mercyId, this.mercyGrid[mercyId].list[i] * tempDropArray.list[i]);
+                            }
+                        }
+                    }
+                }
+                // invert with the original required mercy drop amount
+                for (var mercyId = 0; mercyId < this.numDrops; mercyId++) {
+                    if (this.mercyGrid[mercyId].total > 0) {
+                        // this is all so we can subtract this from the original drop amount and get the actual
+                        // mercy drops that were dropped.
+                        tempDropArray.set(mercyId, this.originalRequiredDropArray.list[mercyId] - tempDropArray.list[mercyId]);
+                    }
+                }
+                // hack IntSumArray
+                // fine as long as there are absolutely no follow-up questions
+                tempDropArray.numPos = 0;
             }
         }
         // otherwise what we have is the new remaining drop amounts.
@@ -402,7 +450,10 @@ class DropTable {
         }
     }
 
+    // return a random drop, weighted by drop chance
+    // returns: IntSumArray
     randomDrop() {
+        // initialize the cumulative drop array if this is the first time
         if (this.cumulativeDropProb == null) {
             this.cumulativeDropProb = Array(this.numDropTableEntries);
             for (var i = 0; i < this.numDropTableEntries; i++) {
@@ -418,7 +469,8 @@ class DropTable {
             i = -(i + 1);
         }
 
-        return this.dropGrid[i].list;
+        // result drop table entry
+        return this.dropGrid[i];
     }
 
     toString() {

@@ -165,22 +165,19 @@ class IntSumArray {
         // copy the num positive, we have to adjust this below
         d.numPos = this.numPos;
         for (var i = 0; i < this.list.length; i++) {
-            // worth optimizing, we're going to be subtracting 0's most of the time
-            if (s.list[i] != 0) {
-                // subtract entry
-                d.list[i] = this.list[i] - s.list[i];
-                // check for truncation
-                if (trunc && d.list[i] < 0) {
-                    // adjust the total
-                    d.total -= d.list[i];
-                    // truncate
-                    d.list[i] = 0;
-                }
-                // check if the negative status of this entry has changed
-                if (this.list[i] <= 0 ^ d.list[i] <= 0) {
-                    // adjust the num positive
-                    d.numPos += d.list[i] <= 0 ? -1 : 1;
-                }
+            // subtract entry
+            d.list[i] = this.list[i] - s.list[i];
+            // check for truncation
+            if (trunc && d.list[i] < 0) {
+                // adjust the total
+                d.total -= d.list[i];
+                // truncate
+                d.list[i] = 0;
+            }
+            // check if the negative status of this entry has changed
+            if (this.list[i] <= 0 ^ d.list[i] <= 0) {
+                // adjust the num positive
+                d.numPos += d.list[i] <= 0 ? -1 : 1;
             }
         }
         return d;

@@ -524,7 +524,9 @@
 <script type="text/javascript" language="javascript" src="js/arrayutils.js"></script>
 <script type="text/javascript" language="javascript" src="js/intutils.js"></script>
 <script type="text/javascript" language="javascript" src="js/droptable.js"></script>
+<script type="text/javascript" language="javascript" src="js/discretedist.js"></script>
 <script type="text/javascript" language="javascript" src="js/analysis.js"></script>
+<script type="text/javascript" language="javascript" src="js/montecarlo.js"></script>
 <script type="text/javascript" language="javascript">
 
     //==============================================================
@@ -1044,7 +1046,7 @@
             // check if the required num is not a possible choice given the probability list
             // either it's 0 and the cumulative probability of 0 is 0%
             } else if ((requiredNum == 0 && numProbs[0] == 0) ||
-                // or it's > 0 and the difference in cumulative probability between num and num - 1 is 0%, meaning there 
+                // or it's > 0 and the difference in cumulative probability between num and num - 1 is 0%, meaning there
                 // is a 0% change of RNG giving us this output
                     (requiredNum > 0 && numProbs[requiredNum] == numProbs[requiredNum - 1])) {
                 errors.push("Required " + name + "s is invalid");
@@ -1067,11 +1069,11 @@
         accept(positiveList, negativeList) {
             // determine whether the given Riven stats meet this criteria
 
-            // check against the required number of positive stats, if applicable        
+            // check against the required number of positive stats, if applicable
             if (this.requiredNumPositives > -1 && this.requiredNumPositives != positiveList.length) {
                 return false;
             }
-            // check against the required number negative stats, if applicable        
+            // check against the required number negative stats, if applicable
             if (this.requiredNumNegatives > -1 && this.requiredNumNegatives != negativeList.length) {
                 return false;
             }
@@ -1097,9 +1099,9 @@
             // intersect the leftover Riven positive stats with out wanted positive stats
             var positiveInt = intersection(leftoverPositives, this.wantedPositives);
 
-            // If the size of that intersection is equal to the number of leftover Riven positive stats, then all of the 
+            // If the size of that intersection is equal to the number of leftover Riven positive stats, then all of the
             // Riven positive stats are wanted, so we're good.
-            // Alternative, if the size of that intersection is equal to the wanted positive stats, then all of our 
+            // Alternative, if the size of that intersection is equal to the wanted positive stats, then all of our
             // wanted positive stats are present, so we're still good.
             if (positiveInt.length != leftoverPositives.length && positiveInt.length != this.wantedPositives.length) {
                 return false;
@@ -1125,9 +1127,9 @@
             // intersect the leftover Riven negative stats with out wanted negative stats
             var negativeInt = intersection(leftoverNegatives, this.wantedNegatives);
 
-            // If the size of that intersection is equal to the number of leftover Riven negative stats, then all of the 
+            // If the size of that intersection is equal to the number of leftover Riven negative stats, then all of the
             // Riven negative stats are wanted, so we're good.
-            // Alternative, if the size of that intersection is equal to the wanted negative stats, then all of our 
+            // Alternative, if the size of that intersection is equal to the wanted negative stats, then all of our
             // wanted negative stats are present, so we're still good.
             if (negativeInt.length != leftoverNegatives.length && negativeInt.length != this.wantedNegatives.length) {
                 return false;
@@ -1332,7 +1334,7 @@
 
 	function split(s) {
 	    // split a string according to the field separator characters
-	    // when a group start character is encounted, ignore any separator characters until the corresponding 
+	    // when a group start character is encounted, ignore any separator characters until the corresponding
 	    // group end character is encountered.
 
 		var list = Array();
@@ -1618,7 +1620,7 @@
     			this.scale = newScale;
 		    }
 
-		    // make sure our dist and cumulative dist are bigh enough for the given bucket index
+		    // make sure our dist and cumulative dist are big enough for the given bucket index
 
 		    // fill any added buckets of the distribution with zeros
 			this.dist = this.ensureSize0(this.dist, (index/this.scale) + 1, false);
@@ -5038,6 +5040,7 @@
 
 
 </script>
+<script type="text/javascript" language="javascript" src="js/analysis.js"></script>
 <body onload="initModel()">
 
 <div class="titleBar">
@@ -5541,7 +5544,7 @@
                         chart cuts off at the 99.9th Percentile, but the <strong>Worst Case</strong> result shows you
                         just how far it could extend if it was drawn out in full.
                     </p>
-                </li>
+                </li>ive
                 <li>
                     <p>
                         <strong>Cumulative Probability</strong>:
