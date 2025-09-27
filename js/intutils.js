@@ -139,6 +139,26 @@ class IntSumArray {
         this.set(index, (this.list[index] ? this.list[index] : 0) + value);
     }
 
+    // add to the value at an index and update state
+    addAll(other) {
+        // ensure size
+        while (this.list.length < other.list.length) {
+            this.list.push(0);
+        }
+        this.total += other.total;
+        for (var i = 0; i < this.list.length; i++) {
+            var prevValue = this.list[i];
+            var value = prevValue + other.list[i];
+            this.list[i] = value;
+            if (prevValue <= 0 ^ value <= 0) {
+                // update the num positive
+                this.numPos += value <= 0 ? -1 : 1;
+            }
+        }
+        // return this to support chaining
+        return this;
+    }
+
     // add a value to the end of the list and update state
     push(value) {
         this.set(this.list.length, value);

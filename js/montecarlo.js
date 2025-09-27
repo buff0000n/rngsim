@@ -152,12 +152,11 @@ var MonteCarlo = (function() {
     }
 
     function test2() {
-        var dropTables = Array()
-        dropTables.push(new DropTable().addEntry(new DropTableEntry(0.1).addDrop("A", 1)));
-        dropTables.push(new DropTable().addEntry(new DropTableEntry(0.2).addDrop("B", 1)));
-        dropTables.push(new DropTable().addEntry(new DropTableEntry(0.3).addDrop("C", 1)));
+        var dropTable = new DropTable().
+            addRotation("A").addEntry(new DropTableEntry(0.1).addDrop("A", 1)).
+            addRotation("B").addEntry(new DropTableEntry(0.2).addDrop("B", 1)).
+            addRotation("C").addEntry(new DropTableEntry(0.3).addDrop("C", 1));
 
-        var dropTable = DropTableUtils.flatten(dropTables);
         var requiredDrops = new IntMap().add("A", 1).add("B", 2).add("C", 3);
 
         console.log(dropTable.toString());
@@ -184,13 +183,13 @@ var MonteCarlo = (function() {
 
     function test4() {
         // khora
-        var da = Array()
-        da.push(new DropTable().addEntry(new DropTableEntry(0.0833).addDrop("Chassis", 1)));
-        da.push(new DropTable().addEntry(new DropTableEntry(0.0833).addDrop("Chassis", 1)));
-        da.push(new DropTable().addEntry(new DropTableEntry(0.0769).addDrop("Helmet", 1)));
-        da.push(new DropTable().addEntry(new DropTableEntry(0.0564).addDrop("Systems", 1)).addEntry(new DropTableEntry(0.0564).addDrop("BP", 1)));
+        var d = new DropTable().
+            addRotation("A").addEntry(new DropTableEntry(0.0833).addDrop("Chassis", 1)).
+            addRotation("A").addEntry(new DropTableEntry(0.0833).addDrop("Chassis", 1)).
+            addRotation("B").addEntry(new DropTableEntry(0.0769).addDrop("Helmet", 1)).
+            addRotation("C").addEntry(new DropTableEntry(0.0564).addDrop("Systems", 1))
+                            .addEntry(new DropTableEntry(0.0564).addDrop("BP", 1));
 
-        var d = DropTableUtils.flatten(da);
         var r = new IntMap().add("Chassis", 1).add("Helmet", 1).add("Systems", 1).add("BP", 1);
 
         console.log(d.toString());
@@ -219,21 +218,18 @@ var MonteCarlo = (function() {
 
     function test6() {
         // oraxia
-        var da = Array()
-        da.push(new DropTable()
-            .addEntry(new DropTableEntry(0.0769).addDrop("BP", 1))
-            .addEntry(new DropTableEntry(0.0769).addDrop("H", 1))
-            .addEntry(new DropTableEntry(0.0769).addDrop("C", 1))
-            .addEntry(new DropTableEntry(0.0769).addDrop("S", 1)));
-
-        da.push(new DropTable()
-            .addEntry(new DropTableEntry(0.195).addDrop("Husk", 16))
-            .addEntry(new DropTableEntry(0.195).addDrop("Husk", 17))
-            .addEntry(new DropTableEntry(0.220).addDrop("Husk", 18))
-            .addEntry(new DropTableEntry(0.195).addDrop("Husk", 19))
-            .addEntry(new DropTableEntry(0.195).addDrop("Husk", 20)));
-
-        var d = DropTableUtils.flatten(da)
+        var d = new DropTable()
+            .addRotation("A")
+                .addEntry(new DropTableEntry(0.0769).addDrop("BP", 1))
+                .addEntry(new DropTableEntry(0.0769).addDrop("H", 1))
+                .addEntry(new DropTableEntry(0.0769).addDrop("C", 1))
+                .addEntry(new DropTableEntry(0.0769).addDrop("S", 1))
+            .addRotation("Husk")
+                .addEntry(new DropTableEntry(0.195).addDrop("Husk", 16))
+                .addEntry(new DropTableEntry(0.195).addDrop("Husk", 17))
+                .addEntry(new DropTableEntry(0.220).addDrop("Husk", 18))
+                .addEntry(new DropTableEntry(0.195).addDrop("Husk", 19))
+                .addEntry(new DropTableEntry(0.195).addDrop("Husk", 20))
             .addMercyRule("Husk", 60, "BP")
             .addMercyRule("Husk", 20, "H")
             .addMercyRule("Husk", 20, "C")
@@ -248,30 +244,27 @@ var MonteCarlo = (function() {
 
     function test7(mercy=true) {
         // isleweaver
-        var da = Array()
-        da.push(new DropTable()
-            .addEntry(new DropTableEntry(0.0769).addDrop("OBP", 1))
-            .addEntry(new DropTableEntry(0.0769).addDrop("OH", 1))
-            .addEntry(new DropTableEntry(0.0769).addDrop("OC", 1))
-            .addEntry(new DropTableEntry(0.0769).addDrop("OS", 1))
-            .addEntry(new DropTableEntry(0.0769).addDrop("ScBP", 1))
-            .addEntry(new DropTableEntry(0.0769).addDrop("ScG", 1))
-            .addEntry(new DropTableEntry(0.0769).addDrop("ScB", 1))
-            .addEntry(new DropTableEntry(0.0769).addDrop("SpBP", 1))
-            .addEntry(new DropTableEntry(0.0769).addDrop("SpBP", 1))
-            .addEntry(new DropTableEntry(0.0769).addDrop("SpB", 1))
-            .addEntry(new DropTableEntry(0.0769).addDrop("SpH", 1))
-            .addEntry(new DropTableEntry(0.0769).addDrop("SpS", 1))
-        );
+        var d = new DropTable()
+            .addRotation("A")
+                .addEntry(new DropTableEntry(0.0769).addDrop("OBP", 1))
+                .addEntry(new DropTableEntry(0.0769).addDrop("OH", 1))
+                .addEntry(new DropTableEntry(0.0769).addDrop("OC", 1))
+                .addEntry(new DropTableEntry(0.0769).addDrop("OS", 1))
+                .addEntry(new DropTableEntry(0.0769).addDrop("ScBP", 1))
+                .addEntry(new DropTableEntry(0.0769).addDrop("ScG", 1))
+                .addEntry(new DropTableEntry(0.0769).addDrop("ScB", 1))
+                .addEntry(new DropTableEntry(0.0769).addDrop("SpBP", 1))
+                .addEntry(new DropTableEntry(0.0769).addDrop("SpBP", 1))
+                .addEntry(new DropTableEntry(0.0769).addDrop("SpB", 1))
+                .addEntry(new DropTableEntry(0.0769).addDrop("SpH", 1))
+                .addEntry(new DropTableEntry(0.0769).addDrop("SpS", 1))
+            .addRotation("Husk")
+                .addEntry(new DropTableEntry(0.195).addDrop("Husk", 16))
+                .addEntry(new DropTableEntry(0.195).addDrop("Husk", 17))
+                .addEntry(new DropTableEntry(0.220).addDrop("Husk", 18))
+                .addEntry(new DropTableEntry(0.195).addDrop("Husk", 19))
+                .addEntry(new DropTableEntry(0.195).addDrop("Husk", 20));
 
-        da.push(new DropTable()
-            .addEntry(new DropTableEntry(0.195).addDrop("Husk", 16))
-            .addEntry(new DropTableEntry(0.195).addDrop("Husk", 17))
-            .addEntry(new DropTableEntry(0.220).addDrop("Husk", 18))
-            .addEntry(new DropTableEntry(0.195).addDrop("Husk", 19))
-            .addEntry(new DropTableEntry(0.195).addDrop("Husk", 20)));
-
-        var d = DropTableUtils.flatten(da);
         if (mercy) {
             d = d
                 .addMercyRule("Husk", 60, "OBP")
